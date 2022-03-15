@@ -1,0 +1,69 @@
+15/03/2022
+- Física Computacional
+
+Aula 32
+Aula 13
+
+
+- Linux
+- shell (ó software que controla la terminal)
+- graficador -> gnuplot : útil este graficador liviano para debuggear código
+- lenguaje de programación -> FORTRAN (repaso de métodos numéricos)
+
+
+drwxrwxr-x 2 mendez mendez 4,0K mar 15 09:42 .
+permisos X usuario grupo tamaño fecha hora
+
+d -> hacer
+r -> leer
+w -> escribir
+x -> ejecutar
+
+los primeros tres son el dueño
+los segundos tres son para el grupo
+los terceros tres son para el visitante(otro)
+
+comando ls -a (muestra tipo lista pero sin permisos)
+		ls -al (muestra tipo lista pero mostrando permisos)
+		ls -alh (h significa human, cambia las unidades para que sean comodas)
+
+archivos que empiezan con . (punto) son archivos ocultos
+
+comando alias
+	nos muestra los alias definidos en el bash shell
+
+Comando ls P*
+	lista todos los directorios que empiezan con P
+	Ojo el * es un "comodín" no usar nunca $ rm * porque borra todo!!
+	
+rm -i
+alias rm = "rm -i" (esto se debe hacer cada vez), para que sea automático modificar el .bashrc
+
+comando more mynote.txt
+
+/palabra
+n (siguiente)
+
+comando (cambiar permisos de un archivo)
+	chmod {u,g,o}{+-}{dwrx} archivo.extension
+	
+	+ agregar 
+	- quitar
+	
+	u user
+	g group
+	o other
+	
+Editor de textos
+	nano
+
+evince archivo.pdf &
+jobs (procesos en el background)
+fg (vuelve el proceso en el frontground)
+
+
+mendez@mendez-notebook:~$ kate 2> /dev/null 
+^Z
+[1]+  Detenido                kate 2> /dev/null
+mendez@mendez-notebook:~$ bg
+[1]+ kate 2> /dev/null &
