@@ -1,17 +1,26 @@
-15/03/2022
-- Física Computacional
+# Física Computacional
+## 15/03/2022
 
 Aula 32
 Aula 13
 
+### Contenido que vamos a ver
++ Linux
++ Shell, es decir, un software que controla la terminal. En particular veremos `bash-shell`.
++ Graficador. En particular, veremos `gnuplot` ya que es un graficador liviano y útil debuggear código.
++ Lenguaje de programación. En particular, usaremos `FORTRAN`, y aprenderemos el lenguaje indirectamente, resolviendo problemas físicos concretos. Sin embargo, se requiere cierto conocimiento previo del lenguaje.
 
-- Linux
-- shell (ó software que controla la terminal)
-- graficador -> gnuplot : útil este graficador liviano para debuggear código
-- lenguaje de programación -> FORTRAN (repaso de métodos numéricos)
+### Linux
 
+El comando `ls -a` muestra en formato tipo lista los archivos dentro de un directorio.
+El comando `ls -al` muestra en formato tipo lista los archivos dentro de un directorio y detalles.
+El comando `ls -alh` muestra en formato tipo lista los archivos dentro de un directorio. Aquí `h` significa human, cambia las unidades para que sean comodas)
 
-drwxrwxr-x 2 mendez mendez 4,0K mar 15 09:42 .
+Con el comando `ls -alh` desde la terminal tendremos una salida de la forma,
+```
+	drwxrwxr-x 2 mendez mendez 4,0K mar 15 09:42 .
+```
+donde 
 permisos X usuario grupo tamaño fecha hora
 
 d -> hacer
@@ -47,7 +56,7 @@ n (siguiente)
 comando (cambiar permisos de un archivo)
 	chmod {u,g,o}{+-}{dwrx} archivo.extension
 	
-	+ agregar 
+	+ agregar
 	- quitar
 	
 	u user
