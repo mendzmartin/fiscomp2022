@@ -1,0 +1,44 @@
+x = real
+y = 123.1_pr
+z = 123.1
+
+write(*,*) y,z
+
+write(*,*) "37/3 = ", 37/3, i/j
+
+do1: do while (z < 1500_pr)
+	write(*,*) z
+	z = 2_pr*z
+enddo do1
+
+y = f(j,z)
+write(*,*) "f", y
+
+call s1()
+
+CONTAINS
+
+	function f(ii, xx)
+	implicit none
+	integer, intent(in) :: ii ! variables locales
+	real(pr), intent(in) :: xx
+	real(pr) :: f
+	
+	write(*,*) "x = ",x
+	f = real(ii,pr)**xx
+	end function f
+end program prob1
+
+subroutine s1(i,j,x,y,z)
+	implicit none
+	integer, intent(in) :: ii
+	integer, intent(out) :: jj
+	real(pr), intent(in) :: xx
+	real(pr), intent(inout) :: yy
+	real(pr), intent(out) :: zz
+	real(pr)
+	
+	
+	jj = 1*ii
+	
+end subroutine s1

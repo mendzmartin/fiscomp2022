@@ -51,3 +51,58 @@ Warning: Integer division truncated to constant ‘2’ at (1) [-Winteger-divisi
  result =    2.0000000000000000
 ```
 + prob01_04.o
+```
+gfortran -g3 -Wall -Wextra -Wconversion prob01.f90 -o prob01_03 && ./prob01_03
+prob01.f90:14:2:
+
+   14 |  res = 28 / 3 / 4    ! prob01_03.o
+      |  1
+Warning: Nonconforming tab character at (1) [-Wtabs]
+prob01.f90:14:9:
+
+   14 |  res = 28 / 3 / 4    ! prob01_03.o
+      |         1
+Warning: Integer division truncated to constant ‘9’ at (1) [-Winteger-division]
+prob01.f90:14:11:
+
+   14 |  res = 28 / 3 / 4    ! prob01_03.o
+      |           1
+Warning: Integer division truncated to constant ‘2’ at (1) [-Winteger-division]
+ result =    2.0000000000000000
+ ```
+ + prob01_05.o
+ ```
+ ```
+  + prob01_06.o
+ ```
+ ```
+  + prob01_07.o
+ ```
+ ```
+  + prob01_08.o
+ ```
+ ```
+  + prob01_09.o
+ ```
+ ```
+  + prob01_10.o
+ ```
+ ```
+  + prob01_11.o
+ ```
+ ```
+  + prob01_12.o
+ ```
+ ```
+  + prob01_13.o
+ ```
+ ```
+  + prob01_14.o
+ ```
+ ```
+  + prob01_15.o
+ ```
+ ```
+  + prob01_16.o
+ ```
+ ```
