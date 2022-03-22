@@ -6,11 +6,12 @@
 ! 	programa sólo válido para la integral definida de la
 !----------------------------------------------------------
 
-program num_integ
+program num_integ_gauss
 	
 	use presition_module 		! use module of presition
 	use functions_module 		! use module of functions
 	use num_integrals_module 	! use module of numerical integrals
+	use gaussmod ! use module of gauss-legendre cuadrature
 	
 	implicit none
 
@@ -54,7 +55,7 @@ program num_integ
 	end do
 	
 	return
-end program num_integ
+end program num_integ_gauss
 
 
 !----------------------------------------------------------

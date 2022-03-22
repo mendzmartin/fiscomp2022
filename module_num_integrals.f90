@@ -1,6 +1,6 @@
-module num_integrals_module
-	use presition_module
-	use functions_module
+module module_num_integrals
+	use module_presition
+	use module_functions
 	
 	implicit none
 	
@@ -126,4 +126,4 @@ module num_integrals_module
 	
 	end subroutine simpson_38_integ
 
-end module num_integrals_module
+end module module_num_integrals

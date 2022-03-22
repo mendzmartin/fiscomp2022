@@ -1,0 +1,25 @@
+Module (nombre)
+[
+
+]
+
+contains
+funciones
+subrutinas
+
+end module (nombre)
+
+
+en el principal
+
+use (nombre) [, only: ..., ..., ...] ! only sirve para traer sólo lo que necesito
+
+
+el compilador genera las interfaces (argumentos y tipos de funciones y subrutinas)
+para ello se ponen dentro de los modulos. Obviamente se pueden poner fuera, pero se deben crear
+las interfaces de forma explísica
+
+
+al compilar nos conviene compilar primero los modulos contains
+gfortran -c nombre_modulo.f90
+esto solo los compila perono genera los ejecutables

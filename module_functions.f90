@@ -1,6 +1,6 @@
-module functions_module
+module module_functions
 	
-	use presition_module
+	use module_presition
 
 	implicit none
 
@@ -16,4 +16,4 @@ module functions_module
 
 	end function exp_func
 
-end module functions_module
+end module module_functions
