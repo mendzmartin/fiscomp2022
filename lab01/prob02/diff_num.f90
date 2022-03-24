@@ -37,6 +37,7 @@ program diff_num
 	
 	open( 10, file = './result.dat', status = 'new', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
+	20 format (E15.2, E15.6)
 	
 	!CALCULO DE LA DIFERENCIACION NUMÉRICA
 	!CALCULO DEL ERROR RELATIVO
@@ -55,7 +56,6 @@ program diff_num
 !		error_porcen = error*100	! relative error
 !		write(10,*) -i, h, diff_exact, diff_aprox, error
 		write(10,20) h, error
-		20 format (E15.2, E15.6)
 	enddo
 	
 	f_forw = exp(x0+h_opt)														! forward function
