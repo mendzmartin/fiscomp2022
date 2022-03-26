@@ -8,10 +8,10 @@
 
 program num_integ_gauss
 	
-	use module_presition 							! use module of presition
-	use module_functions 							! use module of functions
-	use module_num_integrals 						! use module of numerical integrals
-	use module_gauss 								! use module of gauss-legendre cuadrature
+	use module_presition 		! use module of presition
+	use module_functions 		! use module of functions
+	use module_num_integrals 	! use module of numerical integrals
+	use module_gauss 			! use module of gauss-legendre cuadrature
 	use module_numerical_error 	! use module of numerical errors
 	
 	implicit none
@@ -29,6 +29,11 @@ program num_integ_gauss
 	integer(sp) 				:: m_gauss 				! número de intervalos para usar en modulo de gauss
 	integer(sp)					:: function_type 		! tipo de función a integrar
 	real(dp) 					:: rel_error 			! error relativo
+	real(dp) 					:: rel_error_trapez
+	real(dp) 					:: rel_error_simpson13
+	real(dp) 					:: rel_error_simpson38
+	real(dp) 					:: rel_error_gauss
+	integer(sp) 				:: istat				! integer of simple presition
 	
 	! Datos pedidos al usuario
 	write( *, * ) 'Ingrese el limite inferior de integración (a) y presione Enter.'
@@ -39,42 +44,43 @@ program num_integ_gauss
 	read(*,*) function_type
 	write( *, * ) '---------------------------------------'
 			
-	20 format (A15, F15.6)
-	21 format (A5, I8, A10, F8.6)
+	20 format (I10, F10.6, F10.6, F10.6, F10.6, F10.6, F10.6, F10.6, F10.6, F10.6, F10.6)
 	
-	do k = 2, 8, 2
+	open( 10, file = './result.dat', status = 'replace', iostat = istat )
+	write(*,*) 'Input/Output file. istat = ', istat
 	
-		n = 2**k
-		m = n + 1
+	do k = 2, 15, 1
+	
+		n = 2_dp**k
+		m = n + 1_dp
 		h = ( b - a ) * ( 1._dp / n )
 		exact_integ = -( f(b,function_type) - f(a,function_type) )
-		m_gauss = 2**k
+		m_gauss = 2_sp**k
 		
-		
-		write( *, 21 ) 'n = ', n, 'h  = ', h
-		write( *, 20 ) 'I_exact       = ', exact_integ
 		call trapez_integ ( m, a, b, h, trapez_num_integ, function_type )
-		write( *, 20 ) 'I_trapezoidal = ', trapez_num_integ
 		call errors_num_integrals(exact_integ, trapez_num_integ(1,1), rel_error, 2)
-		write( *, 20 ) 'relative error = ', rel_error*100._dp
+		rel_error_trapez = rel_error*100_dp
 		
 		call simpson_13_integ ( m, a, b, h, simps_13_num_integ, function_type )
-		write( *, 20 ) 'I_simpson13   = ', simps_13_num_integ
 		call errors_num_integrals(exact_integ, simps_13_num_integ(1,1), rel_error, 2)
-		write( *, 20 ) 'relative error = ', rel_error*100._dp
+		rel_error_simpson13 = rel_error*100_dp
 		
 		call simpson_38_integ ( m, a, b, h, simps_38_num_integ, function_type )
-		write( *, 20 ) 'I_simpson38   = ', simps_38_num_integ
 		call errors_num_integrals(exact_integ, simps_38_num_integ(1,1), rel_error, 2)
-		write( *, 20 ) 'relative error = ', rel_error*100._dp
+		rel_error_simpson38 = rel_error*100_dp
 		
 		call gauss_integ ( m_gauss, 0, a, b, gauss_num_integ, function_type)
-		write( *, 20 ) 'I_gauss       = ', gauss_num_integ
 		call errors_num_integrals(exact_integ, gauss_num_integ(1,1), rel_error, 2)
-		write( *, 20 ) 'relative error = ', rel_error*100._dp
+		rel_error_gauss = rel_error*100_dp
 		
-		write( *, * ) '---------------------------------------'
+		write( 10, 20 )	n, h, exact_integ,&
+						trapez_num_integ, rel_error_trapez,&
+						simps_13_num_integ, rel_error_simpson13,&
+						simps_38_num_integ, rel_error_simpson38,&
+						gauss_num_integ, rel_error_gauss
 	end do
+	
+	close (10)
 	
 	return
 end program num_integ_gauss

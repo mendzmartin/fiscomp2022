@@ -148,14 +148,15 @@ module module_num_integrals
 		
 		! Data dictionary: declare local variables types & definitions
 		integer(sp) 				:: i					! index loop
-		real(dp), dimension (m,1) 	:: function_vector		! column vector
-		real(dp), dimension (m,1) 	:: coeff_vector			! row vector
+		real(dp), dimension (m,1) 	:: function_vector		! raw vector
+		real(dp), dimension (m,1)	:: grid_ponit_vector	! raw vector
+		real(dp), dimension (m,1) 	:: coeff_vector			! raw vector
 		
 		! Execution section
-		call gauss(m, 0, a, b, function_vector, coeff_vector)
+		call gauss(m, 0, a, b, grid_ponit_vector, coeff_vector)
 		
 		do i = 1, m, 1
-			function_vector(i,1) = f(coeff_vector(i,1),function_type)
+			function_vector(i,1) = f(grid_ponit_vector(i,1),function_type)
 		end do
 		
 		gauss_num_integ = matmul(transpose(function_vector),coeff_vector)
