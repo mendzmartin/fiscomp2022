@@ -22,6 +22,7 @@ program num_integ_gauss
 	real(dp), dimension(1,1) 	:: simps_13_num_integ	! numerical integration with simpson 1/3 method
 	real(dp), dimension(1,1) 	:: simps_38_num_integ	! numerical integration with simpson 3/8 method
 	real(dp), dimension(1,1) 	:: gauss_num_integ		! numerical integration with gauss quadrature method
+	real(dp), dimension(1,1)	:: check_value
 	integer(dp)					:: k					! potencia
 	integer(dp) 				:: n, m 				! número de intervalos y número de puntos
 	real(dp)					:: a,b					! límites de integración
@@ -45,12 +46,18 @@ program num_integ_gauss
 	write( *, * ) '---------------------------------------'
 			
 	20 format (I10, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6)
+	30 format (A30, E15.2)
 	
 	open( 10, file = './result.dat', status = 'replace', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
+	write( *, * ) '---------------------------------------'
+	write(*,*) 'check_value must be equal to zero if the integration was ok'
 	
-	do k = 2, 15, 1
+!	n = 1_dp
 	
+	do k = 1, 15, 1 
+	
+!		n = 2_dp*n
 		n = 2_dp**k
 		m = n + 1_dp
 		h = ( b - a ) * ( 1._dp / n )
@@ -61,7 +68,8 @@ program num_integ_gauss
 		call basic_errors_num(exact_integ, trapez_num_integ(1,1), rel_error, 2)
 		rel_error_trapez = rel_error*100_dp
 		
-		call simpson_13_integ ( m, a, b, h, simps_13_num_integ, function_type )
+		call simpson_13_integ ( m, a, b, h, simps_13_num_integ, function_type, check_value )
+		write(*,30) 'check_value of simpson 1/3 = ', check_value
 		call basic_errors_num(exact_integ, simps_13_num_integ(1,1), rel_error, 2)
 		rel_error_simpson13 = rel_error*100_dp
 		
