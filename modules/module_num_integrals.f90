@@ -1,6 +1,6 @@
 module module_num_integrals
 	use module_presition
-	use module_functions
+	use module_functions_1D
 	use module_gauss
 	
 	implicit none
@@ -33,15 +33,15 @@ module module_num_integrals
 		
 		do i = 2, m-2, 1
 			coeff_vector(i,1) = 2._dp
-			function_vector(1,i) = f(x_current,function_type)
+			function_vector(1,i) = f_1D(x_current,function_type)
 
 			x_current = x_current + h
 		end do
 		
 		coeff_vector(1,1) = 1._dp
 		coeff_vector(m-1,1) = 1._dp
-		function_vector(1,1) = f(a,function_type)
-		function_vector(1,m-1) = f(b,function_type)
+		function_vector(1,1) = f_1D(a,function_type)
+		function_vector(1,m-1) = f_1D(b,function_type)
 		
 		trapez_num_integ = h*matmul(function_vector,coeff_vector)*0.5_dp
 		
@@ -74,10 +74,10 @@ module module_num_integrals
 		do i = 2, m-2, 1
 			if ( mod(i,2) == 0 ) then
 				coeff_vector(i,1) = 4._dp
-				function_vector(1,i) = f(x_current,function_type)
+				function_vector(1,i) = f_1D(x_current,function_type)
 			else
 				coeff_vector(i,1) = 2._dp
-				function_vector(1,i) = f(x_current,function_type)
+				function_vector(1,i) = f_1D(x_current,function_type)
 			end if
 			
 			x_current = x_current + h
@@ -85,8 +85,8 @@ module module_num_integrals
 		
 		coeff_vector(1,1) = 1._dp
 		coeff_vector(m-1,1) = 1._dp
-		function_vector(1,1) = f(a,function_type)
-		function_vector(1,m-1) = f(b,function_type)
+		function_vector(1,1) = f_1D(a,function_type)
+		function_vector(1,m-1) = f_1D(b,function_type)
 		
 		simps_13_num_integ = h*matmul(function_vector,coeff_vector)*(1._dp/3._dp)
 
@@ -113,10 +113,10 @@ module module_num_integrals
 	do i = 2, m-2, 1
 		if ( mod(i,3) == 0 ) then
 			coeff_vector(i,1) = 2._dp
-			function_vector(1,i) = f(x_current,function_type)
+			function_vector(1,i) = f_1D(x_current,function_type)
 		else
 			coeff_vector(i,1) = 3._dp
-			function_vector(1,i) = f(x_current,function_type)
+			function_vector(1,i) = f_1D(x_current,function_type)
 		end if
 		
 		x_current = x_current + h
@@ -124,8 +124,8 @@ module module_num_integrals
 	
 	coeff_vector(1,1) = 1._dp
 	coeff_vector(m-1,1) = 1._dp
-	function_vector(1,1) = f(a,function_type)
-	function_vector(1,m-1) = f(b,function_type)
+	function_vector(1,1) = f_1D(a,function_type)
+	function_vector(1,m-1) = f_1D(b,function_type)
 	
 	simps_38_num_integ = h*matmul(function_vector,coeff_vector)*(3._dp/8._dp)
 	
@@ -156,7 +156,7 @@ module module_num_integrals
 		call gauss(m, 0, a, b, grid_ponit_vector, coeff_vector)
 		
 		do i = 1, m, 1
-			function_vector(i,1) = f(grid_ponit_vector(i,1),function_type)
+			function_vector(i,1) = f_1D(grid_ponit_vector(i,1),function_type)
 		end do
 		
 		gauss_num_integ = matmul(transpose(function_vector),coeff_vector)

@@ -4,22 +4,22 @@ module module_numerical_error
 	implicit none
 	
 	contains
-	subroutine errors_num_integrals(I_exact, I_aprox, error, error_type)
+	subroutine basic_errors_num(val_exact, val_aprox, error, error_type)
 		
-		real(dp), intent(in) :: I_exact, I_aprox
+		real(dp), intent(in) :: val_exact, val_aprox
 		integer(sp), intent(in) :: error_type
 		real(dp), intent(out) :: error
 		
 		select case(error_type)
 		
 		case (1) ! absolute error
-			error = abs(I_exact - I_aprox)
+			error = abs(val_exact - val_aprox)
 		case (2) ! relative error
-			error = abs((I_exact - I_aprox) * ( 1._dp / I_exact))
+			error = abs((val_exact - val_aprox) * ( 1._dp / val_exact))
 		case default
 			write(*,*) 'Invalid error type'
 		end select
 		
-	end subroutine errors_num_integrals
+	end subroutine basic_errors_num
 
 end module module_numerical_error
