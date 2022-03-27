@@ -1,8 +1,9 @@
 #!/usr/bin/gnuplot
 
-
-set terminal png size 1024,1024
-
+# kind of output to generate
+set terminal png size 1024,1024 font 'Times Roman Bold Italic,14'
+show terminal
+# redirect the output toa file or device
 set output 'error.png'
 
 set xlabel 'interval points (n) - logarithmic scale'
