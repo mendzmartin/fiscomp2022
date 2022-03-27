@@ -51,6 +51,7 @@ module module_num_integrals
 	!----------------------------------------------------------
 	! Subrutina para calcular la integral usando el método de
 	!   Simpson 1/3 y Simpson 3/8
+	!   https://es.wikipedia.org/wiki/Regla_de_Simpson
 	!----------------------------------------------------------
 	subroutine simpson_13_integ ( m, a, b, h, simps_13_num_integ, function_type, check_value )
 		
@@ -111,7 +112,7 @@ module module_num_integrals
 	real(dp), dimension(1,1), intent(out) 	:: simps_38_num_integ	! numerical integration with simpson 1/3 method
 	
 	! Data dictionary: declare local variables types & definitions
-	integer(sp) 				:: i					! index loop
+	integer(sp) 				:: i,j					! index loop
 	real(dp), dimension (1,m) 	:: function_vector		! column vector
 	real(dp), dimension (m,1) 	:: coeff_vector			! row vector
 	real(dp) 					:: x_current, x_next	! function valuation points
@@ -120,10 +121,11 @@ module module_num_integrals
 	x_current = a
 	
 	do i = 2, m-1, 1
-	
+		
+		j = i-1
 		x_current = x_current + h
 	
-		if ( mod(i,3) == 0 ) then
+		if ( mod(j,3) == 0 ) then
 			coeff_vector(i,1) = 2._dp
 			function_vector(1,i) = f_1D(x_current,function_type)
 		else
@@ -157,15 +159,15 @@ module module_num_integrals
 		real(dp), dimension(1,1), intent(out) 	:: gauss_num_integ	! numerical integration with simpson 1/3 method
 		
 		! Data dictionary: declare local variables types & definitions
-		integer(sp) 				:: i					! index loop
-		real(dp), dimension (m,1) 	:: function_vector		! raw vector
-		real(dp), dimension (m,1)	:: grid_ponit_vector	! raw vector
-		real(dp), dimension (m,1) 	:: coeff_vector			! raw vector
+		integer(sp) 					:: i					! index loop
+		real(dp), dimension (0:m,1) 	:: function_vector		! raw vector
+		real(dp), dimension (0:m,1)		:: grid_ponit_vector	! raw vector
+		real(dp), dimension (0:m,1) 	:: coeff_vector			! raw vector
 		
 		! Execution section
 		call gauss(m, 0, a, b, grid_ponit_vector, coeff_vector)
 		
-		do i = 1, m, 1
+		do i = 0, m, 1
 			function_vector(i,1) = f_1D(grid_ponit_vector(i,1),function_type)
 		end do
 		

@@ -53,12 +53,10 @@ program num_integ_gauss
 	write( *, * ) '---------------------------------------'
 	write(*,*) 'check_value must be equal to zero if the integration was ok'
 	
-!	n = 1_dp
-	
 	do k = 1, 15, 1 
 	
-!		n = 2_dp*n
-		n = 2_dp**k
+		n = 2_dp**k ! n = {2,4,8,16,32,64,128,256,512,1024,...} 	! even interval numbers (better for simpson 1/3)
+!		n = 3_dp**k ! n = {3,9,27,81,243,729,2187,6561,...} 		! odd interval numbers, multiple of 3 (better for simpson 3/8)
 		m = n + 1_dp
 		h = ( b - a ) * ( 1._dp / n )
 		exact_integ = -( f_1D(b,function_type) - f_1D(a,function_type) )
@@ -97,9 +95,9 @@ end program num_integ_gauss
 !----------------------------------------------------------
 ! REFERENCES
 !----------------------------------------------------------
-!
-!
-!
+! Métodos numéricos para Ingenieros - Steven C. Chapra & Raymond P. Canale
+! Computational Physics - Rubin H. Landau & Manuel J. Páez
+! Fortran 95/2003 for Scientists and Engineers - Stephen J. Chapman
 !----------------------------------------------------------
 
 !----------------------------------------------------------
