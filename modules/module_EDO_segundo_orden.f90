@@ -7,15 +7,15 @@ module module_EDO_primer_orden
 	
 	contains
 	
-	subroutine euler_method ( n, a, b, y_0, y_euler, function_type, !input_type )
+	subroutine euler_method ( n, a, b, y1_0, y2_0, y1_euler, y2_euler, function_type, input_type )
 		
 		! Data dictionary: declare calling parameter types & definitions
-		integer(sp), intent(in)					:: n 				! points
-		integer(sp), intent(in) 				:: function_type 	! type of function to resolve
-!		integer(sp), intent(in) 				:: input_type 		! type of input to create function
-		real(dp), intent(in)	 				:: y_0 				! initial condition
-		real(dp), intent(in)					:: a,b				! validity range of approximate solution
-		real(dp), dimension(n), intent(out) 	:: y_euler 			! aproximate solution vector of ODE using Euler method
+		integer(sp), intent(in)					:: n 					! points
+		integer(sp), intent(in) 				:: function_type 		! type of function to resolve
+		integer(sp), intent(in) 				:: input_type 			! type of input to create function
+		real(dp), intent(in)	 				:: y1_0, y2_0 			! initial condition
+		real(dp), intent(in)					:: a,b					! validity range of approximate solution
+		real(dp), dimension(n), intent(out) 	:: y1_euler, y2_euler	! aproximate solution vector of ODE using Euler method
 		
 		
 		! Data dictionary: declare local variables types & definitions
@@ -28,24 +28,22 @@ module module_EDO_primer_orden
 		h = abs(b - a) * ( 1._dp / (n-1_sp) )
 		
 		x(1) = a
-		y_euler(1) = y_0
+		y1_euler(1) = y1_0
+		y2_euler(1) = y2_0
 		
-!	select case(input_type)
-!		case(1) ! using module_functions_1D
-!			do i = 2, n, 1
-!				index_prev = i-1
-!				x(i) = x(index_prev) + h
-!				y_euler(i) = y_euler(index_prev) + h*f_1D(x(index_prev), function_type)
-!			end do
-!		case(2) ! using module_functions_2D
+	select case(input_type)
+		case(1)
 			do i = 2, n, 1
 				index_prev = i-1
 				x(i) = x(index_prev) + h
-				y_euler(i) = y_euler(index_prev) + h*f_2D(x(index_prev), y_euler(index_prev), function_type)
+				y1_euler(i) = y1_euler(index_prev) + h*(-y_1(index_prev))
+				y2_euler(i) = y2_euler(index_prev) + h*y1_euler(index_prev)
 			end do
-!		case default
-!			write(*,*) 'Invalid input type'
-!	end select
+		!case(2) ! using module_functions_2D
+		!case(3) ! using module_functions_1D
+		case default
+			write(*,*) 'Invalid input type'
+	end select
 		
 	end subroutine euler_method
 	

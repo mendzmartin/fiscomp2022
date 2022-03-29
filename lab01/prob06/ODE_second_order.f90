@@ -16,26 +16,24 @@ program EDO_primer_orden
 	implicit none
 	
 	! Explicit variables declaration
-	integer(sp), parameter 	:: n = 20 				! points
+	integer(sp), parameter 	:: n = 10 				! points
 	integer(sp) 			:: i,index_prev 		! index loop
-	integer(sp)				:: function_type_EDO 	! tipo de función a usar en metodos numéricos
-	integer(sp)				:: function_type_exact 	! tipo de función a usar en cálculo exacto
 	integer(sp) 			:: istat				! integer of simple presition
 	real(dp)				:: a,b					! intervalo de validez para la solución aproximada
-	real(dp)				:: h					! step
-	real(dp) 				:: y_0 					! initial condition
+	real(dp)				:: h					! time step
+	real(dp) 				:: x_0, dx_0			! initial condition
 	real(dp) 				:: rel_error_euler 		! relative error Euler method
 	real(dp) 				:: rel_error_RK2_hu		! relative error 2nd order RK-Hung method
 	real(dp) 				:: rel_error_RK2_mp		! relative error 2nd order RK-Middle-Point method
 	real(dp) 				:: rel_error_RK2_ra		! relative error 2nd order RK-Raltson method
 	real(dp) 				:: rel_error_RK4_cl		! relative error 4th order RK-Classic method
-	real(dp), dimension(n) 	:: y_exact 				! vector con solución exacta de la EDO
-	real(dp), dimension(n) 	:: y_euler 				! vector con solución aproximada de la EDO usando método de Euler
-	real(dp), dimension(n) 	:: y_RK2_hu				! aproximate solution vector of ODE using 2nd order RK-Hung method
-	real(dp), dimension(n) 	:: y_RK2_mp				! aproximate solution vector of ODE using 2nd order RK-Middle-Point method
-	real(dp), dimension(n) 	:: y_RK2_ra				! aproximate solution vector of ODE using 2nd order RK-Raltson method
-	real(dp), dimension(n) 	:: y_RK4_cl 			! aproximate soluction vector of ODE using 4th order RK-Classic method
-	real(dp), dimension(n) 	:: x 					! variable vector
+	real(dp), dimension(n) 	:: x_exact, dx_exact	! vector con solución exacta de la EDO
+	real(dp), dimension(n) 	:: x_euler, dx_euler 	! vector con solución aproximada de la EDO usando método de Euler
+	real(dp), dimension(n) 	:: x_RK2_hu, dx_RK2_hu	! aproximate solution vector of ODE using 2nd order RK-Hung method
+	real(dp), dimension(n) 	:: x_RK2_mp, dx_RK2_mp	! aproximate solution vector of ODE using 2nd order RK-Middle-Point method
+	real(dp), dimension(n) 	:: x_RK2_ra, dx_RK2_ra	! aproximate solution vector of ODE using 2nd order RK-Raltson method
+	real(dp), dimension(n) 	:: x_RK4_cl, dx_RK4_cl 	! aproximate soluction vector of ODE using 4th order RK-Classic method
+	real(dp), dimension(n) 	:: t 					! variable vector
 	
 	! Datos pedidos al usuario
 	write( *, * ) 'Ingrese el limite inferior de integración (a) y presione Enter.'
@@ -43,19 +41,19 @@ program EDO_primer_orden
 	write( *, * ) 'Ingrese el limite superior de integración (a) y presione Enter.'
 	read( *, * ) b
 	write( *, * ) 'Ingrese la condición inicial dy/dx para x=0 y presione Enter.'
-	read( *, * ) y_0
+	read( *, * ) x_0
+	write( *, * ) 'Ingrese la condición inicial (d^2y)/(dx^2) para x=0 y presione Enter.'
+	read( *, * ) dx_0
 	
 	open( 10, file = './result.dat', status = 'replace', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
 	20 format (F10.2, F12.4, F12.4, F12.4, F12.4, F12.4, F12.4, E12.4, E12.4, E12.4, E12.4, E12.4)
 	
-	function_type_exact = 3 ! función 1D = exp(-x^2/2)
-	function_type_EDO = 1 	! función 2D = -xy
-	
 	h = abs(b - a) * ( 1._dp / (n-1_sp) )
 	
-	x(1) = a
-	y_exact(1) = f_1D(x(1), function_type_exact)
+	t(1) = a
+	x_exact(1) = f_1D_HO(1_dp,1_dp,x_0,dx_0,t(1), 1_sp) 	! f_1D_HO(m,k,x_0,v_0,t,function_type)
+	dx_exact(1) = f_1D_HO(1_dp,1_dp,x_0,dx_0,t(1), 2_sp) 	! f_1D_HO(m,k,x_0,v_0,t,function_type)
 	
 	call euler_method( n, a, b, y_0, y_euler, function_type_EDO )	! calculamos solución con método de euler
 	call RK2(1, n, a, b, y_0, y_RK2_hu, function_type_EDO) 			! calculamos solución con método de RK2

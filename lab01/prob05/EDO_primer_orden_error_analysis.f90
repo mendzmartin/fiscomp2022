@@ -24,8 +24,8 @@ program EDO_primer_orden_error_analysis
 	integer(sp), parameter 	:: n_RK2_ra = 50 	! used points in 2nd order RK-Raltson method
 	integer(sp), parameter 	:: n_RK4_cl = 4 	! used points in 4th order RK-Classic method
 
-	real(dp) :: a, b	! intervalo de validez para la solución aproximada
-	real(dp) :: y_0 	! initial condition
+	real(dp) :: a, b			! intervalo de validez para la solución aproximada
+	real(dp) :: y_0 			! initial condition
 
 	
 	! Datos pedidos al usuario
@@ -73,15 +73,17 @@ subroutine results_collection(unit_number, file_name, n, a, b, y_0, method_type)
 	real(dp), 		intent(in) :: y_0 			! initial condition
 
 	! Data dictionary: declare local variables types & definitions
-	integer(sp) 			:: i,index_prev 		! index loop
-	integer(sp)				:: function_type_EDO 	! tipo de función a usar en metodos numéricos
-	integer(sp)				:: function_type_exact 	! tipo de función a usar en cálculo exacto
-	integer(sp) 			:: istat				! integer of simple presition
-	real(dp)				:: h					! step
-	real(dp) 				:: rel_error 			! relative error
-	real(dp), dimension(n) 	:: y_method 			! vector con solución aproximada de la EDO
-	real(dp), dimension(n) 	:: y_exact 				! vector con solución exacta de la EDO
-	real(dp), dimension(n) 	:: x					! variable vector
+	integer(sp) 			:: i,index_prev 			! index loop
+	integer(sp)				:: function_type_EDO 		! tipo de función a usar en metodos numéricos
+	integer(sp)				:: function_type_exact 		! tipo de función a usar en cálculo exacto
+	integer(sp) 			:: istat					! integer of simple presition
+	real(dp)				:: h						! step
+	real(dp) 				:: rel_error 				! relative error
+	real(dp) 				:: start_time, finish_time 	! variables to compute the elapsed CPU time in seconds
+	real(dp) 				:: elapsed_time 			! elapsed CPU time
+	real(dp), dimension(n) 	:: y_method 				! vector con solución aproximada de la EDO
+	real(dp), dimension(n) 	:: y_exact 					! vector con solución exacta de la EDO
+	real(dp), dimension(n) 	:: x						! variable vector
 	
 	
 	function_type_exact = 3 ! función 1D = exp(-x^2/2)
@@ -90,28 +92,41 @@ subroutine results_collection(unit_number, file_name, n, a, b, y_0, method_type)
 	open( unit = unit_number, file = file_name, status = 'replace', iostat = istat )
 	write(*,*) 'Input/Output ', unit_number, 'file. istat = ', istat
 	20 format (F10.2, F12.4, F12.4, E12.4)
+	21 format (F10.2, F12.4, F12.4, E12.4, E12.4)
 	
 	x(1) = a
 	y_exact(1) = f_1D(x(1), function_type_exact)
 
 	select case(method_type)
 		case(1)
+			call cpu_time(start_time)
 			call euler_method( n, a, b, y_0, y_method, function_type_EDO )
+			call cpu_time(finish_time)
 		case(2)
+			call cpu_time(start_time)
 			call RK2(1, n, a, b, y_0, y_method, function_type_EDO)
+			call cpu_time(finish_time)
 		case(3)
+			call cpu_time(start_time)
 			call RK2(2, n, a, b, y_0, y_method, function_type_EDO)
+			call cpu_time(finish_time)
 		case(4)
+			call cpu_time(start_time)
 			call RK2(3, n, a, b, y_0, y_method, function_type_EDO)
+			call cpu_time(finish_time)
 		case(5)
+			call cpu_time(start_time)
 			call RK4(1, n, a, b, y_0, y_method, function_type_EDO)
+			call cpu_time(finish_time)
 		case default
 			write(*,*) 'Invalid method type'
 		end select
 	
-	call errors_num_integrals(y_exact(1), y_method(1), rel_error, 2)
+	elapsed_time = 0.001_dp*(finish_time - start_time) ! elapsed CPU time in mili-seconds
 	
-	write(unit_number,20) 	x(1), y_exact(1), y_method(1), rel_error
+	call basic_errors_num(y_exact(1), y_method(1), rel_error, 2)
+	
+	write(unit_number,21) 	x(1), y_exact(1), y_method(1), rel_error, elapsed_time
 	
 	h = abs(b - a) * ( 1._dp / (n-1_sp) )
 	
@@ -120,7 +135,7 @@ subroutine results_collection(unit_number, file_name, n, a, b, y_0, method_type)
 		x(i) = x(index_prev) + h
 		y_exact(i) = f_1D(x(i),function_type_exact)
 		
-		call errors_num_integrals(y_exact(i), y_method(i), rel_error, 2)
+		call basic_errors_num(y_exact(i), y_method(i), rel_error, 2)
 		
 		write(unit_number,20) 	x(i), y_exact(i), y_method(i), rel_error
 	end do
