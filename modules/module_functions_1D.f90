@@ -70,11 +70,15 @@ module module_functions_1D
 		
 		select case(function_type)
 			case(1)
-				f_1D_HO = a*cos(omega*t+phi) 				! position
+				f_1D_HO = a*cos(omega*t+phi) 						! position
 			case(2)
-				f_1D_HO = -omega*a*sin(omega*t+phi) 		! velocity
+				f_1D_HO = -omega*a*sin(omega*t+phi) 				! velocity
 			case(3)
-				f_1D_HO = -(omega**2)*a*cos(omega*t+phi) 	! acceleration
+				f_1D_HO = -(omega**2)*a*cos(omega*t+phi) 			! acceleration
+			case(4)
+				f_1D_HO = 0.5*m*((-omega*a*sin(omega*t+phi))**2) 	! kinetic energy
+			case(5)
+				f_1D_HO = 0.5*k*((a*cos(omega*t+phi))**2) 			! potential energy
 			case default
 				write(*,*) 'Invalid function type'
 		end select
