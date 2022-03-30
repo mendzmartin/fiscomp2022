@@ -3,10 +3,18 @@
 !  as x such that 1 + E > 1.
 !----------------------------------------------------------
 program test_epsilon
-    real	:: x = 3.143
-    real(8) :: y = 2.33
-    print *, epsilon(x)
-    print *, epsilon(y)
+
+    use module_presition
+
+    implicit none
+    
+    real(sp) :: value_sp = 2.357 ! single presition
+    real(dp) :: value_dp = 2.357 ! double presition
+    
+    20 format (A20, E11.3)
+    
+    write(*,20) "epsilon_machine_sp = ", epsilon(value_sp)
+    write(*,20) "epsilon_machine_dp = ", epsilon(value_dp)
 end program test_epsilon
 
 !----------------------------------------------------------
@@ -17,4 +25,4 @@ end program test_epsilon
 !----------------------------------------------------------
 ! Regla de compilación
 !----------------------------------------------------------
-! gfortran -o modelo modelo.f90 && ./modelo
+! gfortran -o test_epsilon.o test_epsilon.f90 ../modules/module_presition.f90 && ./test_epsilon.o

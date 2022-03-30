@@ -16,7 +16,7 @@ module module_num_integrals
 	subroutine trapez_integ ( m, a, b, h, trapez_num_integ, function_type )
 		
 		! Data dictionary: declare calling parameter types & definitions
-		integer(dp), intent(in) 				:: m					! cantidad puntos => m = n + 1
+		integer(dp), intent(in) 				:: m					! cantidad puntos => m = n + 1, n intervals number
 		integer(sp), intent(in) 				:: function_type 		! tipo de función a integrar
 		real(dp), intent(in) 					:: a,b					! límites de integración
 		real(dp), intent(in) 					:: h					! paso de integración
@@ -24,8 +24,8 @@ module module_num_integrals
 		
 		! Data dictionary: declare local variables types & definitions
 		integer(sp) 				:: i					! index loop
-		real(dp), dimension (1,m) 	:: function_vector		! column vector
-		real(dp), dimension (m,1) 	:: coeff_vector			! row vector
+		real(dp), dimension (1,m) 	:: function_vector		! function as a column vector
+		real(dp), dimension (m,1) 	:: coeff_vector			! coefficents as a row vector
 		real(dp) 					:: x_current, x_next	! function valuation points
 		
 		! Execution section

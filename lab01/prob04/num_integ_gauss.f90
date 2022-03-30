@@ -3,7 +3,6 @@
 !----------------------------------------------------------
 ! Integración numérica.
 ! Puntos equiespaciados: Comparación Trapezoidal vs. Simpson
-! 	programa sólo válido para la integral definida de la
 !----------------------------------------------------------
 
 program num_integ_gauss
@@ -41,8 +40,12 @@ program num_integ_gauss
 	read( *, * ) a
 	write( *, * ) 'Ingrese el limite superior de integración (a) y presione Enter.'
 	read( *, * ) b
-	write( *, *) "Ingrese un entero para la variable function_type y presione Enter."
-	read(*,*) function_type
+	
+	! si queremos que el usuario ingrese el tipo de función a integrar descomentamos esto
+	
+!	write( *, *) "Ingrese un entero para la variable function_type y presione Enter."
+!	read(*,*) function_type
+	function_type = 2
 	write( *, * ) '---------------------------------------'
 			
 	20 format (I10, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6, E15.6)
@@ -51,16 +54,17 @@ program num_integ_gauss
 	open( 10, file = './result.dat', status = 'replace', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
 	write( *, * ) '---------------------------------------'
-	write(*,*) 'check_value must be equal to zero if the integration was ok'
+	write(*,*) 'check_value must be equal to zero if integration was ok'
 	
-	do k = 1, 15, 1 
+	do k = 1, 15, 1 ! change 15 by 10 for odd interval numbers (to reduce compute time)
 	
 		n = 2_dp**k ! n = {2,4,8,16,32,64,128,256,512,1024,...} 	! even interval numbers (better for simpson 1/3)
 !		n = 3_dp**k ! n = {3,9,27,81,243,729,2187,6561,...} 		! odd interval numbers, multiple of 3 (better for simpson 3/8)
 		m = n + 1_dp
 		h = ( b - a ) * ( 1._dp / n )
 		exact_integ = -( f_1D(b,function_type) - f_1D(a,function_type) )
-		m_gauss = 2_sp**k
+		m_gauss = 2_sp**k ! for even n value
+!		m_gauss = 3_sp**k ! for odd n value
 		
 		call trapez_integ ( m, a, b, h, trapez_num_integ, function_type )
 		call basic_errors_num(exact_integ, trapez_num_integ(1,1), rel_error, 2)
@@ -95,13 +99,11 @@ end program num_integ_gauss
 !----------------------------------------------------------
 ! REFERENCES
 !----------------------------------------------------------
-! Métodos numéricos para Ingenieros - Steven C. Chapra & Raymond P. Canale
-! Computational Physics - Rubin H. Landau & Manuel J. Páez
-! Fortran 95/2003 for Scientists and Engineers - Stephen J. Chapman
+! 
 !----------------------------------------------------------
 
 !----------------------------------------------------------
 ! COMPILATION RUL
 !----------------------------------------------------------
-! gfortran -o num_integ_gauss ../../modules/module_presition.f90 ../../modules/module_functions_1D.f90 ../../modules/module_gauss.f90 ../../modules/module_num_integrals.f90 ../../modules/module_numerical_error.f90 num_integ_gauss.f90 && ./num_integ_gauss
+! ./script_run.sh
 !----------------------------------------------------------

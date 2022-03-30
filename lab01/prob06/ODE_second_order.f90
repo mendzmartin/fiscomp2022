@@ -5,12 +5,12 @@
 !
 !----------------------------------------------------------
 
-program EDO_primer_orden
+program ODE_second_orden
 
 	use module_presition 		! module for define presition
 	use module_functions_1D 	! module for use 1D functions
 	use module_functions_2D 	! module for use 2D functions
-	use module_EDO_primer_orden	! module for resolve firste erder ODEs
+	use module_EDO_segundo_orden ! module for resolve second order ODEs
 	use module_numerical_error 	! module for estimate numerical errors
 
 	implicit none
@@ -21,19 +21,24 @@ program EDO_primer_orden
 	integer(sp) 			:: istat				! integer of simple presition
 	real(dp)				:: a,b					! intervalo de validez para la solución aproximada
 	real(dp)				:: h					! time step
-	real(dp) 				:: x_0, dx_0			! initial condition
-	real(dp) 				:: rel_error_euler 		! relative error Euler method
-	real(dp) 				:: rel_error_RK2_hu		! relative error 2nd order RK-Hung method
-	real(dp) 				:: rel_error_RK2_mp		! relative error 2nd order RK-Middle-Point method
-	real(dp) 				:: rel_error_RK2_ra		! relative error 2nd order RK-Raltson method
-	real(dp) 				:: rel_error_RK4_cl		! relative error 4th order RK-Classic method
-	real(dp), dimension(n) 	:: x_exact, dx_exact	! vector con solución exacta de la EDO
-	real(dp), dimension(n) 	:: x_euler, dx_euler 	! vector con solución aproximada de la EDO usando método de Euler
-	real(dp), dimension(n) 	:: x_RK2_hu, dx_RK2_hu	! aproximate solution vector of ODE using 2nd order RK-Hung method
-	real(dp), dimension(n) 	:: x_RK2_mp, dx_RK2_mp	! aproximate solution vector of ODE using 2nd order RK-Middle-Point method
-	real(dp), dimension(n) 	:: x_RK2_ra, dx_RK2_ra	! aproximate solution vector of ODE using 2nd order RK-Raltson method
-	real(dp), dimension(n) 	:: x_RK4_cl, dx_RK4_cl 	! aproximate soluction vector of ODE using 4th order RK-Classic method
-	real(dp), dimension(n) 	:: t 					! variable vector
+	real(dp) 				:: y1_0, y2_0			! initial condition
+	real(dp) 				:: rel_error_euler1 		! relative error Euler method
+	real(dp) 				:: rel_error_RK2_hu1		! relative error 2nd order RK-Hung method
+	real(dp) 				:: rel_error_RK2_mp1		! relative error 2nd order RK-Middle-Point method
+	real(dp) 				:: rel_error_RK2_ra1		! relative error 2nd order RK-Raltson method
+	real(dp) 				:: rel_error_RK4_cl1		! relative error 4th order RK-Classic method
+	real(dp) 				:: rel_error_euler2 		! relative error Euler method
+	real(dp) 				:: rel_error_RK2_hu2		! relative error 2nd order RK-Hung method
+	real(dp) 				:: rel_error_RK2_mp2		! relative error 2nd order RK-Middle-Point method
+	real(dp) 				:: rel_error_RK2_ra2		! relative error 2nd order RK-Raltson method
+	real(dp) 				:: rel_error_RK4_cl2		! relative error 4th order RK-Classic method
+	real(dp), dimension(n) 	:: y1_exact, y2_exact		! vector con solución exacta de la EDO
+	real(dp), dimension(n) 	:: y1_euler, y2_euler 		! vector con solución aproximada de la EDO usando método de Euler
+	real(dp), dimension(n) 	:: y1_RK2_hu, y2_RK2_hu		! aproximate solution vector of ODE using 2nd order RK-Hung method
+	real(dp), dimension(n) 	:: y1_RK2_mp, y2_RK2_mp		! aproximate solution vector of ODE using 2nd order RK-Middle-Point method
+	real(dp), dimension(n) 	:: y1_RK2_ra, y2_RK2_ra	! aproximate solution vector of ODE using 2nd order RK-Raltson method
+	real(dp), dimension(n) 	:: y1_RK4_cl, y2_RK4_cl 	! aproximate soluction vector of ODE using 4th order RK-Classic method
+	real(dp), dimension(n) 	:: x 					! variable vector
 	
 	! Datos pedidos al usuario
 	write( *, * ) 'Ingrese el limite inferior de integración (a) y presione Enter.'
@@ -41,63 +46,94 @@ program EDO_primer_orden
 	write( *, * ) 'Ingrese el limite superior de integración (a) y presione Enter.'
 	read( *, * ) b
 	write( *, * ) 'Ingrese la condición inicial dy/dx para x=0 y presione Enter.'
-	read( *, * ) x_0
+	read( *, * ) y1_0
 	write( *, * ) 'Ingrese la condición inicial (d^2y)/(dx^2) para x=0 y presione Enter.'
-	read( *, * ) dx_0
+	read( *, * ) y2_0
 	
-	open( 10, file = './result.dat', status = 'replace', iostat = istat )
+	open( 10, file = './result_y1.dat', status = 'replace', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
-	20 format (F10.2, F12.4, F12.4, F12.4, F12.4, F12.4, F12.4, E12.4, E12.4, E12.4, E12.4, E12.4)
+	open( 11, file = './result_y2.dat', status = 'replace', iostat = istat )
+	write(*,*) 'Input/Output file. istat = ', istat
+	20 format (E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3, E12.3)
 	
 	h = abs(b - a) * ( 1._dp / (n-1_sp) )
 	
-	t(1) = a
-	x_exact(1) = f_1D_HO(1_dp,1_dp,x_0,dx_0,t(1), 1_sp) 	! f_1D_HO(m,k,x_0,v_0,t,function_type)
-	dx_exact(1) = f_1D_HO(1_dp,1_dp,x_0,dx_0,t(1), 2_sp) 	! f_1D_HO(m,k,x_0,v_0,t,function_type)
+	x(1) = a
+	y1_exact(1) = f_1D_HO(1._dp,1._dp,y1_0,y2_0,x(1), 1_sp) 	! f_1D_HO(m,k,y1_0,y2_0,x,function_type)
+	y2_exact(1) = f_1D_HO(1._dp,1._dp,y1_0,y2_0,x(1), 2_sp) 	! f_1D_HO(m,k,y1_0,y2_0,x,function_type)
 	
-	call euler_method( n, a, b, y_0, y_euler, function_type_EDO )	! calculamos solución con método de euler
-	call RK2(1, n, a, b, y_0, y_RK2_hu, function_type_EDO) 			! calculamos solución con método de RK2
-	call RK2(2, n, a, b, y_0, y_RK2_mp, function_type_EDO) 			! calculamos solución con método de RK2
-	call RK2(3, n, a, b, y_0, y_RK2_ra, function_type_EDO) 			! calculamos solución con método de RK2
-	call RK4(1, n, a, b, y_0, y_RK4_cl, function_type_EDO)			! calculamos solución con método de RK4
+	call euler_method(n,a,b,y1_0,y2_0,y1_euler,y2_euler,0,1)	! calculamos solución con método de euler
+	call RK2(1,n,a,b,y1_0,y2_0,y1_RK2_hu,y2_RK2_hu,0,1) 		! calculamos solución con método de RK2
+	call RK2(2,n,a,b,y1_0,y2_0,y1_RK2_mp,y2_RK2_mp,0,1) 		! calculamos solución con método de RK2
+	call RK2(3,n,a,b,y1_0,y2_0,y1_RK2_ra,y2_RK2_ra,0,1) 		! calculamos solución con método de RK2
+	call RK4(1,n,a,b,y1_0,y2_0,y1_RK4_cl,y2_RK4_cl,0,1)			! calculamos solución con método de RK4
 	
-	call basic_errors_num(y_exact(1), y_euler(1), rel_error_euler, 2) 		! calculamos error relativo método de euler
-	call basic_errors_num(y_exact(1), y_RK2_hu(1), rel_error_RK2_hu, 2) 	! calculamos error relativo método de RK2
-	call basic_errors_num(y_exact(1), y_RK2_mp(1), rel_error_RK2_mp, 2) 	! calculamos error relativo método de RK2
-	call basic_errors_num(y_exact(1), y_RK2_ra(1), rel_error_RK2_ra, 2) 	! calculamos error relativo método de RK2
-	call basic_errors_num(y_exact(1), y_RK4_cl(1), rel_error_RK4_cl, 2) 	! calculamos error relativo método de RK4
+	call basic_errors_num(y1_exact(1), y1_euler(1), rel_error_euler1, 2) 	! calculamos error relativo método de euler
+	call basic_errors_num(y1_exact(1), y1_RK2_hu(1), rel_error_RK2_hu1, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y1_exact(1), y1_RK2_mp(1), rel_error_RK2_mp1, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y1_exact(1), y1_RK2_ra(1), rel_error_RK2_ra1, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y1_exact(1), y1_RK4_cl(1), rel_error_RK4_cl1, 2) 	! calculamos error relativo método de RK4
 	
-	write(10,20) 	x(1), y_exact(1),&
-					y_euler(1),&
-					y_RK2_hu(1), y_RK2_mp(1), y_RK2_ra(1),&
-					y_RK4_cl(1),&
-					rel_error_euler,&
-					rel_error_RK2_hu, rel_error_RK2_mp, rel_error_RK2_ra,&
-					rel_error_RK4_cl
+	call basic_errors_num(y2_exact(1), y2_euler(1), rel_error_euler2, 2) 	! calculamos error relativo método de euler
+	call basic_errors_num(y2_exact(1), y2_RK2_hu(1), rel_error_RK2_hu2, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y2_exact(1), y2_RK2_mp(1), rel_error_RK2_mp2, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y2_exact(1), y2_RK2_ra(1), rel_error_RK2_ra2, 2) 	! calculamos error relativo método de RK2
+	call basic_errors_num(y2_exact(1), y2_RK4_cl(1), rel_error_RK4_cl2, 2) 	! calculamos error relativo método de RK4
+	
+	write(10,20) 	x(1), y1_exact(1),&
+					y1_euler(1),&
+					y1_RK2_hu(1), y1_RK2_mp(1), y1_RK2_ra(1),&
+					y1_RK4_cl(1),&
+					rel_error_euler1,&
+					rel_error_RK2_hu1, rel_error_RK2_mp1, rel_error_RK2_ra1,&
+					rel_error_RK4_cl1
+					
+	write(11,20) 	x(1), y2_exact(1),&
+					y2_euler(1),&
+					y2_RK2_hu(1), y2_RK2_mp(1), y2_RK2_ra(1),&
+					y2_RK4_cl(1),&
+					rel_error_euler2,&
+					rel_error_RK2_hu2, rel_error_RK2_mp2, rel_error_RK2_ra2,&
+					rel_error_RK4_cl2
 	
 	do i = 2, n, 1
 		index_prev = i-1
 		x(i) = x(index_prev) + h
-		y_exact(i) = f_1D(x(i),function_type_exact)
+		y1_exact(i) = f_1D_HO(1._dp,1._dp,y1_0,y2_0,x(i), 1_sp) 	! f_1D_HO(m,k,y1_0,y2_0,x,function_type)
+		y2_exact(i) = f_1D_HO(1._dp,1._dp,y1_0,y2_0,x(i), 2_sp) 	! f_1D_HO(m,k,y1_0,y2_0,x,function_type)
 		
-		call basic_errors_num(y_exact(i), y_euler(i), rel_error_euler, 2) 		! calculamos error relativo método de euler
-		call basic_errors_num(y_exact(i), y_RK2_hu(i), rel_error_RK2_hu, 2) 	! calculamos error relativo método de RK2
-		call basic_errors_num(y_exact(i), y_RK2_mp(i), rel_error_RK2_mp, 2) 	! calculamos error relativo método de RK2
-		call basic_errors_num(y_exact(i), y_RK2_ra(i), rel_error_RK2_ra, 2) 	! calculamos error relativo método de RK2
-		call basic_errors_num(y_exact(i), y_RK4_cl(i), rel_error_RK4_cl, 2) 	! calculamos error relativo método de RK4
+		call basic_errors_num(y1_exact(i), y1_euler(i), rel_error_euler1, 2) 	! calculamos error relativo método de euler
+		call basic_errors_num(y1_exact(i), y1_RK2_hu(i), rel_error_RK2_hu1, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y1_exact(i), y1_RK2_mp(i), rel_error_RK2_mp1, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y1_exact(i), y1_RK2_ra(i), rel_error_RK2_ra1, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y1_exact(i), y1_RK4_cl(i), rel_error_RK4_cl1, 2) 	! calculamos error relativo método de RK4
 		
-		write(10,20) 	x(i), y_exact(i),&
-						y_euler(i),&
-						y_RK2_hu(i), y_RK2_mp(i), y_RK2_ra(i),&
-						y_RK4_cl(i),&
-						rel_error_euler,&
-						rel_error_RK2_hu, rel_error_RK2_mp, rel_error_RK2_ra,&
-						rel_error_RK4_cl
+		call basic_errors_num(y2_exact(i), y2_euler(i), rel_error_euler2, 2) 	! calculamos error relativo método de euler
+		call basic_errors_num(y2_exact(i), y2_RK2_hu(i), rel_error_RK2_hu2, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y2_exact(i), y2_RK2_mp(i), rel_error_RK2_mp2, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y2_exact(i), y2_RK2_ra(i), rel_error_RK2_ra2, 2) 	! calculamos error relativo método de RK2
+		call basic_errors_num(y2_exact(i), y2_RK4_cl(i), rel_error_RK4_cl2, 2) 	! calculamos error relativo método de RK4
+		
+		write(10,20) 	x(i), y1_exact(i),&
+						y1_euler(i),&
+						y1_RK2_hu(i), y1_RK2_mp(i), y1_RK2_ra(i),&
+						y1_RK4_cl(i),&
+						rel_error_euler1,&
+						rel_error_RK2_hu1, rel_error_RK2_mp1, rel_error_RK2_ra1,&
+						rel_error_RK4_cl1
+						
+		write(11,20) 	x(i), y2_exact(i),&
+						y2_euler(i),&
+						y2_RK2_hu(i), y2_RK2_mp(i), y2_RK2_ra(i),&
+						y2_RK4_cl(i),&
+						rel_error_euler2,&
+						rel_error_RK2_hu2, rel_error_RK2_mp2, rel_error_RK2_ra2,&
+						rel_error_RK4_cl2
 	end do
 	
 	close(10)
 	
-end program EDO_primer_orden
+end program ODE_second_orden
 
 
 
@@ -112,7 +148,7 @@ end program EDO_primer_orden
 !----------------------------------------------------------
 ! COMPILATION RUL
 !----------------------------------------------------------
-! gfortran -g -fcheck=all -Wall -o EDO_primer_orden ../../modules/module_presition.f90 ../../modules/module_functions_1D.f90 ../../modules/module_functions_2D.f90 ../../modules/module_EDO_primer_orden.f90 ../../modules/module_numerical_error.f90 EDO_primer_orden.f90 && ./EDO_primer_orden
+! gfortran -g -fcheck=all -Wall -o ODE_second_order ../../modules/module_presition.f90 ../../modules/module_functions_1D.f90 ../../modules/module_functions_2D.f90 ../../modules/module_EDO_segundo_orden.f90 ../../modules/module_numerical_error.f90 ODE_second_order.f90 && ./ODE_second_order
 
-! gfortran -o EDO_primer_orden ../../modules/module_presition.f90 ../../modules/module_functions_1D.f90 ../../modules/module_functions_2D.f90 ../../modules/module_EDO_primer_orden.f90 ../../modules/module_numerical_error.f90 EDO_primer_orden.f90 && ./EDO_primer_orden
+! gfortran -o ODE_second_order ../../modules/module_presition.f90 ../../modules/module_functions_1D.f90 ../../modules/module_functions_2D.f90 ../../modules/module_EDO_segundo_orden.f90 ../../modules/module_numerical_error.f90 ODE_second_order.f90 && ./ODE_second_order
 !----------------------------------------------------------

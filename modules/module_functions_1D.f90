@@ -25,7 +25,7 @@ module module_functions_1D
 	end function f_1D
 	
 	function f_1D_HO(m,k,x_0,v_0,t,function_type)
-		real(dp), intent(in) :: x 					! displacement variable
+		!real(dp), intent(in) :: x 					! displacement variable
 		real(dp), intent(in) :: m 					! inertial mass
 		real(dp), intent(in) :: k 					! spring constant
 		real(dp), intent(in) :: x_0 				! initial condition of displacement
@@ -36,34 +36,35 @@ module module_functions_1D
 		real(dp) :: omega 	! angular frecuency
 		real(dp) :: phi 	! condition of initial phase
 		real(dp) :: a 		! amplitude
+		real(dp) :: f_1D_HO ! function expresion
 		
 		! logical desitions to speed up the execution
 		
 		if (m == k) then
-			omega = 1_dp
+			omega = 1._dp
 			if (abs(x_0) == abs(v_0)) then
-				a = abs(x_0)*sqrt(2_dp)
+				a = abs(x_0)*sqrt(2._dp)
 				if (x_0 /= v_0) then
-					phi = atan(1_dp)
+					phi = atan(1._dp)
 				else
-					phi = -atan(1_dp)
+					phi = -atan(1._dp)
 				end if
 			else
 				a = sqrt((x_0)**2 + (v_0)**2)
-				phi = atan(-v_0*(1_dp/x_0)))
+				phi = atan(-v_0*(1._dp/x_0))
 			end if
 		else
-			omega 	= sqrt(k*(1_dp/m))
+			omega 	= sqrt(k*(1._dp/m))
 			if (abs(x_0) == abs(v_0)) then
-				a = abs(x_0*(1_dp/omega))*sqrt(omega**2+1_dp)
-				if x_0 /= v_0 then
-					phi = atan(1_dp/omega)
+				a = abs(x_0*(1._dp/omega))*sqrt(omega**2+1_dp)
+				if (x_0 /= v_0) then
+					phi = atan(1._dp/omega)
 				else
-					phi = -atan(1_dp/omega)
+					phi = atan(-1._dp/omega)
 				end if
 			else
-				a = sqrt((x_0)**2 + (v_0*(1_dp/omega))**2)
-				phi = atan(-v_0*(1_dp/(omega*x_0)))
+				a = sqrt((x_0)**2 + (v_0*(1._dp/omega))**2)
+				phi = atan(-v_0*(1._dp/(omega*x_0)))
 			end if
 		end if
 		
