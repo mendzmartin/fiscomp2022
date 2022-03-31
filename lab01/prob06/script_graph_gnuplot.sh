@@ -199,9 +199,10 @@
 	set xlabel 'time [s]' font 'Times Roman Bold Italic,20'
 	set ylabel 'global relative error [%] - logarithmic scale' font 'Times Roman Bold Italic,20'
 
-	set key left top
+	set key right top
 	
 	set logscale y
+	set logscale x
 	
 	set autoscale x
 	set autoscale y
@@ -217,14 +218,23 @@
 	set style line 5 linetype rgb "sienna4" linewidth 3
 
 
+	# define functions
+	f(x) = (1/(x**2))*4
+	h(x) = (1/(x**3))*3
+	g(x) = (1/(x**4))*0.01
+	i(x) = sqrt(x)*(10**-15)
+	
 	set title 'Soluciones EDO 1er orden' offset 0,-0.5 font 'Times Roman Bold Italic,20'
-
+	set pointsize 0.3
 	# create plot
 	plot	'result_global_error.dat' using (($1-1)/10):9 title 'euler' with lines linestyle 1,\
 			'result_global_error.dat' using (($1-1)/10):10 title 'RK2_{hu}' with lines linestyle 2,\
 			'result_global_error.dat' using (($1-1)/10):11 title 'RK2_{mp}' with lines linestyle 3,\
 			'result_global_error.dat' using (($1-1)/10):12 title 'RK2_{ra}' with lines linestyle 4,\
-			'result_global_error.dat' using (($1-1)/10):13 title 'RK4_{cl}' with lines linestyle 5
-
+			'result_global_error.dat' using (($1-1)/10):13 title 'RK4_{cl}' with lines linestyle 5,\
+			f(x) title 'x^-2' with points pointtype 1 pointsize 0.8 linecolor rgb "black",\
+			g(x) title 'x^-4' with points pointtype 2 pointsize 0.8 linecolor rgb "black",\
+			h(x) title 'x^-3' with points pointtype 3 pointsize 0.8 linecolor rgb "black",\
+			i(x) title 'x^.5' with points pointtype 4 pointsize 0.8 linecolor rgb "black"
 	# reset all of graph characteristics to default values
 	reset
