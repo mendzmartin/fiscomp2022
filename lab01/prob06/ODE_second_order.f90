@@ -66,10 +66,10 @@ program ODE_second_orden_v2
 	open( 12, file = './result_energies.dat', status = 'replace', action = 'write', iostat = istat )
 	write(*,*) 'Input/Output file. istat = ', istat
 	20 format (I10, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4)
-	21 format (I10, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4)
+	21 format (I10, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4, E12.4)
 	
 	if (istat == 0_sp) then
-		do k = 1, 10, 1 ! (to obtain h [1, 10^-6])
+		do k = 1, 17, 1 ! (to obtain h [1, 10^-6])
 		
 			n = 2_dp**k ! n = {2,4,8,16,32,64,128,256,512,1024,...}
 			
@@ -141,7 +141,7 @@ program ODE_second_orden_v2
 							rel_error_RK2_hu2, rel_error_RK2_mp2, rel_error_RK2_ra2,&
 							rel_error_RK4_cl2
 			
-			write(12,21)	n, (engy_kin_exact(1)+engy_pot_exact(1)),&
+			write(12,21)	n, x(1), (engy_kin_exact(1)+engy_pot_exact(1)),&
 							(engy_kin_euler(1)+engy_pot_euler(1)),&
 							(engy_kin_RK2_hu(1)+engy_pot_RK2_hu(1)),&
 							(engy_kin_RK2_mp(1)+engy_pot_RK2_mp(1)),&
@@ -196,7 +196,7 @@ program ODE_second_orden_v2
 								rel_error_RK2_hu2, rel_error_RK2_mp2, rel_error_RK2_ra2,&
 								rel_error_RK4_cl2
 								
-				write(12,21)	n, (engy_kin_exact(i)+engy_pot_exact(i)),&
+				write(12,21)	n, x(i), (engy_kin_exact(i)+engy_pot_exact(i)),&
 								(engy_kin_euler(i)+engy_pot_euler(i)),&
 								(engy_kin_RK2_hu(i)+engy_pot_RK2_hu(i)),&
 								(engy_kin_RK2_mp(i)+engy_pot_RK2_mp(i)),&
