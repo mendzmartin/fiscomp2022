@@ -10,10 +10,10 @@
 	pth_mod=${pth_mod_01}' '${pth_mod_02}' '${pth_mod_03}' '${pth_mod_04}' '${pth_mod_05}
 
 # object code name
-	ob_cod_name='ODE_second_order_v2.o'
+	ob_cod_name='ODE_second_order.o'
 
 # fortran code name
-	f90_cod_name='ODE_second_order_v2.f90'
+	f90_cod_name='ODE_second_order.f90'
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}

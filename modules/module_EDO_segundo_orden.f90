@@ -17,7 +17,6 @@ module module_EDO_segundo_orden
 		real(dp), intent(in)					:: a,b					! validity range of approximate solution
 		real(dp), dimension(n), intent(out) 	:: y1_euler, y2_euler	! aproximate solution vector of ODE using Euler method
 		
-		
 		! Data dictionary: declare local variables types & definitions
 		integer(sp) 							:: i,index_prev 	! index loop
 		real(dp)								:: h				! step
@@ -32,15 +31,15 @@ module module_EDO_segundo_orden
 		y2_euler(1) = y2_0
 		
 	select case(input_type)
-		case(1)
+		case(1) ! using f_2D_pol(x1,x2,p1,p2,a1,a2,a3,function_type)
 			do i = 2, n, 1
 				index_prev = i-1
 				x(i) = x(index_prev) + h
-				y1_euler(i) = y1_euler(index_prev) + h*(-y2_euler(index_prev))
-				y2_euler(i) = y2_euler(index_prev) + h*y1_euler(index_prev)
+				y1_euler(i) = y1_euler(index_prev) + h*f_2D_pol(0._dp,y2_euler(index_prev),0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+				y2_euler(i) = y2_euler(index_prev) + h*f_2D_pol(0._dp,y1_euler(index_prev),0._dp,1._dp,0._dp,1._dp,0._dp,1)
 			end do
-		!case(2) ! using module_functions_2D
-		!case(3) ! using module_functions_1D
+		!case(2) ! add to use f_2D(x,y,function_type)
+		!case(3) ! add to use f_1D(x,function_type)
 		case default
 			write(*,*) 'Invalid input type'
 	end select
@@ -71,32 +70,32 @@ module module_EDO_segundo_orden
 		real(dp) 				:: h 				! step
 		
 		select case(input_type)
-			case(1) ! custom functions
+			case(1) ! using f_2D_pol(x,y,p1,p2,a1,a2,a3,function_type)
 				select case (RK2_type)
 					case(1) ! Método de Heun con un solo corrector (a_2 = 1/2)
 						h = abs(b - a) * ( 1._dp / (n-1_sp) )
 						x(1) = a
 						y1_RK2(1) = y1_0
-						y2_RK2(1) = y1_0
+						y2_RK2(1) = y2_0
 					
 						do i = 2, n, 1
 							index_prev = i-1
 							x(i) = x(index_prev) + h
 							
 							! ki_1 = fi(y)
-							k1_1 = -y2_RK2(index_prev) 	! custom function f1(y)
-							k2_1 = y1_RK2(index_prev)	! custon function f2(y)
+							k1_1 = f_2D_pol(0._dp,y2_RK2(index_prev),0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_1 = f_2D_pol(0._dp,y1_RK2(index_prev),0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							! yi_improved = yi_RK2(index_prev) + ki_1*h
 							y1_improved = y1_RK2(index_prev) + (k1_1*h)
 							y2_improved = y2_RK2(index_prev) + (k2_1*h)
 							
 							! ki_2 = fi(y_improve)
-							k1_2 = -y2_improved
-							k2_2 = y1_improved
+							k1_2 = f_2D_pol(0._dp,y2_improved,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_2 = f_2D_pol(0._dp,y1_improved,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							! y(i+1) = (y(i) + increment_function)
-							y1_RK2(i) = y1_RK2(index_prev) + (0.5_dp)*h*(k2_1 + k2_2)
+							y1_RK2(i) = y1_RK2(index_prev) + (0.5_dp)*h*(k1_1 + k1_2)
 							y2_RK2(i) = y2_RK2(index_prev) + (0.5_dp)*h*(k2_1 + k2_2)
 						end do
 					case(2) ! Método del punto medio (a_2 = 1)
@@ -109,13 +108,13 @@ module module_EDO_segundo_orden
 							index_prev = i-1
 							x(i) = x(index_prev) + h
 							
-							k1_1 = -y2_RK2(index_prev)
-							k2_1 = y1_RK2(index_prev)
+							k1_1 = f_2D_pol(0._dp,y2_RK2(index_prev),0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_1 = f_2D_pol(0._dp,y1_RK2(index_prev),0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							h_improved = 0.5_dp*h
 							y1_improved = y1_RK2(index_prev) + (k1_1*h_improved)
 							y2_improved = y2_RK2(index_prev) + (k2_1*h_improved)
-							k1_2 = -y2_improved
-							k2_2 = y1_improved
+							k1_2 = f_2D_pol(0._dp,y2_improved,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_2 = f_2D_pol(0._dp,y1_improved,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							! y(i+1) = (y(i) + increment_function)
 							y1_RK2(i) = y1_RK2(index_prev) + h*k1_2
@@ -131,13 +130,13 @@ module module_EDO_segundo_orden
 							index_prev = i-1
 							x(i) = x(index_prev) + h
 							
-							k1_1 = -y2_RK2(index_prev)
-							k2_1 = y1_RK2(index_prev)
+							k1_1 = f_2D_pol(0._dp,y2_RK2(index_prev),0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_1 = f_2D_pol(0._dp,y1_RK2(index_prev),0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							h_improved = 0.25_dp*h
 							y1_improved = y1_RK2(index_prev) + (3._dp*k1_1*h_improved)
 							y2_improved = y2_RK2(index_prev) + (3._dp*k2_1*h_improved)
-							k1_2 = -y2_improved
-							k2_1 = y1_improved
+							k1_2 = f_2D_pol(0._dp,y2_improved,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_2 = f_2D_pol(0._dp,y1_improved,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							! y(i+1) = (y(i) + increment_function)
 							y1_RK2(i) = y1_RK2(index_prev) + (1._dp/3._dp)*h*(k1_1+2*k1_2)
@@ -146,8 +145,8 @@ module module_EDO_segundo_orden
 					case default
 						write(*,*) 'Invalid RK2 type'
 				end select
-			! agregar casos si se quiere usar module_functions_1D o module_functions_2D
-			!case(2) 
+			!case(2) ! add to use f_2D(x,y,function_type)
+			!case(3) ! add to use f_1D(x,function_type)
 			case default
 				write(*,*) 'Invalid input type'
 		end select
@@ -180,7 +179,7 @@ module module_EDO_segundo_orden
 		real(dp) 				:: h 						! step
 		
 		select case(input_type)
-			case(1) ! custom functions
+			case(1) ! using f_2D_pol(x1,x2,p1,p2,a1,a2,a3,function_type)
 				select case (RK4_type)
 					case(1) ! Método clásico
 						h = abs(b - a) * ( 1._dp / (n-1_sp) )
@@ -192,37 +191,35 @@ module module_EDO_segundo_orden
 							index_prev = i-1
 							x(i) = x(index_prev) + h
 							
-							k1_1 = -y2_RK4(index_prev) 	! no vale en gral
-							k2_1 = y1_RK4(index_prev) 	! no vale en gral
+							k1_1 = f_2D_pol(0._dp,y2_RK4(index_prev),0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_1 = f_2D_pol(0._dp,y1_RK4(index_prev),0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							h_improved = 0.5_dp*h
 							
 							y1_improved_k2 = y1_RK4(index_prev) + (k1_1*h_improved)
-							y1_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
-							k1_2 = -y2_improved_k2 	! no vale en gral
-							k2_2 = y1_improved_k2 	! no vale en gral
+							y2_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
+							k1_2 = f_2D_pol(0._dp,y2_improved_k2,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_2 = f_2D_pol(0._dp,y1_improved_k2,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
 							y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
-							k1_3 = -y2_improved_k3 	! no vale en gral
-							k2_3 = y1_improved_k3 	! no vale en gral
+							k1_3 = f_2D_pol(0._dp,y2_improved_k3,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_3 = f_2D_pol(0._dp,y1_improved_k3,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
 							y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
-							k1_4 = -y2_improved_k4 	! no vale en gral
-							k2_4 = y1_improved_k4 	! no vale en gral
+							k1_4 = f_2D_pol(0._dp,y2_improved_k4,0._dp,1._dp,0._dp,-1._dp,0._dp,1)
+							k2_4 = f_2D_pol(0._dp,y1_improved_k4,0._dp,1._dp,0._dp,1._dp,0._dp,1)
 							
 							! y(i+1) = (y(i) + increment_function)
 							y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
 							y2_RK4(i) = y2_RK4(index_prev) + (1._dp/6._dp)*h*(k2_1 + 2._dp*(k2_2+k2_3)+k2_4)
 						end do
-					! agregar casos si se quieren utilizar otras variantes de RK4
-					!case(2)
 					case default
 						write(*,*) 'Invalid RK4 type'
 				end select
-			!agregar casos si se quiere usar module_functions_1D o module_functions_2D
-			!case(2) 
+			!case(2) ! add to use f_2D(x,y,function_type)
+			!case(3) ! add to use f_1D(x,function_type)
 			case default
 				write(*,*) 'Invalid input type'
 		end select
