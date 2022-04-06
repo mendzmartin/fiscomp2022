@@ -87,9 +87,9 @@ module module_functions_1D
 	
 	function f_1D_02(x,a,p,c,function_type)
 		! Data dictionary: declare calling parameter types & definitions
-		real(dp), intent(in) 	:: x,a,p,c			! function variable
-		integer(sp), intent(in) :: function_type 	! function_type
-		real(dp) 				:: f_1D_02			! function expresion
+		real(dp), 		intent(in) 	:: x,a,p,c			! function variable
+		integer(sp), 	intent(in) 	:: function_type 	! function_type
+		real(dp) 					:: f_1D_02			! function expresion
 		
 		select case(function_type)
 			case(1)
@@ -98,5 +98,19 @@ module module_functions_1D
 				write(*,*) 'Invalid function type'
 		end select
 	end function f_1D_02
+	
+	function f1D_trig(x,a1, a2, p1, p2, c,function_type)
+	! Data dictionary: declare calling parameter types & definitions
+	real(dp), 		intent(in) 	:: x,a1,a2,p1,p2,c	! function variable
+	integer(sp), 	intent(in) 	:: function_type 	! function_type
+	real(dp) 					:: f1D_trig			! function expresion
+	
+	select case(function_type)
+		case(1)
+			f1D_trig = cos( a1*(x**p1) ) + sin( a2*(x**p2) ) + c
+		case default
+			write(*,*) 'Invalid function type'
+	end select
+end function f1D_trig
 	
 end module module_functions_1D
