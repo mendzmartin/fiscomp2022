@@ -7,16 +7,13 @@
 	pth_mod_04='../../../modules/module_EDO_segundo_orden.f90'
 	pth_mod_05='../../../modules/module_numerical_error.f90'
 
-	pth_mod=''${pth_mod_01}' '${pth_mod_02}''
-#	pth_mod=''${pth_mod_01}''
+	pth_mod=''${pth_mod_01}''
 
 # object code name
-	ob_cod_name='discret_fourier_transform_fft.o'
-#	ob_cod_name='g1bp1.o'
+	ob_cod_name='logistic_map.o'
 
 # fortran code name
-	f90_cod_name='discret_fourier_transform_fft.f90'
-#	f90_cod_name='g1bp1.f90'
+	f90_cod_name='logistic_map.f90'
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -29,7 +26,7 @@
 		flg_o01='-o3 -ftree-vectorize -ftree-loop-vectorize'
 		flags_o02='-march=native'
 
-	flags=${flg_o01}' '${flg_o02}' '${flg_d01}
+	flags=${flg_o01}' '${flg_o02}
 	
 # libraries
 	lib01='-lfftw3'
@@ -42,7 +39,9 @@
 	#export LD_LIBRARY_PATH= '-L../../../libraries/'
 	ld_path='-L/usr/local/lib/'
 	
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
+	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
+	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${lib01}
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
 	
 	./${ob_cod_name}
 
