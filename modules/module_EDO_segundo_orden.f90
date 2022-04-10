@@ -2,6 +2,7 @@ module module_EDO_segundo_orden
 
 	use module_presition
 	use module_functions_2D
+	use module_double_pendulum
 	
 	implicit none
 	
@@ -152,6 +153,11 @@ module module_EDO_segundo_orden
 		end select
 	end subroutine RK2
 	
+	!++++++++++++++++++++++++++++++++++++++++++++++++++
+	! Subrutina de runge kutta para resolver dos
+	!  ecuaciones diferenciale de primer orden.
+	!++++++++++++++++++++++++++++++++++++++++++++++++++
+
 	subroutine RK4(RK4_type, n, a, b, y1_0, y2_0, y1_RK4, y2_RK4, function_type, input_type)
 		! Data dictionary: declare calling parameter types & definitions
 		integer(sp), 			intent(in)		:: RK4_type
@@ -226,7 +232,12 @@ module module_EDO_segundo_orden
 				
 	end subroutine RK4
 	
-	subroutine RK4_four_eq(RK4_type, n, a1, b1, y1_0, y2_0, y3_0,y4_0, y1_RK4, y2_RK4, y3_RK4, y4_RK4, function_type, input_type)
+	!++++++++++++++++++++++++++++++++++++++++++++++++++
+	! Subrutina de runge kutta para resolver cuatro
+	!  ecuaciones diferenciale de primer orden.
+	!++++++++++++++++++++++++++++++++++++++++++++++++++
+
+	subroutine RK4_four_eq(RK4_type,n,a1,b1,y1_0,y2_0,y3_0,y4_0,y1_RK4,y2_RK4,y3_RK4,y4_RK4,function_type,input_type)
 		! Data dictionary: declare calling parameter types & definitions
 		integer(sp), 			intent(in)		:: RK4_type
 		integer(sp), 			intent(in)		:: n 				! points
@@ -263,32 +274,36 @@ module module_EDO_segundo_orden
 		real(dp) 				:: h_improved 				! improved step evaluation
 		real(dp), dimension(n) 	:: x 						! grid points vector
 		real(dp) 				:: h 						! step
-		real(dp) 				:: w1,w2,dw1,dw2
-		real(dp), parameter 	:: a=1._dp/3._dp, b=0.5_dp, c=0.5_dp
+		real(dp) 				:: f1,f2,f3,f4 				! custom functions
+		real(dp)				:: a,b,c 					! parameters
 		
 		select case(input_type)
-			case(1) ! using func(x1,x2,p1,p2,a1,a2,a3,function_type)
+			case(1) ! using lagrangian_dble_pendulum(q1,q2,dq1,dq2,a,b,c,w1,w2,dw1,dw2,function_type)
 				select case (RK4_type)
 					case(1) ! Método clásico
-						h = abs(b1 - a1) * ( 1._dp / (n-1_sp) )
-						x(1) = a
-						y1_RK4(1) = y1_0
-						y2_RK4(1) = y2_0
-						y3_RK4(1) = y3_0
-						y4_RK4(1) = y4_0
+
+						a = (1._dp/3._dp) 	! alpha = m2/m1
+						b = 0.5_dp		 	! beta  = l2/l1
+						c = 0.5_dp			! gamma = g/l1
+
+						h = abs(b1 - a1) * ( 1._dp / (real(n,dp)-1._dp) )
+						x(1) = a1
+						y1_RK4(1) = y1_0 ! initial condition of generalized coordinate 1
+						y2_RK4(1) = y2_0 ! initial condition of generalized coordinate 2
+						y3_RK4(1) = y3_0 ! initial condition of generalized velocity 1
+						y4_RK4(1) = y4_0 ! initial condition of generalized velocity 2
 					
 						do i = 2, n, 1
 							index_prev = i-1
 							x(i) = x(index_prev) + h
 					
 							call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
-							y4_RK4(index_prev),a,b,c,w1,w2,dw1,dw2,1_sp)
+							y4_RK4(index_prev),a,b,c,f1,f2,f3,f4,1_sp)
 					
-							! lagrangian_dble_pendulum(q1,q2,dq1,dq2,a,b,c,w1,w2,dw1,dw2,function_type)
-							k1_1 = w1
-							k2_1 = w2
-							k3_1 = dw1
-							k4_1 = dw2
+							k1_1 = f1
+							k2_1 = f2
+							k3_1 = f3
+							k4_1 = f4
 							
 							h_improved = 0.5_dp*h
 							
@@ -298,12 +313,12 @@ module module_EDO_segundo_orden
 							y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
 							
 							call lagrangian_dble_pendulum(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
-							y4_improved_k2,a,b,c,w1,w2,dw1,dw2,1_sp)
+							y4_improved_k2,a,b,c,f1,f2,f3,f4,1_sp)
 							
-							k1_2 = w1
-							k2_2 = w2
-							k3_2 = dw1
-							k4_2 = dw2
+							k1_2 = f1
+							k2_2 = f2
+							k3_2 = f3
+							k4_2 = f4
 							
 							y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
 							y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
@@ -311,11 +326,11 @@ module module_EDO_segundo_orden
 							y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
 							
 							call lagrangian_dble_pendulum(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
-							y4_improved_k3,a,b,c,w1,w2,dw1,dw2,1_sp)
-							k1_3 = w1
-							k2_3 = w2
-							k3_3 = dw1
-							k4_3 = dw2
+							y4_improved_k3,a,b,c,f1,f2,f3,f4,1_sp)
+							k1_3 = f1
+							k2_3 = f2
+							k3_3 = f3
+							k4_3 = f4
 							
 							y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
 							y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
@@ -323,11 +338,11 @@ module module_EDO_segundo_orden
 							y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
 							
 							call lagrangian_dble_pendulum(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
-							y4_improved_k4,a,b,c,w1,w2,dw1,dw2,1_sp)
-							k1_4 = w1
-							k2_4 = w2
-							k3_4 = dw1
-							k4_4 = dw2
+							y4_improved_k4,a,b,c,f1,f2,f3,f4,1_sp)
+							k1_4 = f1
+							k2_4 = f2
+							k3_4 = f3
+							k4_4 = f4
 							
 							! y(i+1) = (y(i) + increment_function)
 							y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
