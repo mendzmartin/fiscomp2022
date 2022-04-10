@@ -11,14 +11,16 @@ program logistic_map
 	
 	implicit none
 	
-	integer(sp) 							:: N, M, P
-	real(dp), dimension(:), allocatable 	:: x, r, x0
-	integer(sp) 							:: i, j, k, istat
+	integer(sp) 							:: N 				! discret points number
+	integer(sp) 							:: M, P 			! nomber of parameters and initial conditions
+	real(dp), dimension(:), allocatable 	:: x				! variable vector
+	real(dp), dimension(:), allocatable 	:: r, x0			! parameter and initial condition vectors
+	integer(sp) 							:: i, j, k
+	integer(sp) :: istat ! control variable
 	
 	N = 2**9
 	M = 5
 	P = 4
-	
 	
 	allocate(r(M))
 	r = [1.5_dp, 3.3_dp,3.5_dp,3.55_dp,4._dp]
@@ -40,10 +42,7 @@ program logistic_map
 		end do
 	end do
 	
-	deallocate(x)
-	
 	close(10)
-	
-	deallocate(r,x0)
+	deallocate(r,x, x0)
 	
 end program logistic_map

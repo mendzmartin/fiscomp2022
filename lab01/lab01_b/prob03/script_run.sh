@@ -7,16 +7,17 @@
 	pth_mod_04='../../../modules/module_EDO_segundo_orden.f90'
 	pth_mod_05='../../../modules/module_numerical_error.f90'
 	pth_mod_06='../../../modules/module_fourier_transform.f90'
+	pth_mod_07='../../../modules/module_double_pendulum.f90'
 
-	pth_mod=''${pth_mod_01}' '${pth_mod_06}''
+	pth_mod=''${pth_mod_01}' '${pth_mod_03}' '${pth_mod_04}''
 
 # object code name
 	#ob_cod_name='logistic_map.o'
-	ob_cod_name='fftw3_b_incise.o'
+	ob_cod_name='hola.o'
 
 # fortran code name
 	#f90_cod_name='logistic_map.f90'
-	f90_cod_name='fftw3_b_incise.f90'
+	f90_cod_name='hola.f90'
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -32,7 +33,7 @@
 	flags=${flg_o01}' '${flg_o02}' '${flg_w01}' '${flg_d02} 
 	
 # libraries
-	lib01='-lfftw3'
+	#lib01='-lfftw3'
 
 # execution
 	
@@ -40,10 +41,10 @@
 	rm -f *.mod *.o
 	
 	#export LD_LIBRARY_PATH= '-L../../../libraries/'
-	ld_path='-L/usr/local/lib/'
+	#ld_path='-L/usr/local/lib/'
 	
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
-	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
+	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
 	
 	./${ob_cod_name}
 

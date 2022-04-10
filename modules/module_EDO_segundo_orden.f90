@@ -226,4 +226,124 @@ module module_EDO_segundo_orden
 				
 	end subroutine RK4
 	
+	subroutine RK4_four_eq(RK4_type, n, a1, b1, y1_0, y2_0, y3_0,y4_0, y1_RK4, y2_RK4, y3_RK4, y4_RK4, function_type, input_type)
+		! Data dictionary: declare calling parameter types & definitions
+		integer(sp), 			intent(in)		:: RK4_type
+		integer(sp), 			intent(in)		:: n 				! points
+		integer(sp), 			intent(in) 		:: function_type 	! tipo de función a integrar
+		integer(sp), 			intent(in)		:: input_type 		! type of input to create function
+		real(dp), 				intent(in)		:: y1_0 			! initial condition
+		real(dp), 				intent(in)		:: y2_0 			! initial condition
+		real(dp), 				intent(in)		:: y3_0 			! initial condition
+		real(dp), 				intent(in)		:: y4_0 			! initial condition
+		real(dp), 				intent(in)		:: a1,b1			! intervalo de validez para la solución aproximada
+		real(dp), dimension(n), intent(out) 	:: y1_RK4 			! vector con solución aproximada
+		real(dp), dimension(n), intent(out) 	:: y2_RK4 			! vector con solución aproximada
+		real(dp), dimension(n), intent(out) 	:: y3_RK4 			! vector con solución aproximada
+		real(dp), dimension(n), intent(out) 	:: y4_RK4 			! vector con solución aproximada
+		
+		! Data dictionary: declare local variables types & definitions
+		integer(sp) 			:: i,index_prev 			! index loop
+		real(dp) 				:: k1_1, k1_2, k1_3, k1_4	! recurrence relations
+		real(dp) 				:: k2_1, k2_2, k2_3, k2_4	! recurrence relations
+		real(dp) 				:: k3_1, k3_2, k3_3, k3_4	! recurrence relations
+		real(dp) 				:: k4_1, k4_2, k4_3, k4_4	! recurrence relations
+		real(dp) 				:: y1_improved_k2			! improved function evaluation
+		real(dp) 				:: y1_improved_k3			! improved function evaluation
+		real(dp) 				:: y1_improved_k4			! improved function evaluation
+		real(dp) 				:: y2_improved_k2			! improved function evaluation
+		real(dp) 				:: y2_improved_k3			! improved function evaluation
+		real(dp) 				:: y2_improved_k4			! improved function evaluation
+		real(dp) 				:: y3_improved_k2			! improved function evaluation
+		real(dp) 				:: y3_improved_k3			! improved function evaluation
+		real(dp) 				:: y3_improved_k4			! improved function evaluation
+		real(dp) 				:: y4_improved_k2			! improved function evaluation
+		real(dp) 				:: y4_improved_k3			! improved function evaluation
+		real(dp) 				:: y4_improved_k4			! improved function evaluation
+		real(dp) 				:: h_improved 				! improved step evaluation
+		real(dp), dimension(n) 	:: x 						! grid points vector
+		real(dp) 				:: h 						! step
+		real(dp) 				:: w1,w2,dw1,dw2
+		real(dp), parameter 	:: a=1._dp/3._dp, b=0.5_dp, c=0.5_dp
+		
+		select case(input_type)
+			case(1) ! using func(x1,x2,p1,p2,a1,a2,a3,function_type)
+				select case (RK4_type)
+					case(1) ! Método clásico
+						h = abs(b1 - a1) * ( 1._dp / (n-1_sp) )
+						x(1) = a
+						y1_RK4(1) = y1_0
+						y2_RK4(1) = y2_0
+						y3_RK4(1) = y3_0
+						y4_RK4(1) = y4_0
+					
+						do i = 2, n, 1
+							index_prev = i-1
+							x(i) = x(index_prev) + h
+					
+							call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
+							y4_RK4(index_prev),a,b,c,w1,w2,dw1,dw2,1_sp)
+					
+							! lagrangian_dble_pendulum(q1,q2,dq1,dq2,a,b,c,w1,w2,dw1,dw2,function_type)
+							k1_1 = w1
+							k2_1 = w2
+							k3_1 = dw1
+							k4_1 = dw2
+							
+							h_improved = 0.5_dp*h
+							
+							y1_improved_k2 = y1_RK4(index_prev) + (k1_1*h_improved)
+							y2_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
+							y3_improved_k2 = y3_RK4(index_prev) + (k3_1*h_improved)
+							y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
+							
+							call lagrangian_dble_pendulum(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
+							y4_improved_k2,a,b,c,w1,w2,dw1,dw2,1_sp)
+							
+							k1_2 = w1
+							k2_2 = w2
+							k3_2 = dw1
+							k4_2 = dw2
+							
+							y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
+							y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
+							y3_improved_k3 = y3_RK4(index_prev) + (k3_2*h_improved)
+							y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
+							
+							call lagrangian_dble_pendulum(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
+							y4_improved_k3,a,b,c,w1,w2,dw1,dw2,1_sp)
+							k1_3 = w1
+							k2_3 = w2
+							k3_3 = dw1
+							k4_3 = dw2
+							
+							y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
+							y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
+							y3_improved_k4 = y3_RK4(index_prev) + (k3_3*h)
+							y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
+							
+							call lagrangian_dble_pendulum(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
+							y4_improved_k4,a,b,c,w1,w2,dw1,dw2,1_sp)
+							k1_4 = w1
+							k2_4 = w2
+							k3_4 = dw1
+							k4_4 = dw2
+							
+							! y(i+1) = (y(i) + increment_function)
+							y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
+							y2_RK4(i) = y2_RK4(index_prev) + (1._dp/6._dp)*h*(k2_1 + 2._dp*(k2_2+k2_3)+k2_4)
+							y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
+							y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
+						end do
+					case default
+						write(*,*) 'Invalid RK4 type'
+				end select
+			!case(2) ! add to use f_2D(x,y,function_type)
+			!case(3) ! add to use f_1D(x,function_type)
+			case default
+				write(*,*) 'Invalid input type'
+		end select
+				
+	end subroutine RK4_four_eq
+	
 end module module_EDO_segundo_orden
