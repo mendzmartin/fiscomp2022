@@ -161,6 +161,8 @@ program double_pendulum
 
 end program double_pendulum
 
-
 ! OJO! NOTAR QUE LOS RESULTADOS VARIAN MUCHO RESPECTO A LA ELECCIÓN DEL NÚMERO "n"
-! La variable tot_energy está en unidades de m1*l1*l1 que son parámetros del primer péndulo
+! La variable tot_energy está
+
+! https://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html
+
