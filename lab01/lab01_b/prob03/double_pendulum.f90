@@ -27,7 +27,7 @@ program double_pendulum
     !y4_0 = 0.845_dp
     
     y3_0 = sqrt(1.125_dp)
-	y4_0 = 0._dp
+	y4_0 = 0.
 
 	!subroutine RK4_four_eq(RK4_type, n, a, b, y1_0, y2_0, y3_0,y4_0, y1_RK4, y2_RK4, y3_RK4, y4_RK4, function_type, input_type)
 	call RK4_four_eq(1_sp,n,ti,tf,y1_0,y2_0,y3_0,y4_0,y1_RK4,y2_RK4,y3_RK4,y4_RK4,1_sp,1_sp)

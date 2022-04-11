@@ -9,13 +9,13 @@
 	pth_mod_06='../../../modules/module_fourier_transform.f90'
 	pth_mod_07='../../../modules/module_double_pendulum.f90'
 
-	pth_mod=''${pth_mod_01}' '${pth_mod_03}' '${pth_mod_07}' '${pth_mod_04}''
+	pth_mod=''${pth_mod_01}' '${pth_mod_03}' '${pth_mod_07}' '${pth_mod_04}' '${pth_mod_06}'' # RUN 2
 
 # object code name
-	ob_cod_name='double_pendulum.o'
+	ob_cod_name='double_pendulum_spectrum.o'	# RUN 2
 
 # fortran code name
-	f90_cod_name='double_pendulum.f90'
+	f90_cod_name='double_pendulum_spectrum.f90' # RUN 2
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -28,10 +28,10 @@
 		flg_o01='-o3 -ftree-vectorize -ftree-loop-vectorize'
 		flags_o02='-march=native'
 
-	flags=${flg_o01}' '${flg_o02}' '${flg_w01} 
+	flags=${flg_o01}' '${flg_o02}' '${flg_w01}' '${flg_d02}
 	
 # libraries
-	#lib01='-lfftw3'
+	lib01='-lfftw3'
 
 # execution
 	
@@ -39,10 +39,10 @@
 	rm -f *.mod *.o
 	
 	#export LD_LIBRARY_PATH= '-L../../../libraries/'
-	#ld_path='-L/usr/local/lib/'
+	ld_path='-L/usr/local/lib/'
 	
-	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
+	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
 	
 	./${ob_cod_name}
 
