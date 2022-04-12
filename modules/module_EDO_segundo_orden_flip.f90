@@ -22,7 +22,7 @@ module module_EDO_segundo_orden_flip
     implicit none
     
 contains
-    subroutine RK4_four_eq_flip(n,a,b,y1_0,y2_0,y3_0,y4_0,x_flip)
+    subroutine RK4_four_eq_flip(n,a,b,y1_0,y2_0,y3_0,y4_0,x_flip,escribir)
 
         ! Data dictionary: declare calling parameter types & definitions
         integer(sp),            intent(in) :: n              ! points
@@ -32,6 +32,7 @@ contains
         real(dp),               intent(in) :: y4_0           ! initial condition
         real(dp),               intent(in) :: a,b            ! intervalo de validez para la solución aproximada
         real(dp),               intent(out) :: x_flip        ! flip coordinate
+        logical,                intent(in) :: escribir
         
         ! Data dictionary: declare local variables types & definitions
         integer(sp) 			:: i,index_prev 			! index loop
@@ -75,10 +76,19 @@ contains
         y4_RK4(1) = y4_0 ! initial condition of generalized velocity 2
 
         detector = .false.
-    
+
+        !open( 15, file = './trayectoria_theta1.dat', status = 'replace', action = 'write')
+
         pepito_bucle: do i = 2, n, 1
             index_prev = i-1
-            x(i) = x(index_prev) + h                     
+
+            if (escribir .eqv. .false. ) then 
+                if (2._dp*cos(y1_RK4(index_prev))+cos(y2_RK4(index_prev)) > 1._dp) then
+                    exit pepito_bucle
+                end if
+            end if
+
+            x(i) = x(index_prev) + h
 
             call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
             y4_RK4(index_prev),1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
@@ -133,12 +143,19 @@ contains
             y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
             y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
 
-            if (abs(y1_RK4(i)) >= pi .or. abs(y2_RK4(i)) >= pi) then
-                detector = .true. ! detected flip
-                exit pepito_bucle
-            else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
-                exit pepito_bucle
+            if (escribir .eqv. .false. ) then 
+                if (abs(y1_RK4(i)) >= pi .or. abs(y2_RK4(i)) >= pi) then
+                    detector = .true. ! detected flip
+                    exit pepito_bucle
+                else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
+                    exit pepito_bucle
+                end if
             end if
+
+            if (escribir .eqv. .true. ) then
+                write(*,*) x(i), y1_RK4(i), y2_RK4(i)
+            end if
+
         end do pepito_bucle
 
         if (detector .eqv. .true.) then
@@ -147,6 +164,7 @@ contains
             x_flip = (b + 1._dp)    ! no-detected flip
         end if 
 
-       deallocate(x,y1_RK4,y2_RK4,y3_RK4,y4_RK4)            
+        !close(15)
+        deallocate(x,y1_RK4,y2_RK4,y3_RK4,y4_RK4)            
     end subroutine RK4_four_eq_flip
 end module module_EDO_segundo_orden_flip

@@ -52,9 +52,9 @@
 	# remove modules and object codes
 	rm -f *.mod *.o
 
-	./script_graph_gnuplot.sh
+	#./script_graph_gnuplot.sh
 	
-	rm -f result_flips.dat
+	#rm -f result_flips.dat
 
 # Notes:
 
