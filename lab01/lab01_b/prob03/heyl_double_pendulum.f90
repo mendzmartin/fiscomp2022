@@ -7,12 +7,12 @@ program heyl_double_pendulum
     real(dp),       allocatable :: theta1_0(:), theta2_0(:)
     real(dp),       parameter   :: omega1_0=0._dp, omega2_0=0._dp
     real(dp),       parameter   :: ti=0._dp, tf=10000._dp
-    integer(sp),    parameter   :: dim_theta1_0=150, dim_theta2_0=50
+    integer(sp),    parameter   :: dim_theta1_0=600, dim_theta2_0=300
     real(dp),       parameter   :: theta1_0_min=-3._dp, theta1_0_max=3._dp
     real(dp),       parameter   :: theta2_0_min=0._dp, theta2_0_max=3._dp
     integer(sp)                 :: i,j,istat
     real(dp),       allocatable :: t_flip(:,:)
-    integer(sp),    parameter   :: n=2048 ! points number to use in RK4 method
+    integer(sp),    parameter   :: n=131072 ! points number to use in RK4 method
     real(dp)                    :: h_theta1_0,h_theta2_0
 
     h_theta1_0 = abs(theta1_0_max-theta1_0_min)*(1._dp/(real(dim_theta1_0,dp)-1._dp))
@@ -37,21 +37,22 @@ program heyl_double_pendulum
     ! rellenamos la matriz flip (recordar FORTRAN es colum-major)
     allocate(t_flip(dim_theta2_0,dim_theta1_0))
 
+    open( 10, file = './result_flips.dat', status = 'replace', action = 'write', iostat = istat )
+    write(*,*) 'istat of result_flips.dat = ', istat
     do j=1,dim_theta1_0
         do i=1,dim_theta2_0
             call RK4_four_eq_flip(n,ti,tf,theta1_0(j),theta2_0(i),omega1_0,omega2_0,t_flip(i,j))
-            if (i <= 10 .and. j <= 10) then
-                write(*,*) i, j, theta1_0(j), theta2_0(i), t_flip(i,j)
-            endif
+            write(10,*) theta1_0(j), theta2_0(i), t_flip(i,j)
         end do
     end do
-
-    open( 10, file = './result_flips.dat', status = 'replace', action = 'write', iostat = istat )
-	write(*,*) 'istat of result_flips.dat = ', istat
-    do i=1,dim_theta2_0
-        write(10,*) t_flip(i,:)
-    end do
     close(10)
+
+!    open( 10, file = './result_flips.dat', status = 'replace', action = 'write', iostat = istat )
+!	 write(*,*) 'istat of result_flips.dat = ', istat
+!    do i=1,dim_theta2_0
+!        write(10,*) t_flip(i,:)
+!    end do
+!    close(10)
 
     deallocate(theta1_0,theta2_0)
     deallocate(t_flip)

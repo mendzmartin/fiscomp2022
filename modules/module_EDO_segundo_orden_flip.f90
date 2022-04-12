@@ -77,70 +77,67 @@ contains
         detector = .false.
     
         pepito_bucle: do i = 2, n, 1
+            index_prev = i-1
+            x(i) = x(index_prev) + h                     
+
+            call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
+            y4_RK4(index_prev),1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
+    
+            k1_1 = func_lag1
+            k2_1 = func_lag2
+            k3_1 = func_lag3
+            k4_1 = func_lag4
+            
+            h_improved = 0.5_dp*h
+            
+            y1_improved_k2 = y1_RK4(index_prev) + (k1_1*h_improved)
+            y2_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
+            y3_improved_k2 = y3_RK4(index_prev) + (k3_1*h_improved)
+            y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
+            
+            call lagrangian_dble_pendulum(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
+            y4_improved_k2,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
+            
+            k1_2 = func_lag1
+            k2_2 = func_lag2
+            k3_2 = func_lag3
+            k4_2 = func_lag4
+            
+            y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
+            y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
+            y3_improved_k3 = y3_RK4(index_prev) + (k3_2*h_improved)
+            y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
+            
+            call lagrangian_dble_pendulum(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
+            y4_improved_k3,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
+            k1_3 = func_lag1
+            k2_3 = func_lag2
+            k3_3 = func_lag3
+            k4_3 = func_lag4
+            
+            y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
+            y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
+            y3_improved_k4 = y3_RK4(index_prev) + (k3_3*h)
+            y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
+            
+            call lagrangian_dble_pendulum(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
+            y4_improved_k4,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
+            k1_4 = func_lag1
+            k2_4 = func_lag2
+            k3_4 = func_lag3
+            k4_4 = func_lag4
+            
+            ! y(i+1) = (y(i) + increment_function)
+            y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
+            y2_RK4(i) = y2_RK4(index_prev) + (1._dp/6._dp)*h*(k2_1 + 2._dp*(k2_2+k2_3)+k2_4)
+            y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
+            y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
+
             if (abs(y1_RK4(i)) >= pi .or. abs(y2_RK4(i)) >= pi) then
                 detector = .true. ! detected flip
                 exit pepito_bucle
-                !exit pepito_bucle
-            !else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
-            !    x_flip = (b + 1._dp) ! no-detected flip
-            !    exit pepito_bucle                     
-            else
-                index_prev = i-1
-                x(i) = x(index_prev) + h
-        
-                call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
-                y4_RK4(index_prev),1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
-        
-                k1_1 = func_lag1
-                k2_1 = func_lag2
-                k3_1 = func_lag3
-                k4_1 = func_lag4
-                
-                h_improved = 0.5_dp*h
-                
-                y1_improved_k2 = y1_RK4(index_prev) + (k1_1*h_improved)
-                y2_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
-                y3_improved_k2 = y3_RK4(index_prev) + (k3_1*h_improved)
-                y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
-                
-                call lagrangian_dble_pendulum(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
-                y4_improved_k2,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
-                
-                k1_2 = func_lag1
-                k2_2 = func_lag2
-                k3_2 = func_lag3
-                k4_2 = func_lag4
-                
-                y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
-                y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
-                y3_improved_k3 = y3_RK4(index_prev) + (k3_2*h_improved)
-                y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
-                
-                call lagrangian_dble_pendulum(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
-                y4_improved_k3,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
-                k1_3 = func_lag1
-                k2_3 = func_lag2
-                k3_3 = func_lag3
-                k4_3 = func_lag4
-                
-                y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
-                y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
-                y3_improved_k4 = y3_RK4(index_prev) + (k3_3*h)
-                y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
-                
-                call lagrangian_dble_pendulum(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
-                y4_improved_k4,1._dp,1._dp,1._dp,func_lag1,func_lag2,func_lag3,func_lag4,1_sp)
-                k1_4 = func_lag1
-                k2_4 = func_lag2
-                k3_4 = func_lag3
-                k4_4 = func_lag4
-                
-                ! y(i+1) = (y(i) + increment_function)
-                y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
-                y2_RK4(i) = y2_RK4(index_prev) + (1._dp/6._dp)*h*(k2_1 + 2._dp*(k2_2+k2_3)+k2_4)
-                y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
-                y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
-                x_flip = pi
+            else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
+                exit pepito_bucle
             end if
         end do pepito_bucle
 
