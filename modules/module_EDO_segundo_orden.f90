@@ -275,16 +275,13 @@ module module_EDO_segundo_orden
 		real(dp), dimension(n) 	:: x 						! grid points vector
 		real(dp) 				:: h 						! step
 		real(dp) 				:: f1,f2,f3,f4 				! custom functions
-		real(dp)				:: a,b,c 					! parameters
 		
 		select case(input_type)
 			case(1) ! using lagrangian_dble_pendulum(q1,q2,dq1,dq2,a,b,c,w1,w2,dw1,dw2,function_type)
 				select case (RK4_type)
 					case(1) ! Método clásico
 
-						a = (1._dp/3._dp) 	! alpha = m2/m1
-						b = 0.5_dp		 	! beta  = l2/l1
-						c = 0.5_dp			! gamma = g/l1
+						! remember --> a=alpha=m2/m1; b=beta=l2/l1; c=gamma=g/l1
 
 						h = abs(b1 - a1) * ( 1._dp / (real(n,dp)-1._dp) )
 						x(1) = a1
@@ -298,7 +295,7 @@ module module_EDO_segundo_orden
 							x(i) = x(index_prev) + h
 					
 							call lagrangian_dble_pendulum(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
-							y4_RK4(index_prev),a,b,c,f1,f2,f3,f4,1_sp)
+							y4_RK4(index_prev),(1._dp/3._dp),0.5_dp,0.5_dp,f1,f2,f3,f4,1_sp)
 					
 							k1_1 = f1
 							k2_1 = f2
@@ -313,7 +310,7 @@ module module_EDO_segundo_orden
 							y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
 							
 							call lagrangian_dble_pendulum(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
-							y4_improved_k2,a,b,c,f1,f2,f3,f4,1_sp)
+							y4_improved_k2,(1._dp/3._dp),0.5_dp,0.5_dp,f1,f2,f3,f4,1_sp)
 							
 							k1_2 = f1
 							k2_2 = f2
@@ -326,7 +323,7 @@ module module_EDO_segundo_orden
 							y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
 							
 							call lagrangian_dble_pendulum(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
-							y4_improved_k3,a,b,c,f1,f2,f3,f4,1_sp)
+							y4_improved_k3,(1._dp/3._dp),0.5_dp,0.5_dp,f1,f2,f3,f4,1_sp)
 							k1_3 = f1
 							k2_3 = f2
 							k3_3 = f3
@@ -338,7 +335,7 @@ module module_EDO_segundo_orden
 							y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
 							
 							call lagrangian_dble_pendulum(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
-							y4_improved_k4,a,b,c,f1,f2,f3,f4,1_sp)
+							y4_improved_k4,(1._dp/3._dp),0.5_dp,0.5_dp,f1,f2,f3,f4,1_sp)
 							k1_4 = f1
 							k2_4 = f2
 							k3_4 = f3

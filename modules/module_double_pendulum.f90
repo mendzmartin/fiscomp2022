@@ -18,7 +18,7 @@ module module_double_pendulum
 		real(dp) :: dq12, dq22, q12, denom, num1, num2 ! math expresions
 	
 		select case(function_type)
-				case(1)
+				case(1) ! funcion custom
 					dq12 = dq1*dq1
 					dq22 = dq2*dq2
 					q12 = (q1-q2)
