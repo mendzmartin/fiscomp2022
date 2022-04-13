@@ -8,15 +8,22 @@
 	pth_mod_05='../../../modules/module_numerical_error.f90'
 	pth_mod_06='../../../modules/module_fourier_transform.f90'
 
-	pth_mod=''${pth_mod_01}' '${pth_mod_06}''
+#	pth_mod=''${pth_mod_01}' '${pth_mod_06}'' 	# RUN 02
+	pth_mod=''${pth_mod_01}'' 					# RUN 03, 04, 05
 
 # object code name
-	#ob_cod_name='logistic_map.o'
-	ob_cod_name='fftw3_b_incise.o'
+#	ob_cod_name='logistic_map.o' 	# RUN 01
+#	ob_cod_name='fftw3_b_incise.o' 	# RUN 02
+#	ob_cod_name='histogram_chaos.o' # RUN 03
+#	ob_cod_name='orbits_diagram_chaos.o' # RUN 04
+	ob_cod_name='lyapunov_exponent.o' # RUN 05
 
 # fortran code name
-	#f90_cod_name='logistic_map.f90'
-	f90_cod_name='fftw3_b_incise.f90'
+#	f90_cod_name='logistic_map.f90'		# RUN 01
+#	f90_cod_name='fftw3_b_incise.f90'	# RUN 02
+#	f90_cod_name='histogram_chaos.f90' 	# RUN 03
+#	f90_cod_name='orbits_diagram_chaos.f90' 	# RUN 04
+	f90_cod_name='lyapunov_exponent.f90' 	# RUN 05
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -39,11 +46,10 @@
 	# remove modules and object codes & results.dat existing
 	rm -f *.mod *.o
 	
-	#export LD_LIBRARY_PATH= '-L../../../libraries/'
-	ld_path='-L/usr/local/lib/'
+#	ld_path='-L/usr/local/lib/' # RUN 02
 	
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
-	#gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name}
+#	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01} 	# RUN 02
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} 						# RUN 03, 04, 05
 	
 	./${ob_cod_name}
 

@@ -77,16 +77,8 @@ contains
 
         detector = .false.
 
-        !open( 15, file = './trayectoria_theta1.dat', status = 'replace', action = 'write')
-
         pepito_bucle: do i = 2, n, 1
             index_prev = i-1
-
-            if (escribir .eqv. .false. ) then 
-                if (2._dp*cos(y1_RK4(index_prev))+cos(y2_RK4(index_prev)) > 1._dp) then
-                    exit pepito_bucle
-                end if
-            end if
 
             x(i) = x(index_prev) + h
 
@@ -147,11 +139,12 @@ contains
                 if (abs(y1_RK4(i)) >= pi .or. abs(y2_RK4(i)) >= pi) then
                     detector = .true. ! detected flip
                     exit pepito_bucle
-                else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
-                    exit pepito_bucle
+                !else if (2._dp*cos(y1_RK4(i))+cos(y2_RK4(i)) > 1._dp) then
+                !    exit pepito_bucle
                 end if
             end if
 
+            ! condicional para chequear que RK4 está integrando bien
             if (escribir .eqv. .true. ) then
                 write(*,*) x(i), y1_RK4(i), y2_RK4(i)
             end if
@@ -164,7 +157,6 @@ contains
             x_flip = (b + 1._dp)    ! no-detected flip
         end if 
 
-        !close(15)
         deallocate(x,y1_RK4,y2_RK4,y3_RK4,y4_RK4)            
     end subroutine RK4_four_eq_flip
 end module module_EDO_segundo_orden_flip

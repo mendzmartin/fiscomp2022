@@ -347,6 +347,8 @@ module module_EDO_segundo_orden
 							y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
 							y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
 						end do
+					case(2) ! using hamiltonian_pullen_edmonds(q1,q2,p1,p2,alpha,dq1,dq2,dp1,dp2,function_type)
+
 					case default
 						write(*,*) 'Invalid RK4 type'
 				end select

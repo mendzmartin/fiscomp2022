@@ -6,13 +6,13 @@ program heyl_double_pendulum
 
     real(dp),       allocatable :: theta1_0(:), theta2_0(:)
     real(dp),       parameter   :: omega1_0=0._dp, omega2_0=0._dp
-    real(dp),       parameter   :: ti=0._dp, tf=1000._dp
-    integer(sp),    parameter   :: dim_theta1_0=300, dim_theta2_0=150
+    real(dp),       parameter   :: ti=0._dp, tf=10000._dp
+    integer(sp),    parameter   :: dim_theta1_0=600, dim_theta2_0=300
     real(dp),       parameter   :: theta1_0_min=-3._dp, theta1_0_max=3._dp
     real(dp),       parameter   :: theta2_0_min=0._dp, theta2_0_max=3._dp
     integer(sp)                 :: i,j,istat
     real(dp),       allocatable :: t_flip(:,:)
-    integer(sp),    parameter   :: n=50000 ! points number to use in RK4 method
+    integer(sp),    parameter   :: n=100000 ! points number to use in RK4 method
     real(dp)                    :: h_theta1_0,h_theta2_0
 
     h_theta1_0 = abs(theta1_0_max-theta1_0_min)*(1._dp/(real(dim_theta1_0,dp)-1._dp))
