@@ -1,37 +1,29 @@
 program lyapunov_exponent
-    use module_presition, only: pr => dp
+    use module_presition
     implicit none
-    integer                                  :: i,j,N,Nt
-    real(pr), allocatable                    :: xn(:),r(:)
-    real(pr)                                 :: ra,rb,x0,delta,nn
+    integer(sp)            :: i,j,istat
+    integer(sp), parameter :: N=1500_sp, Nt=300_sp, Nr=1000_sp
+    real(dp), allocatable  :: xn(:)
+    real(dp), parameter    :: r_min=2._dp,r_max=4._dp,x0 = 0.6
+    real(dp)               :: r
+    real(dp)               :: lambda_N
 
-
-    Nt = 300._pr
-    N = 1500._pr
-
-    ra = 2._pr
-    rb = 4._pr
-
-    x0 = 0.6
-    nn = 1._pr/N
-    r = ra + (rb-ra)*(/(i, i=0,1000)/)/1000._pr
-    delta = 0._pr
-    open(5,file='xn-r-lyapunov.d',status='replace')
-    do i = 1,size(r)-1
-        allocate(xn(N))
+    open( 10, file = './lyapunov_exp.dat', status = 'replace', action = 'write', iostat = istat )
+    write(*,*) istat
+    allocate(xn(N))
+    do i = 1,Nr
+        r = r_min + abs(r_max-r_min)*(1._dp/(real(Nr,dp)-1._dp))*(real(i,dp)-1._dp)
         xn(1) = x0
-        do j = 1,size(xn)-1
-            xn(j+1) = r(i)*xn(j)*(1-xn(j))
+        lambda_N = 0._dp
+        do j = 2,N
+            xn(j) = r*xn(j-1_sp)*(1._dp-xn(j-1_sp))
             if (j > Nt) then
-                delta = delta + log(abs(r(i)-2._pr*r(i)*xn(j)))
+                lambda_N = lambda_N + log(abs(r*(1._dp-2._dp*xn(j-1_sp))))
             endif
         enddo
-        write(5,*) r(i), delta*nn
-        delta = 0._pr
-        deallocate(xn)
+        write(10,*) r, lambda_N*(1._dp/real(N,dp))
     enddo
-    close(5)
-
-
+    deallocate(xn)
+    close(10)
 
 end program lyapunov_exponent

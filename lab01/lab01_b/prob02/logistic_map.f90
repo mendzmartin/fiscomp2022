@@ -1,8 +1,7 @@
 !----------------------------------------------------------
 ! PURPOSE
 !----------------------------------------------------------
-! Calculo de la transformada discreta de fourier usando
-!  libreria fftw3
+! Calculo del mapa logistico
 !----------------------------------------------------------
 
 program logistic_map
@@ -11,12 +10,12 @@ program logistic_map
 	
 	implicit none
 	
-	integer(sp) 							:: N 				! discret points number
-	integer(sp) 							:: M, P 			! nomber of parameters and initial conditions
-	real(dp), dimension(:), allocatable 	:: x				! variable vector
-	real(dp), dimension(:), allocatable 	:: r, x0			! parameter and initial condition vectors
-	integer(sp) 							:: i, j, k
-	integer(sp) :: istat ! control variable
+	integer(sp) 							:: N 		! discret points number
+	integer(sp) 							:: M, P 	! nomber of parameters and initial conditions
+	real(dp), dimension(:), allocatable 	:: x		! variable vector
+	real(dp), dimension(:), allocatable 	:: r, x0	! parameter and initial condition vectors
+	integer(sp) 							:: i, j, k 	! loops variables
+	integer(sp) :: istat								! control variable
 	
 	N = 2**9
 	M = 5

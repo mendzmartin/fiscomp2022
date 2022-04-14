@@ -3,6 +3,7 @@ module module_EDO_segundo_orden
 	use module_presition
 	use module_functions_2D
 	use module_double_pendulum
+	use module_pullen_edmonds
 	
 	implicit none
 	
@@ -347,17 +348,86 @@ module module_EDO_segundo_orden
 							y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
 							y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
 						end do
-					case(2) ! using hamiltonian_pullen_edmonds(q1,q2,p1,p2,alpha,dq1,dq2,dp1,dp2,function_type)
-
 					case default
 						write(*,*) 'Invalid RK4 type'
 				end select
-			!case(2) ! add to use f_2D(x,y,function_type)
-			!case(3) ! add to use f_1D(x,function_type)
+			case(2) ! using hamiltonian_pullen_edmonds(q1,q2,p1,p2,alpha,m,omega,dq1,dq2,dp1,dp2,function_type)
+				select case (RK4_type)
+				case(1) ! Método clásico
+					! remember --> a=alpha=m2/m1; b=beta=l2/l1; c=gamma=g/l1
+
+					h = abs(b1 - a1) * ( 1._dp / (real(n,dp)-1._dp) )
+					x(1) = a1
+					y1_RK4(1) = y1_0 ! initial condition of generalized coordinate 1
+					y2_RK4(1) = y2_0 ! initial condition of generalized coordinate 2
+					y3_RK4(1) = y3_0 ! initial condition of generalized velocity 1
+					y4_RK4(1) = y4_0 ! initial condition of generalized velocity 2
+				
+					do i = 2, n, 1
+						index_prev = i-1
+						x(i) = x(index_prev) + h
+				
+						call hamiltonian_pullen_edmonds(y1_RK4(index_prev),y2_RK4(index_prev),y3_RK4(index_prev),&
+						y4_RK4(index_prev),0.05_dp,1._dp,1._dp,f1,f2,f3,f4,1_sp)
+				
+						k1_1 = f1
+						k2_1 = f2
+						k3_1 = f3
+						k4_1 = f4
+						
+						h_improved = 0.5_dp*h
+						
+						y1_improved_k2 = y1_RK4(index_prev) + (k1_1*h_improved)
+						y2_improved_k2 = y2_RK4(index_prev) + (k2_1*h_improved)
+						y3_improved_k2 = y3_RK4(index_prev) + (k3_1*h_improved)
+						y4_improved_k2 = y4_RK4(index_prev) + (k4_1*h_improved)
+						
+						call hamiltonian_pullen_edmonds(y1_improved_k2,y2_improved_k2,y3_improved_k2,&
+						y4_improved_k2,0.05_dp,1._dp,1._dp,f1,f2,f3,f4,1_sp)
+						
+						k1_2 = f1
+						k2_2 = f2
+						k3_2 = f3
+						k4_2 = f4
+						
+						y1_improved_k3 = y1_RK4(index_prev) + (k1_2*h_improved)
+						y2_improved_k3 = y2_RK4(index_prev) + (k2_2*h_improved)
+						y3_improved_k3 = y3_RK4(index_prev) + (k3_2*h_improved)
+						y4_improved_k3 = y4_RK4(index_prev) + (k4_2*h_improved)
+						
+						call hamiltonian_pullen_edmonds(y1_improved_k3,y2_improved_k3,y3_improved_k3,&
+						y4_improved_k3,0.05_dp,1._dp,1._dp,f1,f2,f3,f4,1_sp)
+
+						k1_3 = f1
+						k2_3 = f2
+						k3_3 = f3
+						k4_3 = f4
+						
+						y1_improved_k4 = y1_RK4(index_prev) + (k1_3*h)
+						y2_improved_k4 = y2_RK4(index_prev) + (k2_3*h)
+						y3_improved_k4 = y3_RK4(index_prev) + (k3_3*h)
+						y4_improved_k4 = y4_RK4(index_prev) + (k4_3*h)
+						
+						call hamiltonian_pullen_edmonds(y1_improved_k4,y2_improved_k4,y3_improved_k4,&
+						y4_improved_k4,0.05_dp,1._dp,1._dp,f1,f2,f3,f4,1_sp)
+
+						k1_4 = f1
+						k2_4 = f2
+						k3_4 = f3
+						k4_4 = f4
+						
+						! y(i+1) = (y(i) + increment_function)
+						y1_RK4(i) = y1_RK4(index_prev) + (1._dp/6._dp)*h*(k1_1 + 2._dp*(k1_2+k1_3)+k1_4)
+						y2_RK4(i) = y2_RK4(index_prev) + (1._dp/6._dp)*h*(k2_1 + 2._dp*(k2_2+k2_3)+k2_4)
+						y3_RK4(i) = y3_RK4(index_prev) + (1._dp/6._dp)*h*(k3_1 + 2._dp*(k3_2+k3_3)+k3_4)
+						y4_RK4(i) = y4_RK4(index_prev) + (1._dp/6._dp)*h*(k4_1 + 2._dp*(k4_2+k4_3)+k4_4)
+					end do
+				case default
+					write(*,*) 'Invalid RK4 type'
+				end select
 			case default
 				write(*,*) 'Invalid input type'
-		end select
-				
+		end select	
 	end subroutine RK4_four_eq
 	
 end module module_EDO_segundo_orden

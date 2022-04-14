@@ -5,10 +5,10 @@ program double_pendulum
 
 	implicit none
 
-	integer(sp), 	parameter 		:: n=1048576						! points number
+	integer(sp), 	parameter 		:: n=2097152!524288!1048576						! points number
 	real(dp), 		dimension(n) 	:: y1_RK4, y2_RK4, y3_RK4, y4_RK4 	! solutions from RK4 method
     real(dp),       dimension(n)    :: t                                ! time vector
-	real(dp), 		parameter 		:: ti=0._dp, tf=450._dp 			! start and end times
+	real(dp), 		parameter 		:: ti=0._dp, tf=150._dp 			! start and end times
 	real(dp) 						:: y1_0,y2_0,y3_0,y4_0 				! initial conditions
 	real(dp) 						:: h 								! step
 	integer(sp) 					:: i,index_prev						! loop variables
@@ -23,11 +23,11 @@ program double_pendulum
 	y1_0 = 0._dp
 	y2_0 = 0._dp
 	
-    !y3_0 = 0.332_dp
-    !y4_0 = 0.845_dp
+    y3_0 = 0.332_dp
+    y4_0 = 0.845_dp
     
-    y3_0 = sqrt(1.125_dp)
-	y4_0 = 0.
+    ! y3_0 = sqrt(1.125_dp)
+	! y4_0 = 0.
 
 	!subroutine RK4_four_eq(RK4_type, n, a, b, y1_0, y2_0, y3_0,y4_0, y1_RK4, y2_RK4, y3_RK4, y4_RK4, function_type, input_type)
 	call RK4_four_eq(1_sp,n,ti,tf,y1_0,y2_0,y3_0,y4_0,y1_RK4,y2_RK4,y3_RK4,y4_RK4,1_sp,1_sp)

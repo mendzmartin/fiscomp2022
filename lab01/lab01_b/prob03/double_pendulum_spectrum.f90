@@ -48,7 +48,7 @@ program double_pendulum
 	h_ic = abs(y3_0_max-y3_0_min)/(real(num_ic,dp)-1._dp)
 	
 	tot_energy_exact = -0.745_dp
-	epsilon_energy = 1e-10_dp
+	epsilon_energy = 1e-10_dp 		! epsilon admisible
 
 	control = .false.
 
@@ -77,7 +77,7 @@ program double_pendulum
 
 	n_new = (n-n_st)+1_sp
 	allocate(y1_RK4_st(n_new), y2_RK4_st(n_new))
-	! descartamos regimen )ransitorio de l)s soluciones
+	! descartamos regimen )ransitorio de las soluciones
 	y1_RK4_st = y1_RK4(n_st:n)
 	y2_RK4_st = y2_RK4(n_st:n)
 
@@ -95,8 +95,10 @@ program double_pendulum
 	allocate(ft_real_1(n_new+1_sp), ft_aimag_1(n_new+1_sp), sde_1(n_new+1_sp), omega_1(n_new+1_sp))
 	allocate(ft_real_2(n_new+1_sp), ft_aimag_2(n_new+1_sp), sde_2(n_new+1_sp), omega_2(n_new+1_sp))
 	! subroutine fft_forware_r2c(N, t_start, t_step, func, ft_real, ft_aimag, sde, omega)
-	call fft_forware_r2c(n_new, t(n_st), t(n), y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
-	call fft_forware_r2c(n_new, t(n_st), t(n), y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
+	!call fft_forware_r2c(n_new, t(n_st), t(n), y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
+	!call fft_forware_r2c(n_new, t(n_st), t(n), y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
+	call fft_forware_r2c(n_new, t(n_st), h, y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
+	call fft_forware_r2c(n_new, t(n_st), h, y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
 
 	20 format (E14.6, E14.6, E14.6, E14.6)
 
@@ -129,8 +131,10 @@ program double_pendulum
 	! REALIZAMOS LAS TRANSFORMADAS DE FOURIER DE LAS DOS SOLUCIONES (DESCARTANDO EL TRANSITORIO)
 
 	! subroutine fft_forware_r2c(N, t_start, t_step, func, ft_real, ft_aimag, sde, omega)
-	call fft_forware_r2c(n_new, t(n_st), t(n), y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
-	call fft_forware_r2c(n_new, t(n_st), t(n), y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
+	! call fft_forware_r2c(n_new, t(n_st), t(n), y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
+	! call fft_forware_r2c(n_new, t(n_st), t(n), y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
+	call fft_forware_r2c(n_new, t(n_st), h, y1_RK4_st, ft_real_1, ft_aimag_1, sde_1, omega_1)
+	call fft_forware_r2c(n_new, t(n_st), h, y2_RK4_st, ft_real_2, ft_aimag_2, sde_2, omega_2)
 
 	open( 12, file = './result_ft_01_E0.dat', status = 'replace', action = 'write', iostat = istat )
 	write(*,*) 'istat of result_ft_01_E0.dat = ', istat

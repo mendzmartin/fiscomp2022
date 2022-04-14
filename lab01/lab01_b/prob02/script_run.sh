@@ -13,14 +13,14 @@
 
 # object code name
 #	ob_cod_name='logistic_map.o' 	# RUN 01
-#	ob_cod_name='fftw3_b_incise.o' 	# RUN 02
+#	ob_cod_name='fftw3_logistic_map.o' 	# RUN 02
 #	ob_cod_name='histogram_chaos.o' # RUN 03
 #	ob_cod_name='orbits_diagram_chaos.o' # RUN 04
 	ob_cod_name='lyapunov_exponent.o' # RUN 05
 
 # fortran code name
 #	f90_cod_name='logistic_map.f90'		# RUN 01
-#	f90_cod_name='fftw3_b_incise.f90'	# RUN 02
+#	f90_cod_name='fftw3_logistic_map.f90'	# RUN 02
 #	f90_cod_name='histogram_chaos.f90' 	# RUN 03
 #	f90_cod_name='orbits_diagram_chaos.f90' 	# RUN 04
 	f90_cod_name='lyapunov_exponent.f90' 	# RUN 05

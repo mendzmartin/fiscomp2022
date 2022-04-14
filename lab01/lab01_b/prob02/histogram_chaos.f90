@@ -3,16 +3,16 @@ program histogram_chaos
 
     implicit none
 
-    integer(sp), parameter  :: n_trans=300  ! discarded steps number in transitory regime
-    integer(sp), parameter  :: n_stat=3 ! used steps number in steady state regime
-    integer(sp), parameter  :: n_bins=100   ! numbers of bins (intervals number)
+    integer(sp), parameter  :: n_trans=300_sp       ! discarded steps number in transitory regime
+    integer(sp), parameter  :: n_stat=10000_sp      ! used steps number in steady state regime
+    integer(sp), parameter  :: n_bins=100_sp         ! numbers of bins (intervals number) (JUGAR CON ESTE VALOR)
     integer(sp)             :: i,j,istat
-    real(dp), parameter     :: r=4._dp,x0=0.6_dp ! parameter and initial condition
-    real(dp)                :: x_min,x_max ! min and max values of logistical equation
-    real(dp), allocatable   :: x_stat(:) ! logistical vector in steady state regime
-    real(dp), allocatable   :: x(:) ! logitical vector
-    real(dp), allocatable   :: bins(:) ! bins vector
-    real(sp), allocatable   :: counter(:)   ! counter vector of bins
+    real(dp), parameter     :: r=3.3_dp,x0=0.6_dp    ! parameter and initial condition
+    real(dp)                :: x_min,x_max          ! min and max values of logistical equation
+    real(dp), allocatable   :: x_stat(:)            ! logistical vector in steady state regime
+    real(dp), allocatable   :: x(:)                 ! logitical vector
+    real(dp), allocatable   :: bins(:)              ! bins vector
+    real(sp), allocatable   :: counter(:)           ! counter vector of bins
 
     allocate(x(n_trans+n_stat))
 
