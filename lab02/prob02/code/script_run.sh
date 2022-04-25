@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # module paths
-	pth_mod_01='../../../modules/module_presition.f90'
+	pth_mod_01='../../../modules/module_precision.f90'
 	pth_mod_02='../../../modules/module_functions_1D.f90'
 	pth_mod_03='../../../modules/module_functions_2D.f90'
 	pth_mod_04='../../../modules/module_EDO_segundo_orden.f90'
@@ -11,14 +11,16 @@
 	pth_mod_08='../../../modules/module_EDO_segundo_orden_flip.f90'
 	pth_mod_09='../../../modules/module_pullen_edmonds.f90'
 	pth_mod_10='../../../modules/module_EDO_segundo_orden_poincare.f90'
+	pth_mod_11='../../../modules/module_tridiag_matrix.f90'
 
 	pth_mod=''${pth_mod_01}'' # RUN 1
 
 # object code name
-	ob_cod_name='eq_calor.o' #RUN 1
+	ob_cod_name='heateq_explicit_von_neumann.o' #RUN 1
+
 
 # fortran code name
-	f90_cod_name='eq_calor.f90' 	# RUN 1
+	f90_cod_name='heateq_explicit_von_neumann.f90' 	# RUN 1
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -35,7 +37,6 @@
 	
 # libraries
 #	lib01='-lfftw3'
-
 # execution
 	
 	# remove modules and object codes & results.dat existing
@@ -44,7 +45,7 @@
 #	ld_path='-L/usr/local/lib/'
 	
 #	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} 						# RUN 1
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} 						# RUN 1,2,3,4,5
 	
 	./${ob_cod_name}
 
@@ -52,6 +53,7 @@
 	rm -f *.mod *.o
 
 # Notes:
+# perf stat -e cycles,instructions,cache-references,cache-misses -r 20 ./script_run.sh
 
 # compilation:
 # 	1) chmod +x script.sh
