@@ -13,24 +13,24 @@
 	pth_mod_10='../../../modules/module_EDO_segundo_orden_poincare.f90'
 	pth_mod_11='../../../modules/module_tridiag_matrix.f90'
 
-#	pth_mod=''${pth_mod_01}'' # RUN 1,2
-	pth_mod=''${pth_mod_01}' '${pth_mod_11}'' # RUN 3,4,5,6
+	pth_mod=''${pth_mod_01}'' # RUN 1,2
+#	pth_mod=''${pth_mod_01}' '${pth_mod_11}'' # RUN 3,4,5,6
 
 # object code name
 #	ob_cod_name='heateq_explicit_method.o' #RUN 1
-#	ob_cod_name='heateq_comparison_01.o' #RUN 2
+	ob_cod_name='heateq_comparison_01.o' #RUN 2
 #	ob_cod_name='heateq_implicit_method.o' #RUN 3
 #	ob_cod_name='heateq_crank_nicolson_method.o' #RUN 4
 #	ob_cod_name='heateq_comparison_02.o' #RUN 5
-	ob_cod_name='heateq_comparison_03.o' #RUN 6
+#	ob_cod_name='heateq_comparison_03.o' #RUN 6
 
 # fortran code name
 #	f90_cod_name='heateq_explicit_method.f90' 	# RUN 1
-#	f90_cod_name='heateq_comparison_01.f90' 	# RUN 2
+	f90_cod_name='heateq_comparison_01.f90' 	# RUN 2
 #	f90_cod_name='heateq_implicit_method.f90' #RUN 3
 #	f90_cod_name='heateq_crank_nicolson_method.f90' #RUN 4
 #	f90_cod_name='heateq_comparison_02.f90' #RUN 5
-	f90_cod_name='heateq_comparison_03.f90' #RUN 6
+#	f90_cod_name='heateq_comparison_03.f90' #RUN 6
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -48,9 +48,6 @@
 # libraries
 #	lib01='-lfftw3'
 # execution
-	
-	# remove modules and object codes & results.dat existing
-	rm -f *.mod *.o
 	
 #	ld_path='-L/usr/local/lib/'
 	

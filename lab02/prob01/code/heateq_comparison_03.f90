@@ -16,8 +16,8 @@ program heateq_comparison_03
     integer(sp)             :: i,istat              ! variables de loop y variable de control
     real(dp), parameter     :: t_write_1_noadm=180._dp,t_write_2_noadm=1800._dp ! tiempos en dimensiones para escrituras
     integer(dp)             :: t_write_1,t_write_2      ! pasos temporales entre escrituras
-    20 format (E8.2,x,E8.2)
-    open( 10, file = '../results/result_02_aprox_cranknicolson.dat', status = 'replace', action = 'write', iostat = istat )
+    ! 20 format (E8.2,x,E8.2)
+    ! open( 10, file = '../results/result_02_aprox_cranknicolson.dat', status = 'replace', action = 'write', iostat = istat )
     ! ANÁLISIS DIMENSIONAL
     D=237._dp*(1._dp/(900._dp*2700._dp))
     param_x = 1._dp
@@ -65,9 +65,9 @@ program heateq_comparison_03
     end do
     ! ESCRIBIMOS VALORES LUEGO DE t_write_1 PASOS TEMPORALES
     call implicit_method(n,diag,diag_sup,diag_inf,ux_old(2:n+1),ux_new(2:n+1))
-    do i=1,n+2
-        write(10,20) real(i-1,dp)*x_step_adim, ux_new(i)
-    end do
+    ! do i=1,n+2
+    !     write(10,20) real(i-1,dp)*x_step_adim, ux_new(i)
+    ! end do
     do i=t_write_1,(t_write_2-1)
         call implicit_method(n,diag,diag_sup,diag_inf,data_vector=ux_old(2:n+1),unknown_vector=ux_new(2:n+1))
         A_matrix(1:n,1)=ux_new(2:n+1)
@@ -76,10 +76,10 @@ program heateq_comparison_03
     end do
     ! ESCRIBIMOS VALORES LUEGO DE t_write_2 PASOS TEMPORALES
     call implicit_method(n,diag,diag_sup,diag_inf,ux_old(2:n+1),ux_new(2:n+1))
-    do i=1,n+2
-        write(10,20) real(i-1,dp)*x_step_adim, ux_new(i)
-    end do
-    close(10)
+    ! do i=1,n+2
+    !     write(10,20) real(i-1,dp)*x_step_adim, ux_new(i)
+    ! end do
+    !close(10)
     deallocate(diag,diag_sup,diag_inf,ux_old,ux_new)
     deallocate(B_matrix,A_matrix)
 end program heateq_comparison_03

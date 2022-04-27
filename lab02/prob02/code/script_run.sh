@@ -13,14 +13,25 @@
 	pth_mod_10='../../../modules/module_EDO_segundo_orden_poincare.f90'
 	pth_mod_11='../../../modules/module_tridiag_matrix.f90'
 
-	pth_mod=''${pth_mod_01}'' # RUN 1
+	pth_mod=''${pth_mod_01}'' 				  # RUN 1,4
+#	pth_mod=''${pth_mod_01}' '${pth_mod_11}'' # RUN 2,3,5,6
 
 # object code name
-	ob_cod_name='heateq_explicit_von_neumann.o' #RUN 1
+#	ob_cod_name='heateq_explicit_von_neumann.o' 	  #RUN 1
+#	ob_cod_name='heateq_implicit_von_neumann.o'       #RUN 2
+#	ob_cod_name='heateq_crank_nicolson_von_neumann.o' #RUN 3
+	ob_cod_name='heateq_comparison_01.o' 		      #RUN 4
+#	ob_cod_name='heateq_comparison_02.o'              #RUN 5
+#	ob_cod_name='heateq_comparison_03.o' 			  #RUN 6
 
 
 # fortran code name
-	f90_cod_name='heateq_explicit_von_neumann.f90' 	# RUN 1
+#	f90_cod_name='heateq_explicit_von_neumann.f90' 		 #RUN 1
+#	f90_cod_name='heateq_implicit_von_neumann.f90' 		 #RUN 2
+#	f90_cod_name='heateq_crank_nicolson_von_neumann.f90' #RUN 3
+	f90_cod_name='heateq_comparison_01.f90' 		     #RUN 4
+#	f90_cod_name='heateq_comparison_02.f90' 			 #RUN 5
+#	f90_cod_name='heateq_comparison_03.f90'				 #RUN 6
 
 #flags compiles
 #{see: https://faculty.washington.edu/rjl/classes/am583s2013/notes/gfortran_flags.html}
@@ -31,7 +42,7 @@
 		flg_d02='-g -fbacktrace -fbounds-check'
 	## optimization flags
 		flg_o01='-o3 -ftree-vectorize -ftree-loop-vectorize'
-		flags_o02='-march=native'
+		flg_o02='-march=native'
 
 	flags=${flg_o01}' '${flg_o02}' '${flg_w01}' '${flg_d02}
 	
@@ -45,7 +56,7 @@
 #	ld_path='-L/usr/local/lib/'
 	
 #	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} ${ld_path} ${lib01}
-	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} 						# RUN 1,2,3,4,5
+	gfortran ${flags} -o ${ob_cod_name} ${pth_mod} ${f90_cod_name} 						# RUN 1,2,3,4
 	
 	./${ob_cod_name}
 
