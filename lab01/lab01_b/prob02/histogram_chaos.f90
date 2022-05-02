@@ -57,6 +57,7 @@ program histogram_chaos
     do i = 1,(size(bins)-1_sp)
         write(10,*) bins(i), counter(i)
     enddo
+    close(10)
 
     deallocate(bins, counter)
 

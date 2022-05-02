@@ -1,4 +1,4 @@
-program prueba
+program test_module_tridiag_matrix
     use module_precision
     use module_tridiag_matrix
     implicit none
@@ -11,6 +11,6 @@ program prueba
     call implicit_method(3,diag,diag_sup,diag_inf,vector1,vector2)
     write(*,*) vector1
     write(*,*) vector2
-end program prueba
+end program test_module_tridiag_matrix
 ! run command
-! gfortran -o prueba.o module_precision.f90 module_tridiag_matrix.f90 prueba.f90 && ./prueba.o && rm *.mod *.o
+! gfortran -o test_module_tridiag_matrix.o module_precision.f90 module_tridiag_matrix.f90 test_module_tridiag_matrix.f90 && ./test_module_tridiag_matrix.o && rm *.mod *.o
