@@ -1,0 +1,41 @@
+n=1
+ elapsed time  0.2470E+02
+ mc_volumen=  0.1999E+01    abs_err=  0.3298E-03      sigma=  0.2250E+00
+ ex_volumen=  0.2000E+01
+ n-ball/n-cub  1.0000E+00
+ 
+n=2
+ elapsed time  0.4426E+02
+ mc_volumen=  0.3143E+01    abs_err=  0.4368E-03      sigma=  0.2141E+00
+ ex_volumen=  0.3142E+01
+ n-ball/n-cub  0.7855E+00
+ 
+n=3
+ elapsed time  0.5253E+02
+ mc_volumen=  0.4192E+01    abs_err=  0.8824E-03      sigma=  0.1686E+00
+ ex_volumen=  0.4189E+01
+ n-ball/n-cub  0.5236E+00
+ 
+n=4
+ elapsed time  0.5659E+02
+ mc_volumen=  0.4934E+01    abs_err=  0.1947E-03      sigma=  0.1408E+00
+ ex_volumen=  0.4935E+01
+ n-ball/n-cub  0.3084E+00
+
+n=5
+ elapsed time  0.1130E+03
+ mc_volumen=  0.5260E+01    abs_err=  0.8072E-03      sigma=  0.2181E+00
+ ex_volumen=  0.5264E+01
+ n-ball/n-cub  0.1645E+00
+
+n=6
+ elapsed time  0.1105E+03
+ mc_volumen=  0.5167E+01    abs_err=  0.4670E-04      sigma=  0.1765E+00
+ ex_volumen=  0.5168E+01
+ n-ball/n-cub  0.8075E-01
+ 
+n=7
+ elapsed time  0.1412E+03
+ mc_volumen=  0.4723E+01    abs_err=  0.4518E-03      sigma=  0.1953E+00
+ ex_volumen=  0.4725E+01
+ n-ball/n-cub  0.3691E-01

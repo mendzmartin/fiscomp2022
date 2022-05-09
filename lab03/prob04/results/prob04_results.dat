@@ -1,0 +1,16 @@
+mendez@mendez-notebook:~/github_repositories/my_repositories/fiscomp2022/lab03/prob04/code$ make clean && make hyper_sphere.o && ./hyper_sphere.o
+rm -f *.o *.mod
+gfortran -c ../../../modules/module_precision.f90
+gfortran -c ../../../modules/module_random_generator.f90
+gfortran -o3 -ftree-vectorize -ftree-loop-vectorize -march=native -Wall -Wextra -Wconversion -pedantic -o hyper_sphere.o module_precision.o module_random_generator.o hyper_sphere.f90
+hyper_sphere.f90:15:32:
+
+   15 |     real(dp),    parameter :: pi=4._dp*atan(1._dp)
+      |                                1
+Warning: Unused parameter ‘pi’ declared at (1) [-Wunused-parameter]
+ tr_volumen=  0.4189E+01    abs_err=  0.5441E-11
+ mc_volumen=  0.4187E+01    abs_err=  0.4521E-03      sigma=  0.1844E+00
+ ex_volumen=  0.4189E+01
+ 
+ 
+ n=3;n_random=10E+06,sigma_n=10E+03

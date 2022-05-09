@@ -114,7 +114,7 @@ set cbtics  norangelimit autofreq
 set rtics axis in scale 1,0.5 nomirror norotate  autojustify
 set rtics  norangelimit autofreq 
 unset ttics
-set title "" 
+set title "generador de numeros aleatorios = ran0" 
 set title  font "" textcolor lt -1 norotate
 set timestamp bottom 
 set timestamp "" 
@@ -122,13 +122,13 @@ set timestamp  font "" textcolor lt -1 norotate
 set trange [ * : * ] noreverse nowriteback
 set urange [ * : * ] noreverse nowriteback
 set vrange [ * : * ] noreverse nowriteback
-set xlabel "" 
+set xlabel "numero de pasos (n_{step})" 
 set xlabel  font "" textcolor lt -1 norotate
 set x2label "" 
 set x2label  font "" textcolor lt -1 norotate
 set xrange [ * : * ] noreverse writeback
 set x2range [ * : * ] noreverse writeback
-set ylabel "" 
+set ylabel "counter cuadrantes (1,2,3,4)" 
 set ylabel  font "" textcolor lt -1 rotate
 set y2label "" 
 set y2label  font "" textcolor lt -1 rotate
@@ -165,6 +165,14 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "result.dat"
-p 'result.dat' u 1:2 w l
+x = 0.0
+## Last datafile plotted: "../results/result_03_ran0.dat"
+set grid
+set key font ",20"
+set key font ",20";set xlabel  font ",20" ;set ylabel  font ",20" 
+set terminal png size 1024,1024
+set output 'cuadrantes_mzran.png'
+set title 'N=1E+06 (numero de pasos) - nrand=mzran' font',20'
+set yrange [248500:251500]
+p '../results/result_03_mzran.dat' u 1:3 w lp lw 2 title 'cuad01', '../results/result_03_mzran.dat' u 1:4 w lp lw 2 title 'cuad02', '../results/result_03_mzran.dat' u 1:5 w lp lw 2 title 'cuad03', '../results/result_03_mzran.dat' u 1:6 w lp lw 2 title 'cuad04', '../results/result_03_mzran.dat' u 1:2 w l lw 2 dt 2 title 'N/4'
 #    EOF
