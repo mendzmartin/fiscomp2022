@@ -23,7 +23,7 @@ flg_deb02 = -g -fbacktrace -fbounds-check
 flg_opt01 = -o3 -ftree-vectorize -ftree-loop-vectorize
 flg_opt02 = -march=native
 # used compiler flags
-FFLAGS = $(flg_opt01) $(flg_opt02) $(flg_war01)
+FFLAGS = $(flg_opt01) $(flg_opt02) $(flg_war01) $(flg_deb01) $(flg_deb02)
 
 # library flags
 flg_lib01 = -lfftw3
@@ -35,14 +35,20 @@ LDFLAGS = $(flg_lib01)
 # ============================================================
 # binaries names
 bin_name_01 = ising_ferromagnetic_model
+bin_name_02 = test_integer_rnd
 
 # object dependencies
-dependencies_01 = module_precision.o module_random_generator.o
+dependencies_01= module_precision.o module_mt19937.o
+dependencies_02= module_precision.o module_random_generator.o
 
 # binaries rules
-# hyper_sphere
+# ising_ferromagnetic_model
 $(bin_name_01).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_01).o $(dependencies_01) $(bin_name_01).f90
+
+# test_integer_rnd
+$(bin_name_02).o: $(dependencies_02)
+	$(FC) $(FFLAGS) -o $(bin_name_02).o $(dependencies_02) $(bin_name_02).f90
 
 # ============================================================
 # MODULES COMPILATION
