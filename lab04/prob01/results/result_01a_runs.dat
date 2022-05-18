@@ -1,0 +1,27 @@
+initial_spins_configuration random
+    T_adim1=2.0_dp (result_01a_T_adim1_rnd.dat)
+        M_exact_adim=  0.9113E+00
+        M_med_adim=  0.7532E+00       error_M  0.9824E-03
+        U_med_adim= -0.2583E+04       error_U  0.1104E+01
+    T_adim2=3.3_dp (result_01a_T_adim2_rnd.dat)
+        M_exact_adim=  0.0000E+00
+        M_med_adim=  0.5032E-01       error_M  0.4561E-03
+        U_med_adim= -0.1057E+04       error_U  0.9552E+0
+    T_adim3=2.26_dp (result_01a_T_adim3_rnd.dat)
+        M_exact_adim=  0.6134E+00
+        M_med_adim=  0.3238E+00       error_M  0.2254E-02
+        U_med_adim= -0.2087E+04       error_U  0.1437E+01
+
+initial_spins_configuration spin "up"
+    T_adim1=2.0_dp (result_01a_T_adim1_up.dat)
+        M_exact_adim=  0.9113E+00
+        M_med_adim=  0.9117E+00       error_M  0.3291E-03
+        U_med_adim= -0.6000E+04       error_U  0.1056E+01
+    T_adim2=3.3_dp (result_01a_T_adim2_up.dat)
+        M_exact_adim=  0.0000E+00
+        M_med_adim=  0.1244E+00       error_M  0.7508E-03
+        U_med_adim= -0.4360E+04       error_U  0.1051E+01
+    T_adim3=2.26_dp (result_01a_T_adim3_up.dat)
+        M_exact_adim=  0.6134E+00
+        M_med_adim=  0.7659E+00       error_M  0.1060E-02
+        U_med_adim= -0.5627E+04       error_U  0.1617E+01

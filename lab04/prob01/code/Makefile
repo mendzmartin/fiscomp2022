@@ -18,7 +18,7 @@ FC = $(fcomp_01)
 flg_war01 = -Wall -Wextra -Wconversion -pedantic -ffpe-trap=overflow
 # debugging flags
 flg_deb01 = -ffpe-trap=zero -ffpe-trap=overflow -ffpe-trap=underflow 
-flg_deb02 = -g -fbacktrace -fbounds-check
+flg_deb02 = -g -fcheck=all -fbacktrace -fbounds-check
 # optimization flags
 flg_opt01 = -o3 -ftree-vectorize -ftree-loop-vectorize
 flg_opt02 = -march=native
@@ -36,10 +36,14 @@ LDFLAGS = $(flg_lib01)
 # binaries names
 bin_name_01 = ising_ferromagnetic_model
 bin_name_02 = test_integer_rnd
+bin_name_03 = ising_ferromagnetic_model_02
+bin_name_04 = test_underflows_exp_function
+bin_name_05 = ising_ferromagnetic_model_03
 
 # object dependencies
-dependencies_01= module_precision.o module_mt19937.o
+dependencies_01= module_precision.o module_mt19937.o module_2D_ferromagnetic_ising.o
 dependencies_02= module_precision.o module_random_generator.o
+dependencies_03= module_precision.o
 
 # binaries rules
 # ising_ferromagnetic_model
@@ -49,6 +53,18 @@ $(bin_name_01).o: $(dependencies_01)
 # test_integer_rnd
 $(bin_name_02).o: $(dependencies_02)
 	$(FC) $(FFLAGS) -o $(bin_name_02).o $(dependencies_02) $(bin_name_02).f90
+
+# ising_ferromagnetic_model_02
+$(bin_name_03).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_03).o $(dependencies_01) $(bin_name_03).f90
+
+# test_underflows_exp_function
+$(bin_name_04).o: $(dependencies_03)
+	$(FC) $(FFLAGS) -o $(bin_name_04).o $(dependencies_03) $(bin_name_04).f90
+
+# ising_ferromagnetic_model_03
+$(bin_name_05).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_05).o $(dependencies_01) $(bin_name_05).f90
 
 # ============================================================
 # MODULES COMPILATION
@@ -70,6 +86,7 @@ mod_name_11 = module_tridiag_matrix
 mod_name_12 = module_random_generator
 mod_name_13 = module_mzran
 mod_name_14 = module_mt19937
+mod_name_15 = module_2D_ferromagnetic_ising
 
 # modules recipes
 $(mod_name_01).o:
@@ -80,6 +97,8 @@ $(mod_name_13).o: $(mod_name_01).o
 	$(FC) -c $(mod_path)$(mod_name_13).f90
 $(mod_name_14).o:
 	$(FC) -c $(mod_path)$(mod_name_14).f90
+$(mod_name_15).o: $(mod_name_01).o $(mod_name_14).o
+	$(FC) -c $(mod_path)$(mod_name_15).f90
 	
 # ============================================================
 # PONY rules
