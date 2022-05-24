@@ -202,4 +202,51 @@ module module_2D_ferromagnetic_ising
 
     end subroutine pbc_ij
 
+    ! subrutina para calcular la función de autocorrelación
+    subroutine func_autocor(obs,time_index,tau_corr,num_of_terms,&
+                        autocor_vector,aux_vector1,mask_vector,aux_vector2)
+    implicit none
+
+    integer(sp), intent(in)    :: time_index                                    ! indice del observable
+    integer(sp), intent(in)    :: num_of_terms                                  ! menor cantidad de terminos
+    integer(sp), intent(in)    :: tau_corr                                      ! tiempo de correlación
+    real(dp),    intent(in)    :: obs                                           ! observable
+    real(dp),    intent(inout) :: autocor_vector(tau_corr)                      ! vector autocorrelación
+    real(dp),    intent(inout) :: aux_vector1(tau_corr),aux_vector2(tau_corr)   ! vectores auxiliares
+    real(dp),    intent(inout) :: mask_vector(tau_corr)                         ! vector máscara
+    integer(sp)                :: i,index                                       ! loop indices
+
+    ! llenamos por primera vez el vector de dim=tau_corr
+    if (time_index<=tau_corr) autocor_vector(time_index)=obs
+    if (time_index==tau_corr) then 
+        aux_vector1(:)=autocor_vector(:)
+        aux_vector2(:)=autocor_vector(:)
+    end if
+
+    ! computamos las correlaciones a todo tiempo
+    if (time_index>tau_corr.and.time_index<=(num_of_terms+tau_corr)) then
+        do i=1_sp,tau_corr-1_sp;if (mod(time_index,tau_corr)==i) index=i;end do
+        if (mod(time_index,tau_corr)==0_sp) index=tau_corr
+        aux_vector2(:)=cshift(aux_vector2(:),shift=1)
+        aux_vector2(tau_corr)=obs
+        autocor_vector(index)=dot_product(aux_vector1(:),aux_vector2(:))
+    end if
+
+    ! computamos las correlaciones faltantes
+    if (time_index==(num_of_terms+tau_corr)) then
+        mask_vector(:)=1._dp
+        aux_vector1(:)=aux_vector2(:)
+        do index=1,tau_corr-1
+            aux_vector2(:)=cshift(aux_vector2(:),shift=1)
+            mask_vector(tau_corr-(index-1))=0._dp
+            aux_vector2(:)=aux_vector2(:)*mask_vector(:)
+            autocor_vector(index)=autocor_vector(index)+dot_product(aux_vector1(:),aux_vector2(:))
+            ! promediamos en el ensamble
+            autocor_vector(index)=autocor_vector(index)*(1._dp/real(num_of_terms+tau_corr-index,dp))
+        end do
+        ! promediamos en el ensamble
+        autocor_vector(tau_corr)=autocor_vector(tau_corr)*(1._dp/real(tau_corr,dp))
+    end if
+end subroutine func_autocor
+
 end module module_2D_ferromagnetic_ising

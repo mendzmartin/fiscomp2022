@@ -34,11 +34,15 @@ LDFLAGS = $(flg_lib01)
 # BINARIES COMPILATION
 # ============================================================
 # binaries names
-bin_name_01 = ising_ferromagnetic_model
+bin_name_01 = ising_ferromagnetic_model_01
 bin_name_02 = test_integer_rnd
 bin_name_03 = ising_ferromagnetic_model_02
 bin_name_04 = test_underflows_exp_function
 bin_name_05 = ising_ferromagnetic_model_03
+bin_name_06 = ising_ferromagnetic_model_04
+bin_name_07 = ising_ferromagnetic_model_05
+bin_name_08 = test_autocorrelation
+bin_name_09 = ising_ferromagnetic_model_06
 
 # object dependencies
 dependencies_01= module_precision.o module_mt19937.o module_2D_ferromagnetic_ising.o
@@ -46,7 +50,7 @@ dependencies_02= module_precision.o module_random_generator.o
 dependencies_03= module_precision.o
 
 # binaries rules
-# ising_ferromagnetic_model
+# ising_ferromagnetic_model_01
 $(bin_name_01).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_01).o $(dependencies_01) $(bin_name_01).f90
 
@@ -66,6 +70,21 @@ $(bin_name_04).o: $(dependencies_03)
 $(bin_name_05).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_05).o $(dependencies_01) $(bin_name_05).f90
 
+# ising_ferromagnetic_model_04
+$(bin_name_06).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_06).o $(dependencies_01) $(bin_name_06).f90
+
+# ising_ferromagnetic_model_05
+$(bin_name_07).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_07).o $(dependencies_01) $(bin_name_07).f90
+
+# test_autocorrelation
+$(bin_name_08).o: $(dependencies_03)
+	$(FC) $(FFLAGS) -o $(bin_name_08).o $(dependencies_03) $(bin_name_08).f90
+
+# ising_ferromagnetic_model_06
+$(bin_name_09).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_09).o $(dependencies_01) $(bin_name_09).f90
 # ============================================================
 # MODULES COMPILATION
 # ============================================================

@@ -1,106 +1,120 @@
-! Programa para determinar el tiempo de termalización
-!  se realizan corridas del método de MC "metropolis" para distintas temperaturas
-!  tanto cerca como lejos de la temperatura crítica.
-! make clean && make ising_ferromagnetic_model_03.o && ./ising_ferromagnetic_model_03.o
-program ising_ferromagnetic_model_03
+! Programa para calcular histogramas (inciso c)
+! make clean && make ising_ferromagnetic_model_04.o && ./ising_ferromagnetic_model_04.o
+program ising_ferromagnetic_model_04
     use module_precision;use module_2D_ferromagnetic_ising
     implicit none
 
-    integer(sp), parameter   :: n=40_sp,m=10_sp                     ! sitios de red por dimension
-    integer(sp), parameter   :: MC_step=10000_sp,MC_step_trans=3000 ! Monte Carlo step total and transitory
-    real(dp),    parameter   :: Tc_adim=2.2676_dp                   ! temperatura de Curie adimensional
+    integer(sp), parameter   :: MC_step=10000_sp,MC_step_rlx=3000_sp     ! Monte Carlo step total and transitory
+    real(dp),    parameter   :: Tc_adim=2.2692_dp    ! temperatura de Curie adimensional
     integer(sp), allocatable :: aux_matrix_pbc(:,:)
-    integer(sp)              :: istat
+    real(dp),    allocatable :: Madim_vector(:)    ! vector de magnetización para histograma
+    integer(sp)              :: n                    ! sitios de red por dimension
+    integer(sp)              :: m              ! cantidad puntos para definir el paso de temperaturas
     real(dp)                 :: Madim,U_adim
 
-    allocate(aux_matrix_pbc(n+2,n+2))
-    ! genero configuracion inicial random
+
+    m=10_sp;n=10_sp;allocate(aux_matrix_pbc(n+2,n+2));allocate(Madim_vector(MC_step-MC_step_rlx))
     call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
-    ! calculamos energía interna (configuración inicial)
-    call average_energy(aux_matrix_pbc,n,U_adim)
-    ! calculamos magnetización inicial
-    Madim=M_adim(aux_matrix_pbc,n)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.1999_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_lessTc_10x10.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.5_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_greaterTc_10x10.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    deallocate(aux_matrix_pbc);deallocate(Madim_vector)
 
-    ! temperaturas de equilibrio
-    !T0=1;T1=2.2;T2=2.2676;T3=3.3
+    m=10_sp;n=20_sp;allocate(aux_matrix_pbc(n+2,n+2));allocate(Madim_vector(MC_step-MC_step_rlx))
+    call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.11_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_lessTc_20x20.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.5_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_greaterTc_20x20.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    deallocate(aux_matrix_pbc);deallocate(Madim_vector)
 
-    21 format(2(A12,x),A12)
+    m=10_sp;n=40_sp;allocate(aux_matrix_pbc(n+2,n+2));allocate(Madim_vector(MC_step-MC_step_rlx))
+    call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.118_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_lessTc_40x40.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    call initial_spins_configuration(1_sp,n,aux_matrix_pbc)
+    call average_energy(aux_matrix_pbc,n,U_adim);Madim=M_adim(aux_matrix_pbc,n)
+    call ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,0._dp,Tc_adim*1.5_dp,U_adim,Madim,Madim_vector)
+    call histogram('../results/result_01c_historgram_greaterTc_40x40.dat',10_sp,Madim_vector,MC_step-MC_step_rlx)
+    deallocate(aux_matrix_pbc);deallocate(Madim_vector)
 
-    open(10,file='../results/result_01a_MCS_trans_T0.dat',status='replace',action='write',iostat=istat)
-    write(*,*) 'istat(10file) = ',istat
-    write(10,21) 'MC_step','U_adim','M_adim'
-    call ising_relax(n,MC_step,MC_step_trans,m,10,aux_matrix_pbc,0._dp,1._dp,Tc_adim,U_adim,Madim)
-    close(10)
+end program ising_ferromagnetic_model_04
 
-    open(11,file='../results/result_01a_MCS_trans_T1.dat',status='replace',action='write',iostat=istat)
-    write(*,*) 'istat(11file) = ',istat
-    write(11,21) 'MC_step','U_adim','M_adim'
-    call ising_relax(n,MC_step,MC_step_trans,m,11,aux_matrix_pbc,1.1_dp,2._dp,Tc_adim,U_adim,Madim)
-    close(11)
-
-    open(12,file='../results/result_01a_MCS_trans_T2.dat',status='replace',action='write',iostat=istat)
-    write(*,*) 'istat(12file) = ',istat
-    write(12,21) 'MC_step','U_adim','M_adim'
-    call ising_relax(n,MC_step,MC_step_trans,m,12,aux_matrix_pbc,2.1_dp,Tc_adim,Tc_adim,U_adim,Madim)
-    close(12)
-
-    open(13,file='../results/result_01a_MCS_trans_T3.dat',status='replace',action='write',iostat=istat)
-    write(*,*) 'istat(13file) = ',istat
-    write(13,21) 'MC_step','U_adim','M_adim'
-    call ising_relax(n,MC_step,MC_step_trans,m,13,aux_matrix_pbc,Tc_adim+0.1_dp,3.3_dp,Tc_adim,U_adim,Madim)
-    close(13)
-
-    deallocate(aux_matrix_pbc)
-end program ising_ferromagnetic_model_03
-
-subroutine ising_relax(n,MC_step,MC_step_trans,m,file_num,aux_matrix_pbc,T_start,T_end,Tc_adim,U_adim,Madim)
+subroutine ising_relax(n,MC_step,MC_step_rlx,m,aux_matrix_pbc,T_start,T_end,U_adim,Madim,Madim_vector)
     use module_precision;use module_2D_ferromagnetic_ising
     implicit none 
-    real(dp),    intent(in)     :: T_end,T_start,Tc_adim
-    integer(sp), intent(in)     :: n,m,file_num,MC_step,MC_step_trans
+    real(dp),    intent(in)     :: T_end,T_start
+    integer(sp), intent(in)     :: n,m,MC_step,MC_step_rlx
     integer(sp), intent(inout)  :: aux_matrix_pbc(n+2,n+2)
     real(dp),    intent(inout)  :: U_adim,Madim
-    integer(sp)                 :: i,j,k
+    real(dp),    intent(inout)    :: Madim_vector(MC_step-MC_step_rlx)
+    integer(sp)                 :: i,j
     real(dp)                    :: T_step,T_adim
-    real(dp)                    :: U_med_adim,sigma_U,error_U
-    real(dp)                    :: M_med_adim,sigma_M,error_M
-    real(dp)                    :: s0,s1_U,s2_U,s1_M,s2_M ! variables para hacer estadística
 
-    20 format(I12,x,E12.4,x,E12.4)
-    T_step=abs(T_end-T_start)*(1._dp/real(m-1_sp,dp))
-    ! termalizo hasta una temperatura anterior a la buscada
-    do j=1,m-1
+    bucle_01: do j=1,m ! cantidad de Temperaturas diferentes
+        T_step=abs(T_end-T_start)*(1._dp/real(m-1_sp,dp))
         T_adim=T_start+T_step*real(j-1_sp,dp)
-        write(*,'(A12,E12.4)') 'T_adim=',T_adim
-        do i=1,MC_step
+        do i=1,MC_step_rlx
             call MC_step_relaxation(1_sp,n,aux_matrix_pbc,T_adim,U_adim)
+            Madim=M_adim(aux_matrix_pbc,n) ! Magnetización
         end do
-    end do
-    ! termalizo a la temperatura buscada
-    write(*,'(A12,E12.4)') 'T_adim=',T_end
-    s0=0._dp;s1_U=0._dp;s2_U=0._dp;s1_M=0._dp;s2_M=0._dp
-    do i=1,MC_step
-        call MC_step_relaxation(1_sp,n,aux_matrix_pbc,T_end,U_adim)
-        Madim=M_adim(aux_matrix_pbc,n) ! Magnetización
-        ! datos para hacer estadística en steady state
-        if (k>=MC_step_trans) then
-            s0=s0+1._dp
-            s2_U=s2_U+U_adim*U_adim;s1_U=s1_U+U_adim ! energía
-            s2_M=s2_M+Madim*Madim;s1_M=s1_M+Madim    ! magnetización
-        end if
-        write(file_num,20) i,U_adim,Madim
-    end do
-
-    !calculamos media,desviacion estándar, varianza y error
-    U_med_adim=s1_U*(1._dp/s0)
-    sigma_U=sqrt((s2_U-s0*U_med_adim*U_med_adim)*(1._dp/(s0-1._dp)))
-    error_U=sigma_U*(1._dp/sqrt(s0-1._dp))
-    M_med_adim=s1_M*(1._dp/s0)
-    sigma_M=sqrt((s2_M-s0*M_med_adim*M_med_adim)*(1._dp/(s0-1._dp)))
-    error_M=sigma_M*(1._dp/sqrt(s0-1._dp))
-
-    write(*,'(A14,E12.4)') 'M_exact_adim=', M_exact_adim(n,T_end,Tc_adim)
-    write(*,'(2(A14,E12.4))') 'M_med_adim=', M_med_adim,'error_M',error_M
-    write(*,'(2(A14,E12.4))') 'U_med_adim=', U_med_adim,'error_U',error_U
+        do i=MC_step_rlx+1,MC_step
+            call MC_step_relaxation(1_sp,n,aux_matrix_pbc,T_adim,U_adim)
+            Madim=M_adim(aux_matrix_pbc,n) ! Magnetización
+            if (j==m) Madim_vector(i-MC_step_rlx)=Madim
+        end do
+    end do bucle_01
 
 end subroutine ising_relax
+
+! subrutina para crear e imprimir histograma
+subroutine histogram(file_name,file_number,x_vector,x_dim)
+    use module_precision
+
+    implicit none
+    character(len=*), intent(in) :: file_name
+    integer(sp),      intent(in) :: file_number
+    integer(sp),      intent(in) :: x_dim           ! dimension
+    real(dp),         intent(in) :: x_vector(x_dim) ! normalized data
+
+    integer(sp), parameter   :: n_bins=1000_sp   ! numbers of bins (JUGAR CON ESTE VALOR)
+    real(dp),    allocatable :: bins_points(:)  ! points between bins vector
+    integer(sp), allocatable :: counter(:)      ! counter vector of bins
+    real(sp)                 :: max_value       ! maximun counter value
+    real(dp)                 :: min_bin_point,max_bin_point
+    real(dp)                 :: bins_step       ! step of points between bins
+    integer(sp)              :: i,j,istat       ! loop and control variables
+
+    ! armamos el vector de bins
+    allocate(bins_points(n_bins+1),counter(n_bins))
+    max_bin_point=1._dp;min_bin_point=-1_dp
+    bins_step=abs(max_bin_point-min_bin_point)*(1._dp/n_bins)
+    do i=1,n_bins+1;bins_points(i)=min_bin_point+bins_step*real(i-1,dp);end do
+
+    ! llenamos el vector contador de bins
+    do i=1,n_bins
+        counter(i)=0
+        do j=1,x_dim
+            if ((bins_points(i)<=x_vector(j)).and.(bins_points(i+1)>=x_vector(j))) then
+                counter(i)=counter(i)+1
+            endif
+    enddo;enddo
+
+    max_value=real(maxval(counter(:)),dp)
+    if (max_value==0._dp) write(*,*) 'math error'
+
+    ! escribimos el histograma
+    open(file_number,file=file_name,status='replace',action='write',iostat=istat)
+    21 format(A12,x,A12); 20 format(E12.4,x,E12.4);write(*,*) 'istat=', istat
+    write(file_number,21) 'bins points','counter'
+    do i = 1,n_bins; write(file_number,20) bins_points(i),real(counter(i),dp)*(1._dp/max_value); enddo
+    close(file_number)
+end subroutine histogram

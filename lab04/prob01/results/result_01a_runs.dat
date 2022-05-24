@@ -1,27 +1,46 @@
-initial_spins_configuration random
-    T_adim1=2.0_dp (result_01a_T_adim1_rnd.dat)
+initial_spins_configuration random - lattice= 40x40
+    T=1 (result_01a_spinmap_T=1_rnd.dat)
+        M_exact_adim=  0.9993E+00
+        M_med_adim=  0.9996E+00       error_M  0.8926E-05
+        U_med_adim= -0.3197E+04       error_U  0.5598E-01
+    T=2 (result_01a_spinmap_T=2_rnd.dat)
         M_exact_adim=  0.9113E+00
-        M_med_adim=  0.7532E+00       error_M  0.9824E-03
-        U_med_adim= -0.2583E+04       error_U  0.1104E+01
-    T_adim2=3.3_dp (result_01a_T_adim2_rnd.dat)
+        M_med_adim=  0.9364E+00       error_M  0.1767E-03
+        U_med_adim= -0.2886E+04       error_U  0.6920E+00
+    T=Tc (result_01a_spinmap_T=Tc_rnd.dat)
         M_exact_adim=  0.0000E+00
-        M_med_adim=  0.5032E-01       error_M  0.4561E-03
-        U_med_adim= -0.1057E+04       error_U  0.9552E+0
-    T_adim3=2.26_dp (result_01a_T_adim3_rnd.dat)
-        M_exact_adim=  0.6134E+00
-        M_med_adim=  0.3238E+00       error_M  0.2254E-02
-        U_med_adim= -0.2087E+04       error_U  0.1437E+01
+        M_med_adim=  0.8524E+00       error_M  0.3961E-03
+        U_med_adim= -0.2598E+04       error_U  0.1047E+01
+    T=3.3 (result_01a_spinmap_T=3.3_rnd.dat)
+        M_exact_adim=  0.0000E+00
+        M_med_adim=  0.6398E-01       error_M  0.5875E-03
+        U_med_adim= -0.1243E+04       error_U  0.9665E+00
 
-initial_spins_configuration spin "up"
-    T_adim1=2.0_dp (result_01a_T_adim1_up.dat)
+    mapas de spins
+        result_01a_spinmap_T=1_rnd
+        result_01a_spinmap_T=Tc_rnd
+        result_01a_spinmap_T=3.3_rnd
+
+initial_spins_configuration spin "up" - lattice= 40x40
+
+    T=1 (result_01a_spinmap_T=1_up.dat)
+        M_exact_adim=  0.9993E+00
+        M_med_adim=  0.9995E+00       error_M  0.9524E-05
+        U_med_adim= -0.3197E+04       error_U  0.5953E-01
+    T=2 (result_01a_spinmap_T=2_up.dat)
         M_exact_adim=  0.9113E+00
-        M_med_adim=  0.9117E+00       error_M  0.3291E-03
-        U_med_adim= -0.6000E+04       error_U  0.1056E+01
-    T_adim2=3.3_dp (result_01a_T_adim2_up.dat)
+        M_med_adim=  0.9357E+00       error_M  0.1863E-03
+        U_med_adim= -0.2884E+04       error_U  0.7193E+00
+    T=Tc (result_01a_spinmap_T=Tc_up.dat)
         M_exact_adim=  0.0000E+00
-        M_med_adim=  0.1244E+00       error_M  0.7508E-03
-        U_med_adim= -0.4360E+04       error_U  0.1051E+01
-    T_adim3=2.26_dp (result_01a_T_adim3_up.dat)
-        M_exact_adim=  0.6134E+00
-        M_med_adim=  0.7659E+00       error_M  0.1060E-02
-        U_med_adim= -0.5627E+04       error_U  0.1617E+01
+        M_med_adim=  0.8496E+00       error_M  0.4240E-03
+        U_med_adim= -0.2591E+04       error_U  0.1051E+01
+    T=3.3 (result_01a_spinmap_T=3.3_up.dat)
+        M_exact_adim=  0.0000E+00
+        M_med_adim=  0.6728E-01       error_M  0.5833E-03
+        U_med_adim= -0.1245E+04       error_U  0.9444E+00
+
+    mapas de spins
+        result_01a_spinmap_T=1_up
+        result_01a_spinmap_T=Tc_up
+        result_01a_spinmap_T=3.3_up
