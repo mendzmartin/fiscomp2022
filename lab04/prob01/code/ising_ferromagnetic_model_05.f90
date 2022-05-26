@@ -5,11 +5,11 @@ program ising_ferromagnetic_model_05
     implicit none
 
     integer(sp), parameter   :: n=10_sp                                 ! sitios de red por dimension
-    integer(sp), parameter   :: MC_step=5000_sp,MC_step_trans=3000_sp  ! Monte Carlo step total and transitory
-    integer(sp), parameter   :: m1=25_sp,m2=50_sp                    ! puntos p/ mallado fino y grueso
+    integer(sp), parameter   :: MC_step=5000_sp,MC_step_trans=3000_sp   ! Monte Carlo step total and transitory
+    integer(sp), parameter   :: m1=25_sp,m2=50_sp                       ! puntos p/ mallado fino y grueso
     real(dp),    parameter   :: Tmin_adim=0._dp,Tmax_adim=10._dp        ! temperatura adimensional
     real(dp),    parameter   :: Tc_adim=2.2692_dp                       ! temperatura de Curie adimensional
-    real(dp),    parameter   :: deltaT_adim=Tc_adim*0.5_dp            ! intervalo para incremetar ptos
+    real(dp),    parameter   :: deltaT_adim=Tc_adim*0.5_dp              ! intervalo para incremetar ptos
     integer(sp), allocatable :: aux_matrix_pbc(:,:)
     integer(sp)              :: i,istat
     real(dp)                 :: U_adim,U_med_adim,sigma_U,error_U       ! Energía interna

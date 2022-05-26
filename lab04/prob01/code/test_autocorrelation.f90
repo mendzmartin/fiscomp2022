@@ -76,7 +76,7 @@ subroutine func_autocor(obs,time_index,tau_corr,num_of_terms,&
             autocor_vector(index)=autocor_vector(index)+dot_product(aux_vector1(:),aux_vector2(:))
             autocor_vector(index)=autocor_vector(index)*(1._dp/real(num_of_terms+tau_corr-index,dp))
         end do
-        autocor_vector(tau_corr)=autocor_vector(tau_corr)*(1._dp/real(tau_corr,dp))
+        autocor_vector(tau_corr)=autocor_vector(tau_corr)*(1._dp/real(num_of_terms,dp))
     end if
 
 end subroutine func_autocor

@@ -176,6 +176,7 @@ set multiplot layout 2,2
     '../results/result_01d_binder_cumulant_20x20.dat' every 8  u 1:2 w lp ps 1.5 pt 7 lc rgb 'green' smooth mcsplines t 'laticce=20x20',\
     '../results/result_01d_binder_cumulant_40x40.dat' every 8  u 1:2 w lp ps 1.5 pt 7 lc rgb 'blue' smooth mcsplines t 'laticce=40x40'
 
+    set mxtics 10;set grid mxtics
     set yrange[0.6:0.7];set xrange[0.9:1.1]
     p '../results/result_01d_binder_cumulant_10x10.dat' every 2  u 1:2 w lp ps 1.5 pt 7 lc rgb 'red' smooth mcsplines t 'laticce=10x10',\
     '../results/result_01d_binder_cumulant_20x20.dat' every 2  u 1:2 w lp ps 1.5 pt 7 lc rgb 'green' smooth mcsplines t 'laticce=20x20',\
@@ -184,19 +185,23 @@ set multiplot layout 2,2
     '../results/result_01d_binder_cumulant_20x20.dat' every 2  u 1:2 w p ps 1.5 pt 7 lc rgb 'green' notitle,\
     '../results/result_01d_binder_cumulant_40x40.dat' every 2  u 1:2 w p ps 1.5 pt 7 lc rgb 'blue' notitle
 
-    set autoscale
+    set autoscale;unset mxtics
     set title "Cumulantes de Binder para distintas dimensiones: Version 2"  
     ## Last datafile plotted: "result_01d_binder_cumulant_40x40.dat"
     p '../results/result_01b_07_10x10_v2.dat' every 11  u 1:9 w lp ps 1.5 pt 7 lc rgb 'red' smooth mcsplines t 'laticce=10x10',\
     '../results/result_01b_07_20x20_v2.dat' every 11  u 1:9 w lp ps 1.5 pt 7 lc rgb 'green' smooth mcsplines t 'laticce=20x20',\
     '../results/result_01b_07_40x40_v2.dat' every 11  u 1:9 w lp ps 1.5 pt 7 lc rgb 'blue' smooth mcsplines t 'laticce=40x40',\
 
+    set mxtics 10;set grid mxtics
     set yrange[0.6:0.7];set xrange[0.9:1.1]
+    set trange[0.6:0.67]
+    set parametric; center=1.045
     p '../results/result_01b_07_10x10_v2.dat' every 2  u 1:9 w lp ps 1.5 pt 7 lc rgb 'red' smooth mcsplines t 'laticce=10x10',\
     '../results/result_01b_07_20x20_v2.dat' every 2  u 1:9 w lp ps 1.5 pt 7 lc rgb 'green' smooth mcsplines t 'laticce=20x20',\
     '../results/result_01b_07_40x40_v2.dat' every 2  u 1:9 w lp ps 1.5 pt 7 lc rgb 'blue' smooth mcsplines  t 'laticce=40x40',\
     '../results/result_01b_07_10x10_v2.dat' every 2  u 1:9 w p ps 1.5 pt 7 lc rgb 'red' notitle,\
     '../results/result_01b_07_20x20_v2.dat' every 2  u 1:9 w p ps 1.5 pt 7 lc rgb 'green' notitle,\
-    '../results/result_01b_07_40x40_v2.dat' every 2  u 1:9 w p ps 1.5 pt 7 lc rgb 'blue'  notitle
+    '../results/result_01b_07_40x40_v2.dat' every 2  u 1:9 w p ps 1.5 pt 7 lc rgb 'blue'  notitle,\
+    center,t w l dt 2 lw 3 lc 'black' t 'aprox. T_{c}'
 unset multiplot
 #    EOF
