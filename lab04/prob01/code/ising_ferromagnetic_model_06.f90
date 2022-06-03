@@ -4,7 +4,7 @@ program ising_ferromagnetic_model_06
     use module_precision;use module_2D_ferromagnetic_ising
     implicit none
 
-    integer(sp), parameter   :: n=10_sp                 ! sitios de red por dimension
+    integer(sp), parameter   :: n=20_sp                 ! sitios de red por dimension
     integer(sp), parameter   :: MC_step_trans=10000_sp  ! Monte Carlo step transitory
     integer(sp), parameter   :: m=30_sp                 ! puntos p/ para deltas de temperaturas
     integer(sp), parameter   :: tau_corr=1000_sp        ! tiempo máximo de correlación
