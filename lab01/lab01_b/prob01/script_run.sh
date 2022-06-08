@@ -37,7 +37,7 @@
 # execution
 	
 	# remove modules and object codes & results.dat existing
-	rm -f *.mod *.o
+	#rm -f *.mod *.o
 	
 	#export LD_LIBRARY_PATH= '-L../../../libraries/'
 	ld_path='-L/usr/local/lib/'
@@ -47,7 +47,7 @@
 	./${ob_cod_name}
 
 	# remove modules and object codes
-	rm -f *.mod *.o
+	#rm -f *.mod *.o
 
 # Notes:
 
