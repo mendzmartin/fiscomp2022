@@ -40,7 +40,7 @@ module module_md_lennard_jones
         real(dp)                :: pressure,rij,result,T_adim,force_indiv
         integer(sp) :: i,j
         result=0._dp
-        do j=1,n_p;do i=1,j-1
+        do j=2,n_p;do i=1,j-1
             rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
             x_vector(j),y_vector(j),z_vector(j),n_p,density)
             if (rij<=r_cutoff) then; force_indiv=f_lj_individual(rij)
@@ -59,7 +59,7 @@ module module_md_lennard_jones
         real(dp)                :: u_lj_total
         integer(sp)             :: i,j
         u_lj_total=0._dp
-        do j=1,n_p
+        do j=2,n_p
             do i=1,j-1
                 u_lj_total=u_lj_total+u_lj_individual(n_p,x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),r_cutoff,density)
@@ -82,7 +82,10 @@ module module_md_lennard_jones
         real(dp)             :: r12_pow02,r12_pow06,r12_pow12   ! factores potencia
         real(dp)             :: f_lj_individual   ! adimensional individual lennard jones force
         integer(sp)          :: i
-        if (r12==0._dp) then; write(*,*) 'Error! r12=0';stop;end if
+        if (r12==0._dp) then
+            write(*,*) 'Error! r12=0'
+            stop
+        end if
         r12_pow02=r12*r12
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*(1._dp/r12_pow02);end do ! (r12)^6
@@ -99,7 +102,7 @@ module module_md_lennard_jones
         real(dp)                   :: rij,force_indiv
         integer(sp)                :: i,j
         f_lj_total_vector(:)=0._dp
-        do j=1,n_p;do i=1,j-1
+        do j=2,n_p;do i=1,j-1
             ! calculamos distancia relativa corregida según PBC
             rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
             x_vector(j),y_vector(j),z_vector(j),n_p,density)
@@ -129,14 +132,13 @@ module module_md_lennard_jones
         real(dp)                :: L                 ! logitud macroscópica por dimensión
         real(dp)                :: dx,dy,dz          ! diferencia de posiciones segun coordenadas
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        !dx=abs(x2-x1);dy=abs(y2-y1);dz=abs(z2-z1)
         dx=(x2-x1);dy=(y2-y1);dz=(z2-z1)
-        dx=dx+0.5_dp*L;dx=dx-L*anint(dx*(1._dp/L),dp);dx=abs(dx-0.5_dp*L)
-        dy=dy+0.5_dp*L;dy=dy-L*anint(dy*(1._dp/L),dp);dy=abs(dy-0.5_dp*L)
-        dz=dz+0.5_dp*L;dz=dz-L*anint(dz*(1._dp/L),dp);dz=abs(dz-0.5_dp*L)
-        ! dx=(dx-L*anint(dx*(1._dp/L),dp))
-        ! dy=(dy-L*anint(dy*(1._dp/L),dp))
-        ! dz=(dz-L*anint(dz*(1._dp/L),dp))
+        ! dx=dx-L*anint((dx+0.5_dp*L)*(1._dp/L),dp)
+        ! dy=dy-L*anint((dy+0.5_dp*L)*(1._dp/L),dp)
+        ! dz=dz-L*anint((dz+0.5_dp*L)*(1._dp/L),dp)
+        dx=(dx-L*anint(dx*(1._dp/L),dp))
+        dy=(dy-L*anint(dy*(1._dp/L),dp))
+        dz=(dz-L*anint(dz*(1._dp/L),dp))
         rel_pos_correction=sqrt(dx*dx+dy*dy+dz*dz)
     end function rel_pos_correction
 
@@ -179,31 +181,26 @@ module module_md_lennard_jones
         real(dp)                   :: points_unitcells   ! número de partículas por celda unidad
         real(dp),   allocatable    :: aux_matrix(:,:)    ! matriz auxiliar con vectores primitivos (FCC)
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        allocate(aux_matrix(4,3))
         select case (type_structure)
             case(1) ! sc laticce
                 points_unitcells=1._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
-                a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
-                ! cargamos matriz con vectores primitivos (specific for FCC structure)
-                aux_matrix(:,:)=0._dp
-                aux_matrix(2,1)=a;aux_matrix(3,2)=a;aux_matrix(4,3)=a
+                a=L*(1._dp/(n_unitcells-1._dp))!a=(4*(1._dp/density))**(1._dp/3._dp)
                 ! cargamos vectores de coordenadas
                 index=0
-                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp);do index2=1,4
+                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp)
                     index=index+1
-                    print*, 'index=',index
                     ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
-                    x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
-                    y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
-                    z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
-                end do;end do;end do;end do
+                    x_vector(index)=real(i-1,dp)*a-0.5_dp*L
+                    y_vector(index)=real(j-1,dp)*a-0.5_dp*L
+                    z_vector(index)=real(k-1,dp)*a-0.5_dp*L
+                end do;end do;end do
             case(2) ! fcc laticce
                 points_unitcells=4._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
                 ! cargamos matriz con vectores primitivos (specific for FCC structure)
-                aux_matrix(:,:)=a*0.5_dp
+                allocate(aux_matrix(4,3));aux_matrix(:,:)=a*0.5_dp
                 aux_matrix(1,:)=0.0_dp;aux_matrix(2,3)=0.0_dp
                 aux_matrix(3,2)=0.0_dp;aux_matrix(4,1)=0.0_dp
                 ! cargamos vectores de coordenadas
@@ -215,8 +212,8 @@ module module_md_lennard_jones
                     y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
                     z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
                 end do;end do;end do;end do
+                deallocate(aux_matrix)
             end select
-            deallocate(aux_matrix)
     end subroutine initial_lattice_configuration
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
