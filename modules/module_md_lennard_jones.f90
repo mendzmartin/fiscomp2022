@@ -164,9 +164,10 @@ module module_md_lennard_jones
         z=(z-L*anint(z*(1._dp/L),dp))
     end subroutine position_correction
 
-    ! Subroutine to set up fcc lattice
-    subroutine initial_particle_configuration_fcc(n_p,density,x_vector,y_vector,z_vector)
+    ! Subroutine to set up sc and fcc lattice
+    subroutine initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,type_structure)
         integer(sp), intent(in)    :: n_p                ! numero total de partículas
+        integer(sp), intent(in)    :: type_structure     ! 1 by sc lattice/ 2 by fcc lattice
         real(dp),    intent(in)    :: density            ! densidad de partículas
         real(dp),    intent(inout) :: x_vector(n_p),&    ! coordenadas de los vectores posición
                                       y_vector(n_p),&
@@ -175,25 +176,48 @@ module module_md_lennard_jones
         real(dp)                   :: L                  ! logitud macroscópica por dimensión
         real(dp)                   :: a                  ! parámetro de red
         real(dp)                   :: n_unitcells        ! numero de celdas unidad por dimension
-        real(dp),   allocatable    :: aux_matrix(:,:)    ! matriz auxiliar de indices (FCC)
+        real(dp)                   :: points_unitcells   ! número de partículas por celda unidad
+        real(dp),   allocatable    :: aux_matrix(:,:)    ! matriz auxiliar con vectores primitivos (FCC)
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        n_unitcells=anint((real(n_p,dp)*0.25_dp)**(1._dp/3._dp),dp)
-        a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
-        ! cargamos datos en matrix auxiliar (specific for FCC structure)
-        allocate(aux_matrix(4,3));aux_matrix(:,:)=a*0.5_dp
-        aux_matrix(1,:)=0.0_dp;aux_matrix(2,3)=0.0_dp
-        aux_matrix(3,2)=0.0_dp;aux_matrix(4,1)=0.0_dp
-        ! cargamos vectores de coordenadas
-        index=0
-        do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp);do index2=1,4
-            index=index+1
-            ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
-            x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
-            y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
-            z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
-        end do;end do;end do;end do
-        deallocate(aux_matrix)
-    end subroutine initial_particle_configuration_fcc
+        allocate(aux_matrix(4,3))
+        select case (type_structure)
+            case(1) ! sc laticce
+                points_unitcells=1._dp
+                n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
+                a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
+                ! cargamos matriz con vectores primitivos (specific for FCC structure)
+                aux_matrix(:,:)=0._dp
+                aux_matrix(2,1)=a;aux_matrix(3,2)=a;aux_matrix(4,3)=a
+                ! cargamos vectores de coordenadas
+                index=0
+                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp);do index2=1,4
+                    index=index+1
+                    print*, 'index=',index
+                    ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
+                    x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
+                    y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
+                    z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
+                end do;end do;end do;end do
+            case(2) ! fcc laticce
+                points_unitcells=4._dp
+                n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
+                a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
+                ! cargamos matriz con vectores primitivos (specific for FCC structure)
+                aux_matrix(:,:)=a*0.5_dp
+                aux_matrix(1,:)=0.0_dp;aux_matrix(2,3)=0.0_dp
+                aux_matrix(3,2)=0.0_dp;aux_matrix(4,1)=0.0_dp
+                ! cargamos vectores de coordenadas
+                index=0
+                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp);do index2=1,4
+                    index=index+1
+                    ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
+                    x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
+                    y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
+                    z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
+                end do;end do;end do;end do
+            end select
+            deallocate(aux_matrix)
+    end subroutine initial_lattice_configuration
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&

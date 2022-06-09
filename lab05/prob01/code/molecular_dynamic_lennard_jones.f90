@@ -2,7 +2,7 @@
 program molecular_dynamic_lennard_jones
     use module_precision;use module_md_lennard_jones
     implicit none
-    integer(sp), parameter   :: n_p=256_sp                             ! sitios de red por dimension
+    integer(sp), parameter   :: n_p=125_sp                             ! sitios de red por dimension
     real(dp),    parameter   :: delta_time=0.005_dp
     ! integer(sp), parameter   :: time_eq=1000_sp,time_scal=50_sp,time_run=1000_sp
     integer(sp), parameter   :: time_eq=1000_sp,time_scal=50_sp,time_run=1000_sp
@@ -27,7 +27,7 @@ program molecular_dynamic_lennard_jones
     vx_vector(:)=0._dp;vy_vector(:)=0._dp;vz_vector(:)=0._dp
 
     ! generamos configuración inicial (FCC structure)
-    call initial_particle_configuration_fcc(n_p,density,x_vector,y_vector,z_vector)
+    call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,1)
 
     ! ESCRIBIMOS DATOS
     open(10,file='../results/result_01.dat',status='replace',action='write',iostat=istat)
@@ -80,15 +80,18 @@ program molecular_dynamic_lennard_jones
         write(12,22) time,U_adim*(1._dp/real(n_p,dp)),Ec_adim*(1._dp/real(n_p,dp)),v_mc,press
     end do
     close(12)
-    deallocate(vx_vector,vy_vector,vz_vector)
-    deallocate(force)
 
     ! ESCRIBIMOS DATOS
     open(11,file='../results/result_02.dat',status='replace',action='write',iostat=istat)
     write(*,*) 'istat(11file) = ',istat;write(11,21) 'rx_fcc','ry_fcc','rz_fcc'
     do i=1,n_p;write(11,20) x_vector(i),y_vector(i),z_vector(i);end do;close(11)
 
-    deallocate(x_vector,y_vector,z_vector)
+    write(*,*) 'hasta aca1'
+    deallocate(x_vector)
+    write(*,*) 'hasta aca2'
+    deallocate(vx_vector,vy_vector,vz_vector,y_vector,z_vector)
+    write(*,*) 'hasta aca3'
+    deallocate(force)
     call cpu_time(time_end)
     write(*,*) 'elapsed time = ',time_end-time_start,'[s]'
 end program molecular_dynamic_lennard_jones
