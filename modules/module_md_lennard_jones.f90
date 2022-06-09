@@ -37,14 +37,15 @@ module module_md_lennard_jones
         real(dp),    intent(in) :: r_cutoff,density,mass
         real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(in) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
-        real(dp)                :: pressure,rij,result,T_adim
+        real(dp)                :: pressure,rij,result,T_adim,force_indiv
         integer(sp) :: i,j
         result=0._dp
         do j=1,n_p;do i=1,j-1
             rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-            result=result+f_lj_individual(x_vector(i),y_vector(i),z_vector(i),&
-            x_vector(j),y_vector(j),z_vector(j),r_cutoff,n_p,density)*rij
+            if (rij<=r_cutoff) then; force_indiv=f_lj_individual(rij)
+            else;force_indiv=0._dp;end if
+            result=result+force_indiv*rij
         end do;end do
         T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
         pressure=density*(T_adim+(1._dp/(3._dp*real(n_p,dp)))*result)
@@ -76,46 +77,38 @@ module module_md_lennard_jones
     end function kinetic_ergy_total
 
     ! caclulo de la fuerza individual (par de partículas)
-    function f_lj_individual(x1,y1,z1,x2,y2,z2,r_cutoff,n_p,density)
-        real(dp),    intent(in) :: x1,y1,z1,x2,y2,z2 ! coordenadas del par de partículas
-        integer(sp), intent(in) :: n_p ! cantidad total de partículas
-        real(dp),    intent(in) :: r_cutoff,density
-        real(dp)    :: r12_pow02,r12_pow06,r12_pow12   ! factores potencia
-        real(dp)    :: r12               ! distancia adimensional entre pares de particulas
-        real(dp)    :: f_lj_individual   ! adimensional individual lennard jones force
-        integer(sp) :: i
-        ! calculamos distancia relativa corregida según PBC
-        r12=rel_pos_correction(x1,y1,z1,x2,y2,z2,n_p,density)
+    function f_lj_individual(r12)
+        real(dp), intent(in) :: r12               ! distancia adimensional entre pares de particulas
+        real(dp)             :: r12_pow02,r12_pow06,r12_pow12   ! factores potencia
+        real(dp)             :: f_lj_individual   ! adimensional individual lennard jones force
+        integer(sp)          :: i
+        if (r12==0._dp) then; write(*,*) 'Error! r12=0';stop;end if
         r12_pow02=r12*r12
-        if (r12/=0._dp) then
-            if (r12<=r_cutoff) then
-                r12_pow06=1._dp
-                do i=1,3;r12_pow06=r12_pow06*(1._dp/r12_pow02);end do ! (r12)^6
-                r12_pow12=r12_pow06*r12_pow06 ! (r12)^12
-                f_lj_individual=48._dp*(1._dp/r12_pow02)*(r12_pow12-0.5_dp*r12_pow06)
-            else;f_lj_individual=0._dp
-            end if
-        else
-            write(*,*) 'r12=0'
-            f_lj_individual=0._dp
-        end if
+        r12_pow06=1._dp
+        do i=1,3;r12_pow06=r12_pow06*(1._dp/r12_pow02);end do ! (r12)^6
+        r12_pow12=r12_pow06*r12_pow06 ! (r12)^12
+        f_lj_individual=48._dp*(1._dp/r12_pow02)*(r12_pow12-0.5_dp*r12_pow06)
     end function f_lj_individual
 
     ! calculo de la componente xi de la fuerza total
-    function f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density)
+    subroutine f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,f_lj_total_vector)
         integer(sp), intent(in)    :: n_p
         real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(in)    :: r_cutoff,density
-        real(dp)                   :: f_lj_total
+        real(dp),    intent(inout) :: f_lj_total_vector(n_p)
+        real(dp)                   :: rij,force_indiv
         integer(sp)                :: i,j
-        f_lj_total=0._dp
-        do j=1,n_p
-            do i=1,j-1
-                f_lj_total=f_lj_total+f_lj_individual(x_vector(i),y_vector(i),z_vector(i),&
-                x_vector(j),y_vector(j),z_vector(j),r_cutoff,n_p,density)
-            end do
-        end do
-    end function f_lj_total
+        f_lj_total_vector(:)=0._dp
+        do j=1,n_p;do i=1,j-1
+            ! calculamos distancia relativa corregida según PBC
+            rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+            x_vector(j),y_vector(j),z_vector(j),n_p,density)
+            if (rij<=r_cutoff) then; force_indiv=f_lj_individual(rij)
+            else;force_indiv=0._dp;end if
+                f_lj_total_vector(i)=f_lj_total_vector(i)-force_indiv ! 3ra Ley Newton
+                f_lj_total_vector(j)=f_lj_total_vector(j)+force_indiv ! 3ra Ley Newton
+        end do;end do
+    end subroutine f_lj_total
 
     function temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
         integer(sp), intent(in) :: n_p
@@ -125,21 +118,25 @@ module module_md_lennard_jones
         temperature=mass*(sum(vx_vector(:)*vx_vector(:))+&
         sum(vy_vector(:)*vy_vector(:))+sum(vz_vector(:)*vz_vector(:)))*&
         (1._dp/(3._dp*real(n_p,dp)))
-    end function 
+    end function temperature
     
     ! corrección de las posiciones relativas (PBC)
     function rel_pos_correction(x1,y1,z1,x2,y2,z2,n_p,density)
-        integer(sp), intent(in)    :: n_p               ! numero total de partículas
-        real(dp),    intent(in)    :: density           ! densidad de partículas
-        real(dp),    intent(in)    :: x1,y1,z1,x2,y2,z2 ! coordenadas del par de partículas
-        real(dp)                   :: rel_pos_correction ! posición relativa corregida (PBC)
-        real(dp)                   :: L                 ! logitud macroscópica por dimensión
-        real(dp)                   :: dx,dy,dz          ! diferencia de posiciones segun coordenadas
+        integer(sp), intent(in) :: n_p               ! numero total de partículas
+        real(dp),    intent(in) :: density           ! densidad de partículas
+        real(dp),    intent(in) :: x1,y1,z1,x2,y2,z2 ! coordenadas del par de partículas
+        real(dp)                :: rel_pos_correction ! posición relativa corregida (PBC)
+        real(dp)                :: L                 ! logitud macroscópica por dimensión
+        real(dp)                :: dx,dy,dz          ! diferencia de posiciones segun coordenadas
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        dx=abs(x2-x1);dy=abs(y2-y1);dz=abs(z2-z1)
+        !dx=abs(x2-x1);dy=abs(y2-y1);dz=abs(z2-z1)
+        dx=(x2-x1);dy=(y2-y1);dz=(z2-z1)
         dx=dx+0.5_dp*L;dx=dx-L*anint(dx*(1._dp/L),dp);dx=abs(dx-0.5_dp*L)
         dy=dy+0.5_dp*L;dy=dy-L*anint(dy*(1._dp/L),dp);dy=abs(dy-0.5_dp*L)
         dz=dz+0.5_dp*L;dz=dz-L*anint(dz*(1._dp/L),dp);dz=abs(dz-0.5_dp*L)
+        ! dx=(dx-L*anint(dx*(1._dp/L),dp))
+        ! dy=(dy-L*anint(dy*(1._dp/L),dp))
+        ! dz=(dz-L*anint(dz*(1._dp/L),dp))
         rel_pos_correction=sqrt(dx*dx+dy*dy+dz*dz)
     end function rel_pos_correction
 
@@ -162,9 +159,9 @@ module module_md_lennard_jones
         real(dp),    intent(inout) :: x,y,z     ! posiciones
         real(dp)                   :: L         ! logitud macroscópica por dimensión
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        x=x+0.5_dp*L;x=x-L*anint(x*(1._dp/L),dp);x=x-0.5_dp*L
-        y=y+0.5_dp*L;y=y-L*anint(y*(1._dp/L),dp);y=y-0.5_dp*L
-        z=z+0.5_dp*L;z=z-L*anint(z*(1._dp/L),dp);z=z-0.5_dp*L
+        x=(x-L*anint(x*(1._dp/L),dp))
+        y=(y-L*anint(y*(1._dp/L),dp))
+        z=(z-L*anint(z*(1._dp/L),dp))
     end subroutine position_correction
 
     ! Subroutine to set up fcc lattice
@@ -201,54 +198,62 @@ module module_md_lennard_jones
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&
                                vx_vector,vy_vector,vz_vector,&
-                               delta_time,mass,r_cutoff,density)
+                               delta_time,mass,r_cutoff,density,force)
 
         integer(sp), intent(in)    :: n_p
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
         real(dp),    intent(in)    :: delta_time,mass,r_cutoff,density
+        real(dp),    intent(inout) :: force(n_p)
         integer(sp) :: i
-        real(dp)    :: factor,force
-        real(dp)    :: factor_x_old,factor_y_old,factor_z_old
-        real(dp)    :: factor_x_new,factor_y_new,factor_z_new
+        real(dp)    :: factor
+        real(dp), allocatable :: force_x_old(:),force_y_old(:),force_z_old(:)
+        real(dp), allocatable :: force_x_new(:),force_y_new(:),force_z_new(:)
+
+        allocate(force_x_old(n_p),force_y_old(n_p),force_z_old(n_p))
+        allocate(force_x_new(n_p),force_y_new(n_p),force_z_new(n_p))
+
+        ! FUERZAS EN EL TIEMPO ACTUAL
+        do i=1,n_p
+            force_x_old(i)=x_vector(i)*force(i)
+            force_y_old(i)=y_vector(i)*force(i)
+            force_z_old(i)=z_vector(i)*force(i)
+        end do
 
         factor=delta_time*0.5_dp*(1._dp/mass)
+        call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force)
         do i=1,n_p
-            ! FUERZA EN EL TIEMPO ACTUAL
-            force=f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density)
-            factor_x_old=x_vector(i)*force
-            factor_y_old=y_vector(i)*force
-            factor_z_old=z_vector(i)*force
             ! POSICIONES EN EL TIEMPO EVOLUCIONADO
-            x_vector(i)=x_vector(i)+(vx_vector(i)+factor_x_old*factor)*delta_time
-            y_vector(i)=y_vector(i)+(vy_vector(i)+factor_y_old*factor)*delta_time
-            z_vector(i)=z_vector(i)+(vz_vector(i)+factor_z_old*factor)*delta_time
+            x_vector(i)=x_vector(i)+(vx_vector(i)+force_x_old(i)*factor)*delta_time
+            y_vector(i)=y_vector(i)+(vy_vector(i)+force_y_old(i)*factor)*delta_time
+            z_vector(i)=z_vector(i)+(vz_vector(i)+force_z_old(i)*factor)*delta_time
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
             ! FUERZAS EN EL TIEMPO EVOLUCIONADO
-            force=f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density)
-            factor_x_new=x_vector(i)*force
-            factor_y_new=y_vector(i)*force
-            factor_z_new=z_vector(i)*force
+            force_x_new(i)=x_vector(i)*force(i)
+            force_y_new(i)=y_vector(i)*force(i)
+            force_z_new(i)=z_vector(i)*force(i)
             ! VELOCIDAD EN EL TIEMPO EVOLUCIONADO
-            vx_vector(i)=vx_vector(i)+(factor_x_new+factor_x_old)*factor
-            vy_vector(i)=vy_vector(i)+(factor_y_new+factor_y_old)*factor
-            vz_vector(i)=vz_vector(i)+(factor_z_new+factor_z_old)*factor
+            vx_vector(i)=vx_vector(i)+(force_x_new(i)+force_x_old(i))*factor
+            vy_vector(i)=vy_vector(i)+(force_y_new(i)+force_y_old(i))*factor
+            vz_vector(i)=vz_vector(i)+(force_z_new(i)+force_z_old(i))*factor
         end do
+
+        deallocate(force_x_old,force_y_old,force_z_old)
+        deallocate(force_x_new,force_y_new,force_z_new)
+
     end subroutine velocity_verlet
 
     subroutine md_initial_parameters(n_p,x_vector,y_vector,z_vector,&
                                      vx_vector,vy_vector,vz_vector,&
-                                     T_adim_ref,delta_time,density)
+                                     T_adim_ref,delta_time,density,mass)
 
         integer(sp), intent(in)    :: n_p ! number of particles
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)    ! position vectors
         real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p) ! velocities vectors
-        real(dp),    intent(in)    :: T_adim_ref,delta_time,density ! temperature,time step,densidad
+        real(dp),    intent(in)    :: T_adim_ref,delta_time,density,mass ! temperature,time step,densidad,masa
         real(dp)    :: nrand
         integer(sp) :: seed,seed_val(8),i
-        real(dp)    :: kinetic_ergy_x,kinetic_ergy_y,kinetic_ergy_z ! kinetic energy
-        real(dp)    :: vx_mc,vy_mc,vz_mc ! velociti center of mass
-        real(dp)    :: fs_x,fs_y,fs_z    ! scale factor of the velocities
+        real(dp)    :: vx_mc,vy_mc,vz_mc ! velocity center of mass
 
         call date_and_time(values=seed_val)
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
@@ -261,19 +266,12 @@ module module_md_lennard_jones
         vx_mc=sum(vx_vector(:))*(1._dp/real(n_p,dp))
         vy_mc=sum(vy_vector(:))*(1._dp/real(n_p,dp))
         vz_mc=sum(vz_vector(:))*(1._dp/real(n_p,dp))
-        ! calculamos energía cinética
-        kinetic_ergy_x=0.5_dp*sum(vx_vector(:)*vx_vector(:))*(1._dp/real(n_p,dp))
-        kinetic_ergy_y=0.5_dp*sum(vy_vector(:)*vy_vector(:))*(1._dp/real(n_p,dp))
-        kinetic_ergy_z=0.5_dp*sum(vz_vector(:)*vz_vector(:))*(1._dp/real(n_p,dp))
-        ! re-escaleo de las velocidades
-        fs_x=sqrt(3._dp*T_adim_ref*(1._dp/kinetic_ergy_x))
-        fs_y=sqrt(3._dp*T_adim_ref*(1._dp/kinetic_ergy_y))
-        fs_z=sqrt(3._dp*T_adim_ref*(1._dp/kinetic_ergy_z))
+        ! velocity center of mass to zero and rescaling
+        vx_vector(:)=vx_vector(:)-vx_mc
+        vy_vector(:)=vy_vector(:)-vy_mc
+        vz_vector(:)=vz_vector(:)-vz_mc
+        call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
         do i=1,n_p
-            ! velocity center of mass to zero
-            vx_vector(i)=(vx_vector(i)-vx_mc)*fs_x
-            vy_vector(i)=(vy_vector(i)-vy_mc)*fs_y
-            vz_vector(i)=(vz_vector(i)-vz_mc)*fs_z
             ! position previous time step
             x_vector(i)=x_vector(i)-vx_vector(i)*delta_time
             y_vector(i)=y_vector(i)-vy_vector(i)*delta_time
