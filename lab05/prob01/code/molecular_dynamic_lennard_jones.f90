@@ -2,7 +2,7 @@
 program molecular_dynamic_lennard_jones
     use module_precision;use module_md_lennard_jones
     implicit none
-    integer(sp), parameter   :: n_p=125_sp                             ! sitios de red por dimension
+    integer(sp), parameter   :: n_p=256_sp                             ! sitios de red por dimension
     real(dp),    parameter   :: delta_time=0.005_dp
     integer(sp), parameter   :: time_eq=1000_sp,time_scal=50_sp,time_run=1000_sp
     real(dp),    parameter   :: T_adim_ref=1.1_dp                      ! temperatura de referencia adimensional
@@ -24,7 +24,7 @@ program molecular_dynamic_lennard_jones
     x_vector(:)=0._dp;y_vector(:)=0._dp;z_vector(:)=0._dp
 
     ! generamos configuración inicial (FCC structure)
-    call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,1)
+    call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
 
     ! ESCRIBIMOS DATOS
     open(10,file='../results/result_01.dat',status='replace',action='write',iostat=istat)

@@ -12,15 +12,15 @@ module module_md_lennard_jones
         real(dp), intent(in) :: x1,y1,z1,x2,y2,z2   ! coordenadas del par de partículas
         real(dp), intent(in) :: r_cutoff,density
         real(dp)             :: r12_pow06,r12_pow12 ! potencias de la distancia relativa
-        real(dp)             :: r12                 ! distancia adimensional entre pares de particulas
+        real(dp)             :: r12_pow02                 ! distancia adimensional entre pares de particulas
         real(dp)             :: u_lj_individual     ! adimensional lennard jones potential
         integer(sp)          :: i
         ! calculamos distancia relativa corregida según PBC
-        r12=rel_pos_correction(x1,y1,z1,x2,y2,z2,n_p,density)
-        if (r12/=0._dp) then
-            if (r12<=r_cutoff) then
+        r12_pow02=rel_pos_correction(x1,y1,z1,x2,y2,z2,n_p,density)
+        if (r12_pow02/=0._dp) then
+            if (r12_pow02<=r_cutoff*r_cutoff) then
                 r12_pow06=1._dp
-                do i=1,6;r12_pow06=r12_pow06*(1._dp/r12);end do  ! (r12)^6
+                do i=1,3;r12_pow06=r12_pow06*(1._dp/r12_pow02);end do  ! (r12)^6
                 r12_pow12=r12_pow06*r12_pow06 ! (r12)^12
                 u_lj_individual=4._dp*(r12_pow12-r12_pow06)
             else;u_lj_individual=0._dp
@@ -37,15 +37,15 @@ module module_md_lennard_jones
         real(dp),    intent(in) :: r_cutoff,density,mass
         real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(in) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
-        real(dp)                :: pressure,rij,result,T_adim,force_indiv
+        real(dp)                :: pressure,rij_pow02,result,T_adim,force_indiv
         integer(sp) :: i,j
         result=0._dp
         do j=2,n_p;do i=1,j-1
-            rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+            rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-            if (rij<=r_cutoff) then; force_indiv=f_lj_individual(rij)
+            if (rij_pow02<=r_cutoff*r_cutoff) then; force_indiv=f_lj_individual(rij_pow02)
             else;force_indiv=0._dp;end if
-            result=result+force_indiv*rij
+            result=result+force_indiv*sqrt(rij_pow02)
         end do;end do
         T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
         pressure=density*(T_adim+(1._dp/(3._dp*real(n_p,dp)))*result)
@@ -77,20 +77,19 @@ module module_md_lennard_jones
     end function kinetic_ergy_total
 
     ! caclulo de la fuerza individual (par de partículas)
-    function f_lj_individual(r12)
-        real(dp), intent(in) :: r12               ! distancia adimensional entre pares de particulas
-        real(dp)             :: r12_pow02,r12_pow06,r12_pow12   ! factores potencia
+    function f_lj_individual(r12_pow02)
+        real(dp), intent(in) :: r12_pow02               ! distancia adimensional entre pares de particulas
+        real(dp)             :: r12_pow06,r12_pow12   ! factores potencia
         real(dp)             :: f_lj_individual   ! adimensional individual lennard jones force
         integer(sp)          :: i
-        if (r12==0._dp) then
+        if (r12_pow02==0._dp) then
             write(*,*) 'Error! r12=0'
             stop
         end if
-        r12_pow02=r12*r12
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*(1._dp/r12_pow02);end do ! (r12)^6
         r12_pow12=r12_pow06*r12_pow06 ! (r12)^12
-        f_lj_individual=48._dp*(1._dp/r12_pow02)*(r12_pow12-0.5_dp*r12_pow06)
+        f_lj_individual=24._dp*(1._dp/r12_pow02)*(2._dp*r12_pow12-r12_pow06)
     end function f_lj_individual
 
     ! calculo de la componente xi de la fuerza total
@@ -98,15 +97,16 @@ module module_md_lennard_jones
         integer(sp), intent(in)    :: n_p
         real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(in)    :: r_cutoff,density
-        real(dp),    intent(inout) :: f_lj_total_vector(n_p)
-        real(dp)                   :: rij,force_indiv
+        real(dp),    intent(inout) :: f_lj_total_vector(n_p) ! vector de fuerzas netas
+        real(dp)                   :: rij_pow02
+        real(dp)                   :: force_indiv ! fuerza neta acuando en una determinada partícula
         integer(sp)                :: i,j
         f_lj_total_vector(:)=0._dp
         do j=2,n_p;do i=1,j-1
             ! calculamos distancia relativa corregida según PBC
-            rij=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+            rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-            if (rij<=r_cutoff) then; force_indiv=f_lj_individual(rij)
+            if (rij_pow02<=r_cutoff*r_cutoff) then; force_indiv=f_lj_individual(rij_pow02)
             else;force_indiv=0._dp;end if
                 f_lj_total_vector(i)=f_lj_total_vector(i)-force_indiv ! 3ra Ley Newton
                 f_lj_total_vector(j)=f_lj_total_vector(j)+force_indiv ! 3ra Ley Newton
@@ -128,18 +128,18 @@ module module_md_lennard_jones
         integer(sp), intent(in) :: n_p               ! numero total de partículas
         real(dp),    intent(in) :: density           ! densidad de partículas
         real(dp),    intent(in) :: x1,y1,z1,x2,y2,z2 ! coordenadas del par de partículas
-        real(dp)                :: rel_pos_correction ! posición relativa corregida (PBC)
+        real(dp)                :: rel_pos_correction ! posición relativa corregida (PBC) al cuadrado
         real(dp)                :: L                 ! logitud macroscópica por dimensión
         real(dp)                :: dx,dy,dz          ! diferencia de posiciones segun coordenadas
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
         dx=(x2-x1);dy=(y2-y1);dz=(z2-z1)
-        ! dx=dx-L*anint((dx+0.5_dp*L)*(1._dp/L),dp)
-        ! dy=dy-L*anint((dy+0.5_dp*L)*(1._dp/L),dp)
-        ! dz=dz-L*anint((dz+0.5_dp*L)*(1._dp/L),dp)
+        ! dx=dx-L*real(int((dx+0.5_dp*L)*(1._dp/L),sp),dp)
+        ! dy=dy-L*real(int((dy+0.5_dp*L)*(1._dp/L),sp),dp)
+        ! dz=dz-L*real(int((dz+0.5_dp*L)*(1._dp/L),sp),dp)
         dx=(dx-L*anint(dx*(1._dp/L),dp))
         dy=(dy-L*anint(dy*(1._dp/L),dp))
         dz=(dz-L*anint(dz*(1._dp/L),dp))
-        rel_pos_correction=sqrt(dx*dx+dy*dy+dz*dz)
+        rel_pos_correction=dx*dx+dy*dy+dz*dz
     end function rel_pos_correction
 
     ! SUBRUTINAS
@@ -164,6 +164,9 @@ module module_md_lennard_jones
         x=(x-L*anint(x*(1._dp/L),dp))
         y=(y-L*anint(y*(1._dp/L),dp))
         z=(z-L*anint(z*(1._dp/L),dp))
+        ! x=x-L*real(int((x+0.5_dp*L)*(1._dp/L),sp),dp)
+        ! x=y-L*real(int((y+0.5_dp*L)*(1._dp/L),sp),dp)
+        ! x=z-L*real(int((z+0.5_dp*L)*(1._dp/L),sp),dp)
     end subroutine position_correction
 
     ! Subroutine to set up sc and fcc lattice
@@ -198,7 +201,7 @@ module module_md_lennard_jones
             case(2) ! fcc laticce
                 points_unitcells=4._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
-                a=L*(1._dp/n_unitcells)!a=(4*(1._dp/density))**(1._dp/3._dp)
+                a=L*(1._dp/(n_unitcells-1._dp))!a=(4*(1._dp/density))**(1._dp/3._dp)
                 ! cargamos matriz con vectores primitivos (specific for FCC structure)
                 allocate(aux_matrix(4,3));aux_matrix(:,:)=a*0.5_dp
                 aux_matrix(1,:)=0.0_dp;aux_matrix(2,3)=0.0_dp
@@ -233,6 +236,9 @@ module module_md_lennard_jones
 
         allocate(force_x_old(n_p),force_y_old(n_p),force_z_old(n_p))
         allocate(force_x_new(n_p),force_y_new(n_p),force_z_new(n_p))
+
+        force_x_old(:)=0._dp;force_y_old(:)=0._dp;force_z_old(:)=0._dp
+        force_x_new(:)=0._dp;force_y_new(:)=0._dp;force_z_new(:)=0._dp
 
         ! FUERZAS EN EL TIEMPO ACTUAL
         do i=1,n_p
