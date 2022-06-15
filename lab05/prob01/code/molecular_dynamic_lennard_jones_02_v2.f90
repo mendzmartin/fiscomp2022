@@ -112,6 +112,7 @@ program molecular_dynamic_lennard_jones_02_v2
         press_med=s1_press*(1._dp/real(i,dp))
         T_med=s1_T*(1._dp/real(i,dp))
 
+        ! computamos varianzas (mejor a mayor paso evolucionado)
         var_U=(real(i,dp)*s2_U-s1_U*s1_U)*(1._dp/real(i*i,dp))
         var_Ec=(real(i,dp)*s2_Ec-s1_Ec*s1_Ec)*(1._dp/real(i*i,dp))
         var_Etot=(real(i,dp)*s2_Etot-s1_Etot*s1_Etot)*(1._dp/real(i*i,dp))
@@ -124,12 +125,7 @@ program molecular_dynamic_lennard_jones_02_v2
 
     write(*,*) 'termino el estacionario'
 
-    var_U=(real(time_eq,dp)*s2_U-s1_U*s1_U)*(1._dp/real(time_eq*time_eq,dp))
-    var_Ec=(real(time_eq,dp)*s2_Ec-s1_Ec*s1_Ec)*(1._dp/real(time_eq*time_eq,dp))
-    var_Etot=(real(time_eq,dp)*s2_Etot-s1_Etot*s1_Etot)*(1._dp/real(time_eq*time_eq,dp))
-    var_press=(real(time_eq,dp)*s2_press-s1_press*s1_press)*(1._dp/real(time_eq*time_eq,dp))
-    var_T=(real(time_eq,dp)*s2_T-s1_T*s1_T)*(1._dp/real(time_eq*time_eq,dp))
-    
+    ! computamos errores en el último paso
     err_U=(var_U*0.25_dp)*(1._dp/real(time_eq-1,dp))
     err_Ec=(var_Ec*0.25_dp)*(1._dp/real(time_eq-1,dp))
     err_Etot=(var_Etot*0.25_dp)*(1._dp/real(time_eq-1,dp))

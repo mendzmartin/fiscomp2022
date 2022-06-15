@@ -38,6 +38,7 @@ bin_name_01 = molecular_dynamic_lennard_jones
 bin_name_02 = molecular_dynamic_lennard_jones_02
 bin_name_03 = molecular_dynamic_lennard_jones_03
 bin_name_04 = molecular_dynamic_lennard_jones_02_v2
+bin_name_05 = molecular_dynamic_lennard_jones_04
 
 # object dependencies
 dependencies_01= module_precision.o module_mt19937.o module_md_lennard_jones.o
@@ -55,9 +56,13 @@ $(bin_name_02).o: $(dependencies_01)
 $(bin_name_03).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_03).o $(dependencies_01) $(bin_name_03).f90
 
-# molecular_dynamic_lennard_jones_02_v2 (iniciso b) - version 2
+# molecular_dynamic_lennard_jones_02_v2 (iniciso b)
 $(bin_name_04).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_04).o $(dependencies_01) $(bin_name_04).f90
+
+# molecular_dynamic_lennard_jones_04 (iniciso c)
+$(bin_name_05).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_05).o $(dependencies_01) $(bin_name_05).f90
 
 # ============================================================
 # MODULES COMPILATION
