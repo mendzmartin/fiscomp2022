@@ -6,6 +6,35 @@ module module_md_lennard_jones
     contains
 
     ! FUNCIONES
+    ! FUNCION PARA CALCULAR EL FACTOR DE ESTRUCTURA ESTÁTICO (PARAMETRO DE ORDEN CRISTALINO)
+    function static_structure_factor(n_p,density,x_vector,y_vector,z_vector)
+        integer(sp), intent(in) :: n_p                                       ! numero de partículas
+        real(dp),    intent(in) :: density                                   ! densidad de partículas
+        real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! coordenadas del vector posicion
+        real(dp)                :: static_structure_factor                   ! funcion de estructura
+        real(dp),    parameter  :: pi=4._dp*atan(1._dp)
+        real(dp)                :: a                                         ! parámetro de red
+        real(dp)                :: points_unitcells                          ! número de partículas por celda unidad
+        real(dp)                :: factor1,factor2
+        real(dp)                :: kx,ky,kz                                  ! componentes del vector de onda
+        integer(sp)             :: i
+    
+        ! valido únicamente para una red FCC
+        points_unitcells=4._dp
+        a=(points_unitcells*(1._dp/density))**(1._dp/3._dp)
+        factor1=0._dp;factor2=0._dp
+        do i=1,n_p
+            ! cambiar en caso de tener otro vector de onda
+            kx=-2._dp*pi*(1._dp/a)*x_vector(i)
+            ky=2._dp*pi*(1._dp/a)*y_vector(i)
+            kz=-2._dp*pi*(1._dp/a)*z_vector(i)
+            factor1=factor1+cos(kx+ky+kz)
+            factor2=factor2+sin(kx+ky+kz)
+        end do
+        factor1=factor1*factor1;factor2=factor2*factor2
+        static_structure_factor=(1._dp/real(n_p*n_p,dp))*(factor1+factor2)
+    end function static_structure_factor
+
     function pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector,&
         vx_vector,vy_vector,vz_vector)
         integer(sp), intent(in) :: n_p
@@ -330,6 +359,7 @@ module module_md_lennard_jones
         end do
     end subroutine velocity_verlet
 
+    ! SUBRUTINA PARA DEFINIR PARAMETRO INICIALES DE DINAMICA MOLECULAR
     subroutine md_initial_parameters(n_p,x_vector,y_vector,z_vector,&
                                      vx_vector,vy_vector,vz_vector,&
                                      T_adim_ref,delta_time,density,mass)
@@ -367,4 +397,58 @@ module module_md_lennard_jones
         !     call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         ! end do
     end subroutine md_initial_parameters
+
+    ! SUBRUTINA PARA CALCULAR LA FUNCION DE DISTRIBUCIÓN RADIAL (FUNCION DE CORRELACIÓN)
+    subroutine radial_ditribution_function(file_name,n_p,density,x_vector,y_vector,z_vector,n_bins,g)
+        character(len=*), intent(in)    :: file_name                                 ! nombre del archivo de datos
+        integer(sp),      intent(in)    :: n_p,n_bins                                ! numero de partículas y numero total de bins
+        real(dp),         intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! coordenadas del vector posicion
+        real(dp),         intent(in)    :: density                                   ! densidad de partículas
+        real(dp),         intent(inout) :: g(n_bins)                                 ! funcion distribución
+
+        integer(sp) :: ngr              ! contador de particulas
+        real(dp)    :: rij_pow02,rij    ! distancia relativa entre par de partículas
+        real(dp)    :: L                ! logitud macroscópica
+        real(dp)    :: step_bins        ! tamaño de bins 
+        real(dp)    :: volume           ! volumen de particulas
+        real(dp)    :: nid              ! numero de partículas del gas ideal en volume
+        integer(sp) :: i,j,index,istat  ! loop variables
+
+        ! initialization
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+        step_bins=L/(2*n_bins)
+        g(:)=0._dp
+
+        ! sample
+        ngr=0_sp;ngr=ngr+1_sp
+        do j=2,n_p;do i=1,j-1
+            ! relative distances (pow 2) with pbc correction
+            rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+            x_vector(j),y_vector(j),z_vector(j),n_p,density)
+            ! relative distances
+            rij=sqrt(rij_pow02)
+            if (rij<=L/2) then ! only within half the box length
+                index=int(rij/step_bins)
+                g(index)=g(index)+2._dp ! contribution for particle i and j
+            end if
+        end do;end do
+        
+        ! result initialization (determine g(rij))
+        open(100,file=file_name,status='replace',action='write',iostat=istat)
+            if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
+            101 format(E12.4,x,E12.4);102 format(A12,x,A12)
+            write(100,102) 'rij','g(rij)'
+            do i=1,n_bins
+                rij=step_bins*(i+0.5_dp)
+                ! volumen between bin i+1 and bin i
+                volume=(real(i+1,dp)**3-real(i,dp)**3)*(step_bins**3)
+                ! number of ideal gas particles in volume
+                nid=(1._dp/3._dp)*16._dp*atan(1._dp)*volume*density
+                ! normalize g(rij)
+                g(i)=g(i)/(real(ngr*n_p,dp)*nid)
+                write(100,101) rij,g(i)
+            end do
+        close(100)
+    end subroutine radial_ditribution_function
+
 end module module_md_lennard_jones
