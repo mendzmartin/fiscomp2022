@@ -178,14 +178,14 @@ set multiplot layout 2,2
 
     set xlabel "velocity components (v_{x},v_{y},v_{z})"
     set ylabel "probability (p(v_{x}),p(v_{y}),p(v_{z}))"
-    p '../results/components_velocities_histogram.dat' u 1:2 w boxes t 'p(v_{x})',\
-    '../results/components_velocities_histogram.dat' u 3:4 w boxes t 'p(v_{y})',\
-    '../results/components_velocities_histogram.dat' u 5:6 w boxes t 'p(v_{z})',\
+    p '../results/components_velocities_histogram.dat' u 1:($2/25) w boxes t 'p(v_{x})',\
+    '../results/components_velocities_histogram.dat' u 3:($4/25) w boxes t 'p(v_{y})',\
+    '../results/components_velocities_histogram.dat' u 5:($6/25) w boxes t 'p(v_{z})',\
     '../results/exact_velocities_distributions.dat' u 1:2 w l lc 'black' smooth mcsplines t 'exact'
 
     set xlabel "total velocity (v_{tot})"
     set ylabel "probability (p(v_{tot})"
-    p '../results/total_velocities_histogram.dat' u 1:($2/35) w boxes t 'p(v_{tot})',\
+    p '../results/total_velocities_histogram.dat' u 1:($2/20) w boxes t 'p(v_{tot})',\
     '../results/exact_velocities_distributions.dat' u 7:8 w l lc 'black' smooth mcsplines t 'exact'
 
 

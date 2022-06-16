@@ -298,53 +298,6 @@ module module_md_lennard_jones
     end subroutine initial_lattice_configuration
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
-    ! subroutine velocity_verlet_v2(n_p,x_vector,y_vector,z_vector,&
-    !                            vx_vector,vy_vector,vz_vector,&
-    !                            delta_time,mass,r_cutoff,density,force)
-
-    !     integer(sp), intent(in)    :: n_p
-    !     real(dp),    intent(in)    :: delta_time,mass,r_cutoff,density
-    !     real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
-    !     real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
-    !     real(dp),    intent(inout) :: force(n_p)
-    !     integer(sp)           :: i
-    !     real(dp)              :: factor
-    !     real(dp), allocatable :: force_x_old(:),force_y_old(:),force_z_old(:)
-    !     real(dp), allocatable :: force_x_new(:),force_y_new(:),force_z_new(:)
-
-    !     allocate(force_x_old(n_p),force_y_old(n_p),force_z_old(n_p))
-    !     allocate(force_x_new(n_p),force_y_new(n_p),force_z_new(n_p))
-    !     force_x_old(:)=0._dp;force_y_old(:)=0._dp;force_z_old(:)=0._dp
-    !     force_x_new(:)=0._dp;force_y_new(:)=0._dp;force_z_new(:)=0._dp
-
-    !     factor=delta_time*0.5_dp*(1._dp/mass)
-    !     do i=1,n_p
-    !         ! FUERZAS EN EL TIEMPO ACTUAL
-    !         force_x_old(i)=x_vector(i)*force(i)
-    !         force_y_old(i)=y_vector(i)*force(i)
-    !         force_z_old(i)=z_vector(i)*force(i)
-    !         ! POSICIONES EN EL TIEMPO EVOLUCIONADO
-    !         x_vector(i)=x_vector(i)+(vx_vector(i)+force_x_old(i)*factor)*delta_time
-    !         y_vector(i)=y_vector(i)+(vy_vector(i)+force_y_old(i)*factor)*delta_time
-    !         z_vector(i)=z_vector(i)+(vz_vector(i)+force_z_old(i)*factor)*delta_time
-    !         call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
-    !     end do
-    !     ! actualizamos vector de fuerzas force(:)
-    !     call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force)
-    !     do i=1,n_p
-    !         ! FUERZAS EN EL TIEMPO EVOLUCIONADO
-    !         force_x_new(i)=x_vector(i)*force(i)
-    !         force_y_new(i)=y_vector(i)*force(i)
-    !         force_z_new(i)=z_vector(i)*force(i)
-    !         ! VELOCIDAD EN EL TIEMPO EVOLUCIONADO
-    !         vx_vector(i)=vx_vector(i)+(force_x_new(i)+force_x_old(i))*factor
-    !         vy_vector(i)=vy_vector(i)+(force_y_new(i)+force_y_old(i))*factor
-    !         vz_vector(i)=vz_vector(i)+(force_z_new(i)+force_z_old(i))*factor
-    !     end do
-    !     deallocate(force_x_old,force_y_old,force_z_old)
-    !     deallocate(force_x_new,force_y_new,force_z_new)
-    ! end subroutine velocity_verlet_v2
-
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&
         vx_vector,vy_vector,vz_vector,&
         delta_time,mass,r_cutoff,density,force_x,force_y,force_z)

@@ -166,5 +166,42 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "fluctuations_vs_time.dat"
-p 'fluctuations_vs_time.dat' u 1:2 w p pt 7 ps 0.4
+set terminal pdf size 12,12;set output 'fluctuations_vs_time.pdf'
+
+set multiplot layout 3,3
+    set autoscale
+    set title "n_{p}=256,t_{eq}=1000,t_{scal}=50,t_{run}=1000,{/Symbol D}t=.005"
+    set xlabel "Adimensional time (t)"
+    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+
+    set ylabel "Adimensional average Energy/particles ({E_{adim}}^{med}/n_{p})"
+    p '../results/fluctuations_vs_time.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-pot}}^{med}',\
+    '../results/fluctuations_vs_time.dat' u 1:(-0.5011E+01) w l dt 2 lw 3 lc 'black' t '(-5.011)+-(0.6716*10^{-6})'
+
+    p '../results/fluctuations_vs_time.dat' u 1:4 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-kin}}^{med}',\
+    '../results/fluctuations_vs_time.dat' u 1:(0.1650E+01) w l dt 2 lw 3 lc 'black' t '(1.650)+-(0.6617*10^{-6})'
+
+    p '../results/fluctuations_vs_time.dat' u 1:6 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-tot}}^{med}',\
+    '../results/fluctuations_vs_time.dat' u 1:(-0.3361E+01) w l dt 2 lw 3 lc 'black' t '(-3.361)+-(0.6188*10^{-9})'
+
+    set ylabel "fluctuations of energies (var({E_{adim}}^{med}/n_{p}))"
+    p '../results/fluctuations_vs_time.dat' u 1:3 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-pot}}^{med})',\
+    '../results/fluctuations_vs_time.dat' u 1:5 w l lw 2 lc 'blue' smooth mcsplines t 'var({E_{adim-kin}}^{med})'
+    p '../results/fluctuations_vs_time.dat' u 1:7 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-tot}}^{med})'
+
+    set ylabel "Adimensional average pressure ({P_{adim}}^{med})"
+    p '../results/fluctuations_vs_time.dat' u 1:8 w l lw 2 lc 'red' smooth mcsplines t '{P_{adim}}^{med}',\
+    '../results/fluctuations_vs_time.dat' u 1:(0.2255E+01) w l dt 2 lw 3 lc 'black' t '(-2.255)+-(0.1249E*10^{-4})'
+
+    set ylabel "fluctuations of pressure (var({P_{adim}}^{med}))"
+    p '../results/fluctuations_vs_time.dat' u 1:9 w l lw 2 lc 'red' smooth mcsplines t 'var({P_{adim}}^{med})'
+    
+    set ylabel "Adimensional average temperature ({T_{adim}}^{med})"
+    p '../results/fluctuations_vs_time.dat' u 1:10 w l lw 2 lc 'red' smooth mcsplines t '{T_{adim}}^{med}',\
+    '../results/fluctuations_vs_time.dat' u 1:(0.1100E+01) w l dt 2 lw 3 lc 'black' t '(1.1)+-(0.2941*10^{-6})'
+
+    set ylabel "fluctuations of temperature (var({T_{adim}}^{med}))"
+    p '../results/fluctuations_vs_time.dat' u 1:11 w l lw 2 lc 'red' smooth mcsplines t 'var({T_{adim}}^{med})'
+
+unset multiplot
 #    EOF

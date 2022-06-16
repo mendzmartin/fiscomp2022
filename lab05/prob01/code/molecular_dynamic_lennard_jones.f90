@@ -151,7 +151,3 @@ subroutine create_movie(index,x_vector,y_vector,z_vector,n_p)
     write(52,50) 'rx_fcc','ry_fcc','rz_fcc'
     do i=1,n_p;write(52,51) x_vector(i),y_vector(i),z_vector(i);end do;close(52)
 end subroutine create_movie
-
-subroutine statistics_variables
-
-end subroutine
