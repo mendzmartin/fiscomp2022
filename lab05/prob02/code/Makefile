@@ -36,6 +36,7 @@ LDFLAGS = $(flg_lib01)
 # binaries names
 bin_name_01 = md_lj_canonical_ensamble_01
 bin_name_02 = md_lj_canonical_ensamble_02
+bin_name_03 = md_lj_canonical_ensamble_03
 
 # object dependencies
 dependencies_01= module_precision.o module_mt19937.o module_md_lennard_jones.o
@@ -48,6 +49,10 @@ $(bin_name_01).o: $(dependencies_01)
 # md_lj_canonical_ensamble_02 (inciso b)
 $(bin_name_02).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_02).o $(dependencies_01) $(bin_name_02).f90
+
+# md_lj_canonical_ensamble_03 (inciso c)
+$(bin_name_03).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_03).o $(dependencies_01) $(bin_name_03).f90
 
 # ============================================================
 # MODULES COMPILATION
