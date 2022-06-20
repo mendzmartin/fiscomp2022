@@ -11,6 +11,7 @@ for i in {10..20}
         index=$((index+1))
     done
 
+
 ffmpeg -r 9 -i ../results/movie%d.jpeg movie.mp4
 
 for i in {0..10}

@@ -150,7 +150,7 @@ set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "en_GB.UTF-8"
+set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -165,43 +165,93 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "fluctuations_vs_time.dat"
-set terminal pdf size 8,20;set output 'fluctuations_vs_time.pdf'
+## Last datafile plotted: "pressure_vs_density.dat"
+set terminal pdf size 8,8;set output 'properties.pdf'
 
-set multiplot layout 5,2
-    set autoscale
-    set title "n_{p}=256,t_{eq}=1000,t_{scal}=50,t_{run}=1000,{/Symbol D}t=.005"
-    set xlabel "Adimensional time (t)"
+set multiplot layout 2,2
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set key left top
 
-    set ylabel "Adimensional average Energy/particles ({E_{adim}}^{med}/n_{p})"
-    p '../results/fluctuations_vs_time.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-pot}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(-0.5011E+01) w l dt 2 lw 3 lc 'black' t '(-5.011)+-(0.6716*10^{-6})'
+    set xrange [0.8:1.2];set xtics 0.05
+    set xlabel "density ({/Symbol r})"
+    set title "n_{p}=256,T_{adim}=1.0,t_{eq}=t_{run}=1000,t_{scal}=50,{/Symbol D}t=.005,r_{cutoff}=2.5"
 
-    p '../results/fluctuations_vs_time.dat' u 1:4 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-kin}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.1650E+01) w l dt 2 lw 3 lc 'black' t '(1.650)+-(0.6617*10^{-6})'
+    set ylabel "average adimensional pressure (P)"
+    set parametric
+    rho1=0.8889;rho2=0.9333;set trange [0:10]
+    p '../results/pressure_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/pressure_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
 
-    p '../results/fluctuations_vs_time.dat' u 1:6 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-tot}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(-0.3361E+01) w l dt 2 lw 3 lc 'black' t '(-3.361)+-(0.6188*10^{-9})'
+    # "../results/pressure_vs_density.dat" u (0.8889):2 w l dt 2 lc 'black' notitle,\
+    # "../results/pressure_vs_density.dat" u (0.9333):2 w l dt 2 lc 'black' notitle
 
-    set ylabel "fluctuations of energies (var({E_{adim}}^{med}/n_{p}))"
-    p '../results/fluctuations_vs_time.dat' u 1:3 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-pot}}^{med})',\
-    '../results/fluctuations_vs_time.dat' u 1:5 w l lw 2 lc 'blue' smooth mcsplines t 'var({E_{adim-kin}}^{med})'
-    p '../results/fluctuations_vs_time.dat' u 1:7 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-tot}}^{med})'
+    set autoscale;set xrange [0.8:1.2];set xtics 0.05;set trange [0:0.7]
+    set ylabel "static structure function (s(k,t))"
+    p '../results/struct_factor_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/struct_factor_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
 
-    set ylabel "Adimensional average pressure ({P_{adim}}^{med})"
-    p '../results/fluctuations_vs_time.dat' u 1:8 w l lw 2 lc 'red' smooth mcsplines t '{P_{adim}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.2255E+01) w l dt 2 lw 3 lc 'black' t '(-2.255)+-(0.1249E*10^{-4})'
+    set autoscale;set xrange [0.8:1.2];set xtics 0.05;set trange[0:3]
+    set ylabel "diffusion constant (D)"
+    p '../results/diffsuion_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/diffsuion_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
 
-    set ylabel "fluctuations of pressure (var({P_{adim}}^{med}))"
-    p '../results/fluctuations_vs_time.dat' u 1:9 w l lw 2 lc 'red' smooth mcsplines t 'var({P_{adim}}^{med})'
-    
-    set ylabel "Adimensional average temperature ({T_{adim}}^{med})"
-    p '../results/fluctuations_vs_time.dat' u 1:10 w l lw 2 lc 'red' smooth mcsplines t '{T_{adim}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.1100E+01) w l dt 2 lw 3 lc 'black' t '(1.1)+-(0.2941*10^{-6})'
+    set autoscale;set xrange [0.8:1.2];set xtics 0.05;set trange[5:25]
+    set ylabel "mean squared displacement (MSD)"
+    p '../results/diffsuion_vs_density.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/diffsuion_vs_density.dat" u 1:4:5 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
+unset multiplot
 
-    set ylabel "fluctuations of temperature (var({T_{adim}}^{med}))"
-    p '../results/fluctuations_vs_time.dat' u 1:11 w l lw 2 lc 'red' smooth mcsplines t 'var({T_{adim}}^{med})'
+set terminal pdf size 8,8;set output 'properties_zoom.pdf'
+set multiplot layout 2,2
+    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set key left top
 
+    set xrange [0.85:0.95];set xtics 0.01
+    set yrange [2.5:4.2]
+    set xlabel "density ({/Symbol r})"
+    set title "n_{p}=256,T_{adim}=1.0,t_{eq}=t_{run}=1000,t_{scal}=50,{/Symbol D}t=.005,r_{cutoff}=2.5"
+
+    set ylabel "average adimensional pressure (P)"
+    set parametric
+    rho1=0.8889;rho2=0.9333;set trange [0:10]
+    p '../results/pressure_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/pressure_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
+
+    # "../results/pressure_vs_density.dat" u (0.8889):2 w l dt 2 lc 'black' notitle,\
+    # "../results/pressure_vs_density.dat" u (0.9333):2 w l dt 2 lc 'black' notitle
+
+    set autoscale;set xrange [0.85:0.95];set xtics 0.01;set trange [0:0.7]
+    set ylabel "static structure function (s(k,t))"
+    p '../results/struct_factor_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/struct_factor_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
+
+    set autoscale;set xrange [0.85:0.95];set xtics 0.01;set trange[0:3]
+    set yrange [1.4:2.5];set ytics 0.01
+    set logscale y
+    set ylabel "diffusion constant (D) - logscale"
+    p '../results/diffsuion_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/diffsuion_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
+
+    set autoscale;set xrange [0.85:0.95];set xtics 0.01;set trange[5:25]
+    set yrange [15:22];set ytics 0.1
+    set ylabel "mean squared displacement (MSD) - logscale"
+    p '../results/diffsuion_vs_density.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    "../results/diffsuion_vs_density.dat" u 1:4:5 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t 'rho=0.8889',\
+    rho2,t w l lw 3 lc 'black' dt 4 t 'rho=0.9333'
 unset multiplot
 #    EOF

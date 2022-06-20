@@ -177,7 +177,7 @@ set multiplot layout 1,1
     set yrange[0:1.1]
     set xrange[0:15]
     set xlabel "adimensional time (t)"
-    set ylabel "radial distribution function (s(k,t))"
+    set ylabel "static structure function (s(k,t))"
 
     p '../results/structure_function_rho1.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines t '{/Symbol r}=0.8(liquid)',\
     '../results/structure_function_rho2.dat' u 1:2 w l lw 3 lc 'blue' smooth mcsplines t '{/Symbol r}=1.2(solid)'

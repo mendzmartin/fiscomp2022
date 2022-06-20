@@ -1,16 +1,18 @@
-! make clean && make molecular_dynamic_lennard_jones_03_v2.o && ./molecular_dynamic_lennard_jones_03_v2.o
-program molecular_dynamic_lennard_jones_03_v2
+! Inciso f)
+! make clean && make molecular_dynamic_lennard_jones_05.o && ./molecular_dynamic_lennard_jones_05.o
+program molecular_dynamic_lennard_jones_05
     use module_precision;use module_md_lennard_jones
     implicit none
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: T_adim_ref=1.1_dp                      ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
-    real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa     
+    real(dp),    parameter   :: mass=1._dp                             ! masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
     real(dp),    allocatable :: vx_vector(:),vy_vector(:),vz_vector(:) ! componentes de la velocidad/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
     integer(sp)              :: time_eq,time_scal,&                    ! pasos de equilibración y de escaleo de veloc.
                                 time_run                               ! pasos de evolucion en el estado estacionario
+    real(dp)                 :: r_cutoff                               ! radio de corte de interacciones
     real(dp)                 :: delta_time                             ! paso temporal
     integer(sp)              :: i,j,istat,index                        ! loop index
     real(dp)                 :: U_adim,U_med,var_U,err_U
@@ -42,17 +44,22 @@ program molecular_dynamic_lennard_jones_03_v2
     call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
  
 
-    open(10,file='../results/enrgy_fluct_relations.dat',status='replace',action='write',iostat=istat)
+    open(10,file='../results/enrgy_fluct_relations_vs_rcutoff.dat',status='replace',action='write',iostat=istat)
     if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
-    11 format(E12.4,x,E12.4);12 format(A12,x,A12)
-    write(10,12) 'delta_time','var_Etot/var_Ec'
+    11 format(E14.6,x,E14.6);12 format(A14,x,A14)
+    write(10,12) 'r_{cutoff}','varEtot/varEc'
 
-    delta_time=0.02_dp
-    do j=1,5
-        ! definimos los pasos temporales y pasos de MD
-        time_eq=5._dp*(1._dp/delta_time)
-        time_scal=0.25_dp*(1._dp/delta_time)
-        time_run=5._dp*(1._dp/delta_time)
+    ! definimos pasos temporales pequeños
+    delta_time=0.005_dp
+    time_eq=5._dp*(1._dp/delta_time)
+    time_scal=0.25_dp*(1._dp/delta_time)
+    time_run=5._dp*(1._dp/delta_time)
+
+    r_cutoff=0._dp
+    do j=1,10
+
+        ! definimos r_cutoff en el rango [1;5]
+        r_cutoff=1.0_dp+(4._dp*(1._dp/9._dp)*real(j-1,dp))
 
         index=0
         ! TRANSITORIO
@@ -114,9 +121,7 @@ program molecular_dynamic_lennard_jones_03_v2
         err_Ec=(var_Ec*0.25_dp)*(1._dp/real(time_eq-1,dp))
         err_Etot=(var_Etot*0.25_dp)*(1._dp/real(time_eq-1,dp))
 
-        write(10,11) delta_time,var_Etot*(1._dp/var_Ec)
-
-        delta_time=delta_time*0.5_dp
+        write(10,11) r_cutoff,var_Etot*(1._dp/var_Ec)
     end do
 
     close(10)
@@ -127,4 +132,4 @@ program molecular_dynamic_lennard_jones_03_v2
 
     call cpu_time(time_end)
     write(*,*) 'elapsed time = ',time_end-time_start,'[s]'
-end program molecular_dynamic_lennard_jones_03_v2
+end program molecular_dynamic_lennard_jones_05

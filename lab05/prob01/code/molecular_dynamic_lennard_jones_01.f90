@@ -1,5 +1,5 @@
-! make clean && make molecular_dynamic_lennard_jones.o && ./molecular_dynamic_lennard_jones.o
-program molecular_dynamic_lennard_jones
+! make clean && make molecular_dynamic_lennard_jones_01.o && ./molecular_dynamic_lennard_jones_01.o
+program molecular_dynamic_lennard_jones_01
     use module_precision;use module_md_lennard_jones
     implicit none
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
@@ -19,10 +19,10 @@ program molecular_dynamic_lennard_jones
     logical                  :: movie_switch,fcc_init_switch,&
                                 Tadim_trans_switch,energies_switch
 
-    movie_switch       =.false. ! escribir peliculas en la caja
+    movie_switch       =.false. ! escribir pelicula con partículas en la caja
     fcc_init_switch    =.false. ! escribir estructura fcc inicial
     Tadim_trans_switch =.false. ! escribir tempereratura en el estado transitorio
-    energies_switch    =.false.  ! escribir energías en el estado estacionario
+    energies_switch    =.true. ! escribir energías en el estado estacionario
 
     call cpu_time(time_start)
     22 format(5(E12.4,x),E12.4);23 format(5(A12,x),A12)
@@ -133,8 +133,9 @@ program molecular_dynamic_lennard_jones
 
     call cpu_time(time_end)
     write(*,*) 'elapsed time = ',time_end-time_start,'[s]'
-end program molecular_dynamic_lennard_jones
+end program molecular_dynamic_lennard_jones_01
 
+! subrutina para crear película de partículas en la caja
 subroutine create_movie(index,x_vector,y_vector,z_vector,n_p)
     use module_precision
     implicit none

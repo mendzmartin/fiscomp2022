@@ -184,10 +184,14 @@ set multiplot layout 2,2
     p '../results/result_03.dat' u 1:4 w l lw 1 lc 'red' smooth mcsplines notitle
 
     set ylabel "Adimensional Pressure (P)"
-    p '../results/result_03.dat' u 1:5 w l lw 2 lc 'red' smooth mcsplines notitle
+    p '../results/result_03.dat' u 1:5 w l lw 2 lc 'red' smooth mcsplines notitle,\
+    '../results/result_03.dat' u 1:(0.2255E+01) w l dt 2 lw 3 lc 'black' t '(-2.255)+-(0.1249E*10^{-4})'
 
     set ylabel "Adimensional Temperature (T_{adim})"
+    set key left top
     p '../results/result_03.dat' u 1:6 w l lw 2 lc 'red' smooth mcsplines notitle,\
+    '../results/result_03.dat' u 1:(1.1+1/sqrt(256)) w l dt 2 lw 3 lc 'black' t '{T_{ref}} + {n_p}^{-1/2}',\
+    '../results/result_03.dat' u 1:(1.1-1/sqrt(256)) w l dt 2 lw 3 lc 'black' t '{T_{ref}} - {n_p}^{-1/2}',\
     '../results/result_03.dat' u 1:(1.1) w l dt 2 lw 3 lc 'black' t 'T_{ref}'
 unset multiplot
 #    EOF

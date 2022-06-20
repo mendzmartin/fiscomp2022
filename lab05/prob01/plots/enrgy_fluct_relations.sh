@@ -150,7 +150,7 @@ set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "en_GB.UTF-8"
+set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -165,43 +165,24 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "fluctuations_vs_time.dat"
-set terminal pdf size 8,20;set output 'fluctuations_vs_time.pdf'
+## Last datafile plotted: "enrgy_fluct_relations_vs_rcutoff.dat"
+set terminal pdf size 4,8;set output 'enrgy_fluct_relations.pdf'
 
-set multiplot layout 5,2
-    set autoscale
-    set title "n_{p}=256,t_{eq}=1000,t_{scal}=50,t_{run}=1000,{/Symbol D}t=.005"
-    set xlabel "Adimensional time (t)"
+set multiplot layout 2,1
+    #set logscale
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-
-    set ylabel "Adimensional average Energy/particles ({E_{adim}}^{med}/n_{p})"
-    p '../results/fluctuations_vs_time.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-pot}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(-0.5011E+01) w l dt 2 lw 3 lc 'black' t '(-5.011)+-(0.6716*10^{-6})'
-
-    p '../results/fluctuations_vs_time.dat' u 1:4 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-kin}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.1650E+01) w l dt 2 lw 3 lc 'black' t '(1.650)+-(0.6617*10^{-6})'
-
-    p '../results/fluctuations_vs_time.dat' u 1:6 w l lw 2 lc 'red' smooth mcsplines t '{E_{adim-tot}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(-0.3361E+01) w l dt 2 lw 3 lc 'black' t '(-3.361)+-(0.6188*10^{-9})'
-
-    set ylabel "fluctuations of energies (var({E_{adim}}^{med}/n_{p}))"
-    p '../results/fluctuations_vs_time.dat' u 1:3 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-pot}}^{med})',\
-    '../results/fluctuations_vs_time.dat' u 1:5 w l lw 2 lc 'blue' smooth mcsplines t 'var({E_{adim-kin}}^{med})'
-    p '../results/fluctuations_vs_time.dat' u 1:7 w l lw 2 lc 'red' smooth mcsplines t 'var({E_{adim-tot}}^{med})'
-
-    set ylabel "Adimensional average pressure ({P_{adim}}^{med})"
-    p '../results/fluctuations_vs_time.dat' u 1:8 w l lw 2 lc 'red' smooth mcsplines t '{P_{adim}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.2255E+01) w l dt 2 lw 3 lc 'black' t '(-2.255)+-(0.1249E*10^{-4})'
-
-    set ylabel "fluctuations of pressure (var({P_{adim}}^{med}))"
-    p '../results/fluctuations_vs_time.dat' u 1:9 w l lw 2 lc 'red' smooth mcsplines t 'var({P_{adim}}^{med})'
-    
-    set ylabel "Adimensional average temperature ({T_{adim}}^{med})"
-    p '../results/fluctuations_vs_time.dat' u 1:10 w l lw 2 lc 'red' smooth mcsplines t '{T_{adim}}^{med}',\
-    '../results/fluctuations_vs_time.dat' u 1:(0.1100E+01) w l dt 2 lw 3 lc 'black' t '(1.1)+-(0.2941*10^{-6})'
-
-    set ylabel "fluctuations of temperature (var({T_{adim}}^{med}))"
-    p '../results/fluctuations_vs_time.dat' u 1:11 w l lw 2 lc 'red' smooth mcsplines t 'var({T_{adim}}^{med})'
-
+    set ylabel "fluctuations of energies ({/Symbol d}({E_{adim}^{tot})/{/Symbol d}({E_{adim}^{kin}))"
+    set autoscale
+    set title "0<=t_{real}<=5"
+    set xtics 0.005
+    set xlabel "Adimensional step time ({/Symbol D}t)"
+    p '../results/enrgy_fluct_relations_vs_deltat.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    '../results/enrgy_fluct_relations_vs_deltat.dat' u 1:2 w p pt 7 ps 0.5 lc 'black' notitle
+    set autoscale
+    set xtics 0.5
+    set title "t_{eq}=1000,t_{scal}=50,t_{run}=10,{/Symbol D}t=.005"
+    set xlabel "Adimensional cut-off radius (r_{cutoff})"
+    p '../results/enrgy_fluct_relations_vs_rcutoff.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
+    '../results/enrgy_fluct_relations_vs_rcutoff.dat' u 1:2 w p pt 7 ps 0.5 lc 'black' notitle
 unset multiplot
 #    EOF

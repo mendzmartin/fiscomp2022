@@ -173,39 +173,45 @@ set terminal pdf size 8,8;set output 'histograms.pdf'
 set multiplot layout 2,2
     set grid
     set autoscale
-    set title "n_{p}=256,{/Symbol r}t=.8,T_{adim}=1.1"
+    set title "n_{p}=256,{/Symbol r}t=.8,T_{adim}=1.1 - FORTRAN histogram"
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
 
+    set xrange[-3:3];set yrange[0:1]
     set xlabel "velocity components (v_{x},v_{y},v_{z})"
     set ylabel "probability (p(v_{x}),p(v_{y}),p(v_{z}))"
-    p '../results/components_velocities_histogram.dat' u 1:($2/25) w boxes t 'p(v_{x})',\
-    '../results/components_velocities_histogram.dat' u 3:($4/25) w boxes t 'p(v_{y})',\
-    '../results/components_velocities_histogram.dat' u 5:($6/25) w boxes t 'p(v_{z})',\
-    '../results/exact_velocities_distributions.dat' u 1:2 w l lc 'black' smooth mcsplines t 'exact'
+    p '../results/components_velocities_histogram.dat' u 1:($2/24) w boxes t 'p(v_{x})',\
+    '../results/components_velocities_histogram.dat' u 3:($4/24) w boxes t 'p(v_{y})',\
+    '../results/components_velocities_histogram.dat' u 5:($6/24) w boxes t 'p(v_{z})',\
+    '../results/exact_velocities_distributions.dat' u 1:2 w l lc 'black' smooth mcsplines t 'exact(Gaussian distribution)'
 
+    set xrange[0.25:4];set yrange[0:1]
     set xlabel "total velocity (v_{tot})"
     set ylabel "probability (p(v_{tot})"
-    p '../results/total_velocities_histogram.dat' u 1:($2/20) w boxes t 'p(v_{tot})',\
-    '../results/exact_velocities_distributions.dat' u 7:8 w l lc 'black' smooth mcsplines t 'exact'
+    p '../results/total_velocities_histogram.dat' u 1:($2/18) w boxes t 'p(v_{tot})',\
+    '../results/exact_velocities_distributions.dat' u 7:8 w l lc 'black' smooth mcsplines t 'exact(Maxwell-Boltzmann distribution)'
 
 
     reset
 
-    set title "n_{p}=256,{/Symbol r}t=.8,T_{adim}=1.1"
+    set title "n_{p}=256,{/Symbol r}t=.8,T_{adim}=1.1 - GNUPLOT histogram"
     set style data histogram
     binwidth=0.2
     bin(x,width)=width*floor(x/width)
 
     set xlabel "velocity components (v_{x},v_{y},v_{z})"
     set ylabel "probability (p(v_{x}),p(v_{y}),p(v_{z}))"
-    p '../results/exact_velocities_distributions.dat' u (bin($1,binwidth)):(1.0) smooth freq with boxes t 'p(v_{x})',\
-    '../results/exact_velocities_distributions.dat' u (bin($3,binwidth)):(1.0) smooth freq with boxes t 'p(v_{y})',\
-    '../results/exact_velocities_distributions.dat' u (bin($5,binwidth)):(1.0) smooth freq with boxes t 'p(v_{z})'
+    set xrange[-3:3];set yrange[0:1];set grid
+    p '../results/exact_velocities_distributions.dat' u (bin($1,binwidth)):(1.0/64) smooth freq with boxes t 'p(v_{x})',\
+    '../results/exact_velocities_distributions.dat' u (bin($3,binwidth)):(1.0/64) smooth freq with boxes t 'p(v_{y})',\
+    '../results/exact_velocities_distributions.dat' u (bin($5,binwidth)):(1.0/64) smooth freq with boxes t 'p(v_{z})',\
+    '../results/exact_velocities_distributions.dat' u 1:2 w l lc 'black' smooth mcsplines t 'exact(Gaussian distribution)'
 
     binwidth=0.07
+    set xrange[0.25:4];set yrange[0:1];set grid
     set xlabel "total velocity (v_{tot})"
     set ylabel "probability (p(v_{tot})"
-    p '../results/exact_velocities_distributions.dat' u (bin($7,binwidth)):(1.0) smooth freq with boxes t 'p(v_{tot})'
+    p '../results/exact_velocities_distributions.dat' u (bin($7,binwidth)):(2.7/64) smooth freq with boxes t 'p(v_{tot})',\
+    '../results/exact_velocities_distributions.dat' u 7:8 w l lc 'black' smooth mcsplines t 'exact(Maxwell-Boltzmann distribution)'
 
 unset multiplot
 #    EOF

@@ -43,30 +43,14 @@ module module_md_lennard_jones
         real(dp),    intent(in) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
         real(dp)                :: pressure,rij_pow02,result,T_adim,force_indiv
         integer(sp)             :: i,j
-        real(dp),    parameter  :: rij_min=1.1225_dp ! 2^(1/6)*sigma
-        !real(dp)                :: L,dx,dy,dz
-        !L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
         result=0._dp
         do j=2,n_p
             do i=1,j-1
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                cond3:  if (rij_pow02<=r_cutoff*r_cutoff) then
-                            ! if (rij_pow02<=rij_min*rij_min) then
-                            !     rij_pow02=rij_min*rij_min
-                            !     !force_indiv=f_lj_individual(rij_pow02)
-                            !     force_indiv=0._dp
-                            !     exit cond3
-                            ! else
-                                force_indiv=f_lj_individual(rij_pow02)
-                            !end if
-                else
-                    force_indiv=0._dp
-                end if cond3
-                ! dx=pbc_correction((x_vector(i)-x_vector(j)),n_p,density)
-                ! dy=pbc_correction((y_vector(i)-y_vector(j)),n_p,density)
-                ! dz=pbc_correction((z_vector(i)-z_vector(j)),n_p,density)
-                !result=result+force_indiv*(dx*dx+dy*dy+dz*dz)
+                if (rij_pow02<=r_cutoff*r_cutoff) then
+                    force_indiv=f_lj_individual(rij_pow02)
+                else; force_indiv=0._dp; end if
                 result=result+force_indiv*rij_pow02
             end do
         end do
@@ -92,25 +76,15 @@ module module_md_lennard_jones
         real(dp),    intent(in) :: r_cutoff,density
         real(dp)                :: u_lj_total,u_indiv,rij_pow02
         integer(sp)             :: i,j
-        real(dp),    parameter  :: rij_min=1._dp ! sigma
         u_lj_total=0._dp
         do j=2,n_p
             do i=1,j-1
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                cond2:  if (rij_pow02<=r_cutoff*r_cutoff) then
-                            ! if (rij_pow02<=rij_min*rij_min) then
-                            !     rij_pow02=rij_min*rij_min
-                            !     !u_indiv=u_lj_individual(rij_pow02)
-                            !     u_indiv=0._dp
-                            !     exit cond2
-                            ! else
-                                u_indiv=u_lj_individual(rij_pow02)
-                            !end if
-                        else
-                            u_indiv=0._dp
-                end if cond2
+                if (rij_pow02<=r_cutoff*r_cutoff) then
+                    u_indiv=u_lj_individual(rij_pow02)
+                else; u_indiv=0._dp; end if
                 u_lj_total=u_lj_total+u_indiv
             end do
         end do
@@ -135,7 +109,6 @@ module module_md_lennard_jones
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do ! (r12)^6
         f_lj_individual=24._dp*(1._dp/(r12_pow02*r12_pow06))*(2._dp*(1._dp/r12_pow06)-1._dp)
-        !f_lj_individual=-48._dp*(1._dp/r12_pow02)*((1._dp/r12_pow06)**2-0.5_dp*(1._dp/r12_pow06))
     end function f_lj_individual
 
     ! calculo de la componente xi de la fuerza total
@@ -149,7 +122,6 @@ module module_md_lennard_jones
         real(dp)                   :: rij_pow02
         real(dp)                   :: force_indiv ! fuerza neta acuando en una determinada partícula
         integer(sp)                :: i,j
-        real(dp),    parameter     :: rij_min=1.1225_dp ! 2^(1/6)*sigma
         real(dp)                   :: dx,dy,dz,L
         fx_lj_total_vector(:)=0._dp;fy_lj_total_vector(:)=0._dp;fz_lj_total_vector(:)=0._dp
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
@@ -158,18 +130,11 @@ module module_md_lennard_jones
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                cond1:  if (rij_pow02<=r_cutoff*r_cutoff) then
-                            ! if (rij_pow02<=rij_min*rij_min) then
-                            !     rij_pow02=rij_min*rij_min
-                            !     !force_indiv=f_lj_individual(rij_pow02)
-                            !     force_indiv=0._dp
-                            !     exit cond1
-                            ! else
-                                force_indiv=f_lj_individual(rij_pow02)
-                            !end if
-                        else
-                            force_indiv=0._dp
-                end if cond1
+
+                if (rij_pow02<=r_cutoff*r_cutoff) then
+                    force_indiv=f_lj_individual(rij_pow02)
+                else; force_indiv=0._dp;end if
+
                 dx=pbc_correction((x_vector(i)-x_vector(j)),n_p,density)
                 dy=pbc_correction((y_vector(i)-y_vector(j)),n_p,density)
                 dz=pbc_correction((z_vector(i)-z_vector(j)),n_p,density)
@@ -213,8 +178,7 @@ module module_md_lennard_jones
         real(dp),    intent(in) :: x        ! variable a corregir
         real(dp)                :: pbc_correction,L
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-        pbc_correction=(x-L*anint(x*(1._dp/L),dp)) ! MÉTODO 1
-        !pbc_correction=x-L*real(int((x+0.5_dp*L)*(1._dp/L),sp),dp) ! MÉTODO 2
+        pbc_correction=(x-L*anint(x*(1._dp/L),dp))
     end function pbc_correction
 
     ! SUBRUTINAS
@@ -388,6 +352,8 @@ module module_md_lennard_jones
         vy_vector(:)=vy_vector(:)-vy_mc
         vz_vector(:)=vz_vector(:)-vz_mc
         call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
+
+        ! descomentar si se quere re-asignar posiciones según velocidades iniciales
         ! do i=1,n_p
         !     ! position previous time step
         !     x_vector(i)=x_vector(i)-vx_vector(i)*delta_time

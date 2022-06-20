@@ -6,7 +6,6 @@ program molecular_dynamic_lennard_jones_02
     real(dp),    parameter   :: delta_time=0.005_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=1000_sp,time_scal=50_sp,&      ! pasos de equilibración y de escaleo de veloc.
                                 time_run=1000_sp                       ! pasos de evolucion en el estado estacionario
-    integer(sp), parameter   :: n_exp=10_sp                            ! numero de experimentos
     real(dp),    parameter   :: T_adim_ref=1.1_dp                      ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa     
@@ -19,11 +18,11 @@ program molecular_dynamic_lennard_jones_02
     real(dp)                 :: Etot_adim,Etot_med,var_Etot,err_Etot
     real(dp)                 :: press,press_med,var_press,err_press
     real(dp)                 :: T_adim,T_med,var_T,err_T
-    real(dp)                 :: s1_U,s2_U,s1_U_mom,s2_U_mom
-    real(dp)                 :: s1_Ec,s2_Ec,s1_Ec_mom,s2_Ec_mom
-    real(dp)                 :: s1_Etot,s2_Etot,s1_Etot_mom,s2_Etot_mom
-    real(dp)                 :: s1_press,s2_press,s1_press_mom,s2_press_mom
-    real(dp)                 :: s1_T,s2_T,s1_T_mom,s2_T_mom
+    real(dp)                 :: s1_U,s2_U
+    real(dp)                 :: s1_Ec,s2_Ec
+    real(dp)                 :: s1_Etot,s2_Etot
+    real(dp)                 :: s1_press,s2_press
+    real(dp)                 :: s1_T,s2_T
     real(dp)                 :: vx_mc,vy_mc,vz_mc                      ! componentes de la velocidad del centro de masas
     real(dp)                 :: time_end,time_start                    ! tiempos de CPU
 
@@ -50,7 +49,7 @@ program molecular_dynamic_lennard_jones_02
     ! TRANSITORIO
     do i=1,time_eq
         index=index+1
-        write(*,*) 'paso temporal =',index,' de',time_eq+time_run*n_exp
+        write(*,*) 'paso temporal =',index,' de',time_eq+time_run
         if (mod(i,time_scal)==0_sp) call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
         call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
         vx_vector,vy_vector,vz_vector,delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
@@ -69,80 +68,69 @@ program molecular_dynamic_lennard_jones_02
     11 format(9(E12.4,x),E12.4);12 format(9(A12,x),A12)
     write(10,12) 'U_med','err_U','Ec_med','err_Ec','Etot_med','err_Etot','press_med','err_press','T_med','err_T'
 
-    U_med=0._dp;s1_U_mom=0._dp;s2_U_mom=0._dp
-    Ec_med=0._dp;s1_Ec_mom=0._dp;s2_Ec_mom=0._dp
-    Etot_med=0._dp;s1_Etot_mom=0._dp;s2_Etot_mom=0._dp
-    press_med=0._dp;s1_press_mom=0._dp;s2_press_mom=0._dp
-    T_med=0._dp;s1_T_mom=0._dp;s2_T_mom=0._dp
+    open(20,file='../results/fluctuations_vs_time.dat',status='replace',action='write',iostat=istat)
+    if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
+    21 format(10(E12.4,x),E12.4);22 format(10(A12,x),A12)
+    write(20,22) 'time','U_med','var_U','Ec_med','var_Ec','Etot_med','var_Etot','press_med','var_press','T_med','var_T'
 
-    do j=1,n_exp
-        s1_U=0._dp;s2_U=0._dp
-        s1_Ec=0._dp;s2_Ec=0._dp
-        s1_Etot=0._dp;s2_Etot=0._dp
-        s1_press=0._dp;s2_press=0._dp
-        s1_T=0._dp;s2_T=0._dp
-        do i=1,time_run
-            index=index+1
-            write(*,*) 'paso temporal =',index,' de',time_eq+time_run*n_exp
-            call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
-            vx_vector,vy_vector,vz_vector,delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
+    U_med=0._dp
+    Ec_med=0._dp
+    Etot_med=0._dp
+    press_med=0._dp
+    T_med=0._dp
 
-            U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            Ec_adim=kinetic_ergy_total(n_p,vx_vector,vy_vector,vz_vector,mass)
-            Etot_adim=(U_adim+Ec_adim)*(1._dp/real(n_p,dp))
-            press=pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector,&
-            vx_vector,vy_vector,vz_vector)
-            T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
+    s1_U=0._dp;s2_U=0._dp
+    s1_Ec=0._dp;s2_Ec=0._dp
+    s1_Etot=0._dp;s2_Etot=0._dp
+    s1_press=0._dp;s2_press=0._dp
+    s1_T=0._dp;s2_T=0._dp
+    
+    do i=1,time_run
+        index=index+1
+        write(*,*) 'paso temporal =',index,' de',time_eq+time_run
+        call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+        vx_vector,vy_vector,vz_vector,delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
 
-            ! computamos 1er y 2do momento
-            s1_U=s1_U+U_adim*(1._dp/real(n_p,dp));s2_U=s2_U+U_adim*U_adim*(1._dp/real(n_p*n_p,dp))
-            s1_Ec=s1_Ec+Ec_adim*(1._dp/real(n_p,dp));s2_Ec=s2_Ec+Ec_adim*Ec_adim*(1._dp/real(n_p*n_p,dp))
-            s1_Etot=s1_Etot+Etot_adim;s2_Etot=s2_Etot+Etot_adim*Etot_adim
-            s1_press=s1_press+press;s2_press=s2_press+press*press
-            s1_T=s1_T+T_adim;s2_T=s2_T+T_adim*T_adim
-        end do
+        U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+        Ec_adim=kinetic_ergy_total(n_p,vx_vector,vy_vector,vz_vector,mass)
+        Etot_adim=(U_adim+Ec_adim)*(1._dp/real(n_p,dp))
+        press=pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector,&
+        vx_vector,vy_vector,vz_vector)
+        T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
 
-        ! acumulamos valores medios
-        U_med=U_med+s1_U*(1._dp/real(time_run,dp))
-        Ec_med=Ec_med+s1_Ec*(1._dp/real(time_run,dp))
-        Etot_med=Etot_med+s1_Etot*(1._dp/real(time_run,dp))
-        press_med=press_med+s1_press*(1._dp/real(time_run,dp))
-        T_med=T_med+s1_T*(1._dp/real(time_run,dp))
+        ! computamos 1er y 2do momento
+        s1_U=s1_U+U_adim*(1._dp/real(n_p,dp));s2_U=s2_U+U_adim*U_adim*(1._dp/real(n_p*n_p,dp))
+        s1_Ec=s1_Ec+Ec_adim*(1._dp/real(n_p,dp));s2_Ec=s2_Ec+Ec_adim*Ec_adim*(1._dp/real(n_p*n_p,dp))
+        s1_Etot=s1_Etot+Etot_adim;s2_Etot=s2_Etot+Etot_adim*Etot_adim
+        s1_press=s1_press+press;s2_press=s2_press+press*press
+        s1_T=s1_T+T_adim;s2_T=s2_T+T_adim*T_adim
 
-        ! computamos medias de medias
-        s1_U_mom=s1_U_mom+s1_U*(1._dp/real(time_run,dp))
-        s2_U_mom=s2_U_mom+s2_U*(1._dp/real(time_run,dp))
-        s1_Ec_mom=s1_Ec_mom+s1_Ec*(1._dp/real(time_run,dp))
-        s2_Ec_mom=s2_Ec_mom+s2_Ec*(1._dp/real(time_run,dp))
-        s1_Etot_mom=s1_Etot_mom+s1_Etot*(1._dp/real(time_run,dp))
-        s2_Etot_mom=s2_Etot_mom+s2_Etot*(1._dp/real(time_run,dp))
-        s1_press_mom=s1_press_mom+s1_press*(1._dp/real(time_run,dp))
-        s2_press_mom=s2_press_mom+s2_press*(1._dp/real(time_run,dp))
-        s1_T_mom=s1_T_mom+s1_T*(1._dp/real(time_run,dp))
-        s2_T_mom=s2_T_mom+s2_T*(1._dp/real(time_run,dp))
+        ! computamos valores medios (mejor a mayor paso evolucionado)
+        U_med=s1_U*(1._dp/real(i,dp))
+        Ec_med=s1_Ec*(1._dp/real(i,dp))
+        Etot_med=s1_Etot*(1._dp/real(i,dp))
+        press_med=s1_press*(1._dp/real(i,dp))
+        T_med=s1_T*(1._dp/real(i,dp))
 
+        ! computamos varianzas (mejor a mayor paso evolucionado)
+        var_U=(real(i,dp)*s2_U-s1_U*s1_U)*(1._dp/real(i*i,dp))
+        var_Ec=(real(i,dp)*s2_Ec-s1_Ec*s1_Ec)*(1._dp/real(i*i,dp))
+        var_Etot=(real(i,dp)*s2_Etot-s1_Etot*s1_Etot)*(1._dp/real(i*i,dp))
+        var_press=(real(i,dp)*s2_press-s1_press*s1_press)*(1._dp/real(i*i,dp))
+        var_T=(real(i,dp)*s2_T-s1_T*s1_T)*(1._dp/real(i*i,dp))
+
+        write(20,21) delta_time*real(i,dp),U_med,var_U,Ec_med,var_Ec,Etot_med,var_Etot,press_med,var_press,T_med,var_T
     end do
+    close(20)
 
     write(*,*) 'termino el estacionario'
 
-    ! computamos valores estadisticos finales
-    U_med=U_med*(1._dp/real(n_exp,dp))
-    Ec_med=Ec_med*(1._dp/real(n_exp,dp))
-    Etot_med=Etot_med*(1._dp/real(n_exp,dp))
-    press_med=press_med*(1._dp/real(n_exp,dp))
-    T_med=T_med*(1._dp/real(n_exp,dp))
-
-    var_U=(real(n_exp,dp)*s2_U_mom-s1_U_mom*s1_U_mom)*(1._dp/real(n_exp*n_exp,dp))
-    var_Ec=(real(n_exp,dp)*s2_Ec_mom-s1_Ec_mom*s1_Ec_mom)*(1._dp/real(n_exp*n_exp,dp))
-    var_Etot=(real(n_exp,dp)*s2_Etot_mom-s1_Etot_mom*s1_Etot_mom)*(1._dp/real(n_exp*n_exp,dp))
-    var_press=(real(n_exp,dp)*s2_press_mom-s1_press_mom*s1_press_mom)*(1._dp/real(n_exp*n_exp,dp))
-    var_T=(real(n_exp,dp)*s2_T_mom-s1_T_mom*s1_T_mom)*(1._dp/real(n_exp*n_exp,dp))
-    
-    err_U=(var_U*0.25_dp)*(1._dp/real(n_exp-1,dp))
-    err_Ec=(var_Ec*0.25_dp)*(1._dp/real(n_exp-1,dp))
-    err_Etot=(var_Etot*0.25_dp)*(1._dp/real(n_exp-1,dp))
-    err_press=(var_press*0.25_dp)*(1._dp/real(n_exp-1,dp))
-    err_T=(var_T*0.25_dp)*(1._dp/real(n_exp-1,dp))
+    ! computamos errores en el último paso
+    err_U=(var_U*0.25_dp)*(1._dp/real(time_eq-1,dp))
+    err_Ec=(var_Ec*0.25_dp)*(1._dp/real(time_eq-1,dp))
+    err_Etot=(var_Etot*0.25_dp)*(1._dp/real(time_eq-1,dp))
+    err_press=(var_press*0.25_dp)*(1._dp/real(time_eq-1,dp))
+    err_T=(var_T*0.25_dp)*(1._dp/real(time_eq-1,dp))
 
     write(10,11) U_med,err_U,Ec_med,err_Ec,Etot_med,err_Etot,press_med,err_press,T_med,err_T
     close(10)
