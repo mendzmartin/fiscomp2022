@@ -5,8 +5,8 @@ program md_lj_canonical_ensamble_03
     integer(sp), parameter   :: n_p=500_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=2000_sp,&                      ! pasos de equilibración
-                                time_run=1000_sp                       ! pasos de evolucion en el estado estacionario
-    integer(sp), parameter   :: tau_max_corr=1000_sp                   ! pasos maximos de correlación
+                                time_run=5000_sp                       ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: tau_max_corr=5000_sp                   ! pasos maximos de correlación
     real(dp),    parameter   :: T_adim_ref=1.0_dp                      ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
@@ -21,13 +21,13 @@ program md_lj_canonical_ensamble_03
     real(dp)                 :: vx_mc,vy_mc,vz_mc                      ! componentes de la velocidad del centro de masas
     real(dp)                 :: time,time_end,time_start               ! tiempos de CPU
     real(dp)                 :: msd                                    ! desplazamiento cuadrático medio
-    !real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
-    real(dp),    parameter   :: density=1.2_dp                         ! densidad (particulas/volumen)
+    real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
+    !real(dp),    parameter   :: density=1.2_dp                         ! densidad (particulas/volumen)
 
     ! DESCOMENTAR PARA density=0.8
-    !open(10,file='../results/msd_rho1.dat',status='replace',action='write',iostat=istat)
+    open(10,file='../results/msd_rho1.dat',status='replace',action='write',iostat=istat)
     ! DESCOMENTAR PARA density=1.2
-    open(10,file='../results/msd_rho2.dat',status='replace',action='write',iostat=istat)
+    !open(10,file='../results/msd_rho2.dat',status='replace',action='write',iostat=istat)
     if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
     24 format(E12.4,x,E12.4);25 format(A12,x,A12)
     write(10,25) 'time','msd'
@@ -136,7 +136,7 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     
     integer(sp)            :: i,j
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
-    integer(sp), parameter :: nmax_tau_corr_0=10_sp ! maximo número de tau_corr_0 que almacenamos
+    integer(sp), parameter :: nmax_tau_corr_0=500_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina
     tau_corr_0=mod(counter-1,tau_max_corr)+1 ! tiempo de correlación actual tau_corr_0={1,2,...,tau_max_corr}
