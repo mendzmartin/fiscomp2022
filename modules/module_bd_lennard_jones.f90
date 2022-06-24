@@ -8,19 +8,21 @@ module module_bd_lennard_jones
     ! FUNCIONES
 
     ! función para obtener numero random con distribución gaussiana
-    function gaussian_rnd(seed,sigma,media)
-        integer(sp), intent(in) :: seed
+    function gaussian_rnd(sigma,media)
         real(dp),    intent(in) :: sigma,media
-        integer(sp)             :: iset=0_sp
+        integer(sp)             :: iset=0_sp,seed,seed_val(8)
         real(dp),    parameter  :: pi=4._dp*atan(1._dp)
         real(dp)                :: gaussian_rnd2,gaussian_rnd,nrand_01,nrand_02
         save iset,gaussian_rnd2
-        call sgrnd(seed);nrand_01=real(grnd(),dp);nrand_02=real(grnd(),dp)
+
+        call date_and_time(values=seed_val)
+        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
+        nrand_01=real(grnd(),dp);nrand_02=real(grnd(),dp)
         if (iset==0_sp) then
-            gaussian_rnd=sqrt(-2*log(nrand_01))*sin(2*pi*nrand_02)
+            gaussian_rnd=sqrt(-2._dp*log(nrand_01))*sin(2._dp*pi*nrand_02)
             gaussian_rnd=sigma*gaussian_rnd+media
-            gaussian_rnd2=sqrt(-2*log(nrand_01))*cos(2*pi*nrand_02)
-            iset=1_dp
+            gaussian_rnd2=sqrt(-2._dp*log(nrand_01))*cos(2._dp*pi*nrand_02)
+            iset=1_sp
         else
             gaussian_rnd=gaussian_rnd2
             gaussian_rnd=sigma*gaussian_rnd+media
@@ -280,25 +282,35 @@ module module_bd_lennard_jones
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine evolution_bd(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
         dinamic_viscosity,diffusion_coeff)
 
         integer(sp), intent(in)    :: n_p
         real(dp),    intent(in)    :: delta_time,mass,r_cutoff,density,dinamic_viscosity,diffusion_coeff
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(inout) :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                      z_vector_noPBC(n_p)                       ! componentes del vector posición sin PBC
         real(dp),    intent(inout) :: force_x(n_p),force_y(n_p),force_z(n_p)
-        integer(sp)                :: i,seed,seed_val(8)
+        integer(sp)                :: i
         real(dp)                   :: factor,brownian_position
         real(dp),    parameter     :: pi=4._dp*atan(1._dp)
 
         factor=3._dp*pi*dinamic_viscosity
 
-        call date_and_time(values=seed_val)
-        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5)
-
         do i=1,n_p
-            brownian_position=gaussian_rnd(seed,sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
+            brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             x_vector(i)=x_vector(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
+            x_vector_noPBC=x_vector(i)
+
+            !brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
+            y_vector(i)=y_vector(i)+force_y(i)*(1._dp/factor)*delta_time+brownian_position
+            y_vector_noPBC=y_vector(i)
+
+            !brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
+            z_vector(i)=z_vector(i)+force_z(i)*(1._dp/factor)*delta_time+brownian_position
+            z_vector_noPBC=z_vector(i)
+
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         end do
 

@@ -2,52 +2,58 @@
 program brownian_dynamic_lennard_jones_01
     use module_precision;use module_bd_lennard_jones
     implicit none
+    ! VARIABLES y PARAMETROS GENERALES
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
-    real(dp),    parameter   :: delta_time=0.1_dp                    ! paso temporal
-    integer(sp), parameter   :: time_eq=1000_sp,&                      ! pasos de equilibración
-                                time_run=1000_sp                       ! pasos de evolucion en el estado estacionario
-    real(dp),    parameter   :: T_adim_ref=1.1_dp                      ! temperatura de referencia adimensional
+    real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
+    integer(sp), parameter   :: time_eq=5000_sp,&                        ! pasos de equilibración
+                                time_run=5000_sp,&                    ! pasos de evolucion en el estado estacionario
+                                ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
+    real(dp),    parameter   :: T_adim_ref=1._dp                       ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
-    real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa     
+    real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
+    real(dp),    parameter   :: dinamic_viscosity=2.87_dp
+    real(dp),    parameter   :: pi=4._dp*atan(1._dp)
+    real(dp),    parameter   :: diffusion_coeff=T_adim_ref*&
+                                 (1._dp/(3._dp*pi*dinamic_viscosity)) 
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
-    integer(sp)              :: i,istat,index                          ! loop index
-    logical                  :: movie_switch,fcc_init_switch,&
-                                energies_switch,msd_switch,gr_switch
-    ! VARIABLES PARA COMPUTAR ENERGIA POTENCIAL Y PRESIÓN
+    integer(sp)              :: i,j,istat,index                        ! loop index
+    real(dp)                 :: time_end,time_start                    ! tiempos de CPU
+    ! VARIABLES LOGICAS PARA DECIDIR QUÉ ESCRIBIR
+    logical, parameter       :: movie_switch=.false.,&      ! escribir pelicula con partículas en la caja
+                                fcc_init_switch=.false.,&   ! escribir estructura fcc inicial
+                                energies_switch=.true.,&    ! escribir energías en el estado estacionario
+                                msd_switch=.true.,&         ! escribir coeficiente de difusión vs densidad
+                                gr_switch=.true.            ! escribir distribución de correlación espacial
+    ! VARIABLES PARA COMPUTAR ENERGÍA POTENCIAL
     real(dp)                 :: U_adim,time,press  ! observables
     real(dp)                 :: U_med,var_U,err_U
     real(dp)                 :: s1_U,s2_U
+    ! VARIABLES PARA COMPUTAR PRESIÓN HOSMÓTICA
     real(dp)                 :: press_med,var_press,err_press
     real(dp)                 :: s1_press,s2_press
-    real(dp)                 :: time_end,time_start                    ! tiempos de CPU
-    real(dp),    parameter   :: dinamic_viscosity=2.87_dp,pi=4._dp*atan(1._dp)
-    real(dp),    parameter   :: diffusion_coeff=T_adim_ref*(1._dp/(3._dp*pi*dinamic_viscosity))
-    real(dp)                 :: msd_med,var_msd,err_msd
-    real(dp)                 :: s1_msd,s2_msd
-    ! VARIABLES PARA COMPUTAR COEFICIENTE DE DIFUSIÓN
+    ! VARIABLES PARA COMPUTAR DESPLAZAMIENTO CUADRÁTICO MEDIO
     integer(sp), parameter   :: tau_max_corr=1000_sp                   ! pasos maximos de correlación
+    real(dp),    allocatable :: x_vector_noPBC(:),y_vector_noPBC(:),&  ! componentes de la posición sin PBC
+                                z_vector_noPBC(:)
     real(dp),    allocatable :: wxx_matrix(:,:),wyy_matrix(:,:),&      ! matrices auxiliares para cálculo de msd
                                 wzz_matrix(:,:)
     real(dp),    allocatable :: sum_wxx_vector(:),sum_wyy_vector(:),&  ! vectores auxiliares para cálculo de msd
                                 sum_wzz_vector(:)
     integer(sp), allocatable :: counter_data(:)
-    real(dp)                 :: msd                                    ! desplazamiento cuadrático medio
+    real(dp)                 :: msd,msd_med,var_msd,err_msd            ! desplazamiento cuadrático medio
+    real(dp)                 :: s1_msd,s2_msd
     integer(sp)              :: counter
-    ! VARIABLES PARA COMPUTAR g(r)
-    real(dp),   allocatable  :: g(:)                                   ! radial ditribution vector
-    integer(sp), parameter   :: n_bins=1000_sp
-
-    movie_switch       =.false. ! escribir pelicula con partículas en la caja
-    fcc_init_switch    =.false. ! escribir estructura fcc inicial
-    energies_switch    =.false. ! escribir energías en el estado estacionario
-    msd_switch         =.false.  ! escribir coeficiente de difusión vs densidad
-    gr_switch          =.true.  ! escribir distribución de correlación espacial
+    ! VARIABLES PARA COMPUTAR AUTOCORRELACIÓN ESPACIAL
+    integer(sp), parameter   :: n_bins=1000_sp          ! numero de bins
+    real(dp),   allocatable  :: g(:)                    ! radial ditribution vector
 
     call cpu_time(time_start)
 
     allocate(x_vector(n_p),y_vector(n_p),z_vector(n_p))
     x_vector(:)=0._dp;y_vector(:)=0._dp;z_vector(:)=0._dp
+    allocate(x_vector_noPBC(n_p),y_vector_noPBC(n_p),z_vector_noPBC(n_p))
+    x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
     allocate(force_x(n_p),force_y(n_p),force_z(n_p))
     force_x(:)=0._dp;force_y(:)=0._dp;force_z(:)=0._dp
     allocate(wxx_matrix(n_p,tau_max_corr),wyy_matrix(n_p,tau_max_corr),wzz_matrix(n_p,tau_max_corr))
@@ -56,6 +62,11 @@ program brownian_dynamic_lennard_jones_01
     allocate(counter_data(tau_max_corr))
     counter=0_sp;counter_data(:)=0_sp
     allocate(g(n_bins))
+
+    ! generamos configuración inicial (FCC structure)
+    call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
+    ! computamos fuerzas en el tiempo inicial
+    call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
 
     ! ESCRIBIMOS DATOS
     if (fcc_init_switch.eqv..true.) then
@@ -75,28 +86,20 @@ program brownian_dynamic_lennard_jones_01
         open(13,file='../results/msd_vs_time.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(13,"(A12,x,A12)") 'time','msd'
-    end if
-
-    ! generamos configuración inicial (FCC structure)
-    call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
-
-    if (msd_switch.eqv..true.) then
         call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
             wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
             counter_data,counter)
     end if
 
-    ! computamos fuerzas en el tiempo inicial
-    call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-
     ! TRANSITORIO
     do i=1,time_eq
         write(*,*) i
         call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+            x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
             delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
             dinamic_viscosity,diffusion_coeff)
-        if (msd_switch.eqv..true.) then
-            call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+        if ((mod(i,ensamble_step)==0_sp).and.(msd_switch.eqv..true.)) then
+            call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
                 wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
                 counter_data,counter)
         end if
@@ -108,53 +111,55 @@ program brownian_dynamic_lennard_jones_01
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
     end if
 
-    time=0._dp
+    ! seteamos variables
+    time=0._dp;i=0_sp
 
-    do i=1,time_run
-        write(*,*) time_eq+i
+    do j=1,time_run
+        write(*,*) time_eq+j
 
         call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+            x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
             delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
             dinamic_viscosity,diffusion_coeff)
 
-        time=real(i,dp)*delta_time
-
         ! ESCRIBIMOS DATOS
-        if (energies_switch.eqv..true.) then
-            U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
+        if (mod(j,ensamble_step)==0_sp) then
+            i=i+1_sp
+            time=real(i,dp)*delta_time
+            if (energies_switch.eqv..true.) then
+                U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
 
-            s1_U=s1_U+U_adim*(1._dp/real(n_p,dp));s2_U=s2_U+U_adim*U_adim
-            U_med=s1_U*(1._dp/real(i,dp))
-            var_U=(real(i,dp)*s2_U-s1_U*s1_U)*(1._dp/real(i*i,dp))
+                s1_U=s1_U+U_adim*(1._dp/real(n_p,dp));s2_U=s2_U+U_adim*U_adim
+                U_med=s1_U*(1._dp/real(i,dp))
+                var_U=(real(i,dp)*s2_U-s1_U*s1_U)*(1._dp/real(i*i,dp))
 
-            s1_press=s1_press+press;s2_press=s2_press+press*press
-            press_med=s1_press*(1._dp/real(i,dp))
-            var_press=(real(i,dp)*s2_press-s1_press*s1_press)*(1._dp/real(i*i,dp))
+                s1_press=s1_press+press;s2_press=s2_press+press*press
+                press_med=s1_press*(1._dp/real(i,dp))
+                var_press=(real(i,dp)*s2_press-s1_press*s1_press)*(1._dp/real(i*i,dp))
 
-            write(12,"(2(E12.4,x),E12.4)") time,U_med,press_med
-        end if
-        if ((movie_switch.eqv..true.).and.(mod(i,100)==0_sp)) then
-            index=index+1;call create_movie(index,x_vector,y_vector,z_vector,n_p)
-        end if
-        if (msd_switch.eqv..true.) then
-            call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
-            wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
-            counter_data,counter)
-        end if
-        if (gr_switch.eqv..true.) then
-            call radial_ditribution_function('../results/radial_ditribution_function.dat',n_p,density,&
-                                            x_vector,y_vector,z_vector,n_bins,g)
+                write(12,"(2(E12.4,x),E12.4)") time,U_med,press_med
+            end if
+            if ((movie_switch.eqv..true.).and.(mod(i,100)==0_sp)) then
+                index=index+1;call create_movie(index,x_vector,y_vector,z_vector,n_p)
+            end if
+            if (msd_switch.eqv..true.) then
+                call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
+                wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
+                counter_data,counter)
+            end if
         end if
     end do
 
     if (energies_switch.eqv..true.) then
         ! computamos errores en el último paso
-        err_U=(var_U*0.25_dp)*(1._dp/real(time_eq-1,dp))
-        err_press=(var_press*0.25_dp)*(1._dp/real(time_eq-1,dp))
+        err_U=(var_U*0.25_dp)*(1._dp/real(i-1,dp))
+        err_press=(var_press*0.25_dp)*(1._dp/real(i-1,dp))
 
         write(*,'(A12,x,E12.4,x,E12.4)') 'U_med=',U_med,err_U
         write(*,'(A12,x,E12.4,x,E12.4)') 'press_med=',press_med,err_press
+
+        close(12)
     end if
 
     if (msd_switch.eqv..true.) then
@@ -162,7 +167,6 @@ program brownian_dynamic_lennard_jones_01
         do i=1,tau_max_corr
             time=real(i,dp)*delta_time
             ! computamos msd
-            print*, counter_data(i)
             msd=(sum_wxx_vector(i)+sum_wyy_vector(i)+sum_wzz_vector(i))*&
                 (1._dp/real(counter_data(i),dp))*(1._dp/real(n_p,dp))
             ! computamos observables,1er y 2do momento,valores medios y varianzas
@@ -175,6 +179,8 @@ program brownian_dynamic_lennard_jones_01
         ! computamos errores en el último paso
         err_msd=(var_msd*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
         write(*,'(A12,x,E12.4,x,E12.4)') 'msd_med=',msd_med,err_msd
+
+        close(13)
     end if
 
     if (gr_switch.eqv..true.) then
@@ -182,10 +188,8 @@ program brownian_dynamic_lennard_jones_01
                                         x_vector,y_vector,z_vector,n_bins,g)
     end if
 
-    if (energies_switch.eqv..true.) close(12)
-    if (msd_switch.eqv..true.) close(13)
-
     deallocate(x_vector,y_vector,z_vector)
+    deallocate(x_vector_noPBC,y_vector_noPBC,z_vector_noPBC)
     deallocate(force_x,force_y,force_z)
     deallocate(wxx_matrix,wyy_matrix,wzz_matrix)
     deallocate(sum_wxx_vector,sum_wyy_vector,sum_wzz_vector)
@@ -216,7 +220,7 @@ subroutine create_movie(index,x_vector,y_vector,z_vector,n_p)
 end subroutine create_movie
 
 ! subrutina para calcular el desplazamiento cuadrático medio
-subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+subroutine mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
     counter_data,counter)
     use module_precision
@@ -224,7 +228,8 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     implicit none
     integer(sp), intent(in)    :: n_p                                       ! numero total de partículas
     integer(sp), intent(in)    :: tau_max_corr                              ! pasos maximos de autocorrelación
-    real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! componentes del vector posición
+    real(dp),    intent(in)    :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                  z_vector_noPBC(n_p)                       ! componentes del vector posición sin PBC
     real(dp),    intent(inout) :: wxx_matrix(n_p,tau_max_corr),&            ! matrices de acumulación
                                   wyy_matrix(n_p,tau_max_corr),&
                                   wzz_matrix(n_p,tau_max_corr)
@@ -236,7 +241,7 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     
     integer(sp)            :: i,j
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
-    integer(sp), parameter :: nmax_tau_corr_0=50_sp ! maximo número de tau_corr_0 que almacenamos
+    integer(sp), parameter :: nmax_tau_corr_0=10_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina
     tau_corr_0=mod(counter-1,tau_max_corr)+1 ! tiempo de correlación actual tau_corr_0={1,2,...,tau_max_corr}
@@ -244,9 +249,9 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     ! guardamos cíclicamente los últimos tau_max_corr valores
     !  de las componentes x,y,z de cada partícula
     do i=1,n_p
-        wxx_matrix(i,tau_corr_0)=x_vector(i)
-        wyy_matrix(i,tau_corr_0)=y_vector(i)
-        wzz_matrix(i,tau_corr_0)=z_vector(i)
+        wxx_matrix(i,tau_corr_0)=x_vector_noPBC(i)
+        wyy_matrix(i,tau_corr_0)=y_vector_noPBC(i)
+        wzz_matrix(i,tau_corr_0)=z_vector_noPBC(i)
     end do
 
     if ((mod(counter,nmax_tau_corr_0)==0).and.(counter>tau_max_corr)) then
