@@ -88,7 +88,7 @@ module module_bd_lennard_jones
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do  ! (r12)^6
         u_lj_individual=4._dp*(1._dp/r12_pow06)*((1._dp/r12_pow06)-1._dp)
     end function u_lj_individual
-    ! compute total lennard jones potential
+    ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
     function u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
         integer(sp), intent(in) :: n_p
         real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
@@ -102,7 +102,7 @@ module module_bd_lennard_jones
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
                 if (rij_pow02<=r_cutoff*r_cutoff) then
-                    u_indiv=u_lj_individual(rij_pow02)
+                    u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
                 u_lj_total=u_lj_total+u_indiv
             end do
@@ -119,8 +119,7 @@ module module_bd_lennard_jones
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do ! (r12)^6
         f_lj_individual=24._dp*(1._dp/(r12_pow02*r12_pow06))*(2._dp*(1._dp/r12_pow06)-1._dp)
     end function f_lj_individual
-
-    ! calculo de la componente xi de la fuerza total
+    ! calculo de la componente xi de la fuerza total (TRUNCADO Y DESPLAZADO)
     subroutine f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
         fx_lj_total_vector,fy_lj_total_vector,fz_lj_total_vector)
         integer(sp), intent(in)    :: n_p
@@ -298,7 +297,7 @@ module module_bd_lennard_jones
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5)
 
         do i=1,n_p
-            brownian_position=gaussian_rnd(seed,sqrt(x_vector(i)*x_vector(i)),0._dp)
+            brownian_position=gaussian_rnd(seed,sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             x_vector(i)=x_vector(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         end do
