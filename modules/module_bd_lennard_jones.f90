@@ -15,10 +15,10 @@ module module_bd_lennard_jones
         real(dp)                :: gaussian_rnd2,gaussian_rnd,nrand_01,nrand_02
         save iset,gaussian_rnd2
 
-        call date_and_time(values=seed_val)
-        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
-        nrand_01=real(grnd(),dp);nrand_02=real(grnd(),dp)
         if (iset==0_sp) then
+            call date_and_time(values=seed_val)
+            seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
+            nrand_01=real(grnd(),dp);nrand_02=real(grnd(),dp)
             gaussian_rnd=sqrt(-2._dp*log(nrand_01))*sin(2._dp*pi*nrand_02)
             gaussian_rnd=sigma*gaussian_rnd+media
             gaussian_rnd2=sqrt(-2._dp*log(nrand_01))*cos(2._dp*pi*nrand_02)
@@ -303,11 +303,11 @@ module module_bd_lennard_jones
             x_vector(i)=x_vector(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
             x_vector_noPBC=x_vector(i)
 
-            !brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
+            brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             y_vector(i)=y_vector(i)+force_y(i)*(1._dp/factor)*delta_time+brownian_position
             y_vector_noPBC=y_vector(i)
 
-            !brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
+            brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             z_vector(i)=z_vector(i)+force_z(i)*(1._dp/factor)*delta_time+brownian_position
             z_vector_noPBC=z_vector(i)
 

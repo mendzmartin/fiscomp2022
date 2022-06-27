@@ -1,0 +1,250 @@
+
+
+*******************************************************************************
+Sat Jun 25 20:57:59 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00300000 : 0.00350000]
+        #datapoints = 13
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*(x**b)+c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b             c            
+   0 1.1821291301e+04   0.00e+00  5.77e-01    1.000000e+00   1.000000e+00   1.000000e+00
+ 442 5.6829931511e-03  -9.99e-01  5.77e-04    4.902470e+01   3.959066e-01   2.608321e+01
+
+After 442 iterations the fit converged.
+final sum of squares of residuals : 0.00568299
+rel. change during last iteration : -9.98661e-06
+
+degrees of freedom    (FIT_NDF)                        : 10
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.023839
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.000568299
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 49.0247          +/- 644.2        (1314%)
+b               = 0.395907         +/- 4.103        (1036%)
+c               = 26.0832          +/- 52.45        (201.1%)
+
+correlation matrix of the fit parameters:
+                a      b      c      
+a               1.000 
+b               1.000  1.000 
+c               1.000  1.000  1.000 
+
+
+*******************************************************************************
+Sat Jun 25 20:58:20 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00350000 : 0.00360000]
+        #datapoints = 3
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*(x**b)+c
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b             c            
+   0 2.7528188501e+03   0.00e+00  5.77e-01    1.000000e+00   1.000000e+00   1.000000e+00
+ 401 3.6343403324e-04  -9.64e-01  5.77e-04    3.141732e+01   1.979052e-01   2.100775e+01
+
+After 401 iterations the fit converged.
+final sum of squares of residuals : 0.000363434
+rel. change during last iteration : -9.63848e-06
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 31.4173        
+b               = 0.197905       
+c               = 21.0078        
+
+
+*******************************************************************************
+Sat Jun 25 20:58:43 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00350000 : 0.00360000]
+        #datapoints = 3
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 2.7528188501e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   8 3.6058559200e-04  -1.10e-06  7.07e-09    5.796003e+02   2.923849e+01
+
+After 8 iterations the fit converged.
+final sum of squares of residuals : 0.000360586
+rel. change during last iteration : -1.1014e-11
+
+degrees of freedom    (FIT_NDF)                        : 1
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0189891
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.000360586
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 579.6            +/- 363.2        (62.66%)
+b               = 29.2385          +/- 1.289        (4.409%)
+
+correlation matrix of the fit parameters:
+                a      b      
+a               1.000 
+b              -1.000  1.000 
+
+
+*******************************************************************************
+Sat Jun 25 21:00:27 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00350000 : 0.00360000]
+        #datapoints = 3
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 2.7528188501e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   8 3.6058559200e-04  -1.10e-06  7.07e-09    5.796003e+02   2.923849e+01
+
+After 8 iterations the fit converged.
+final sum of squares of residuals : 0.000360586
+rel. change during last iteration : -1.1014e-11
+
+degrees of freedom    (FIT_NDF)                        : 1
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0189891
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.000360586
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 579.6            +/- 363.2        (62.66%)
+b               = 29.2385          +/- 1.289        (4.409%)
+
+correlation matrix of the fit parameters:
+                a      b      
+a               1.000 
+b              -1.000  1.000 
+
+
+*******************************************************************************
+Sat Jun 25 21:01:07 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00350000 : 0.00360000]
+        #datapoints = 3
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 2.7528188501e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   8 3.6058559200e-04  -1.10e-06  7.07e-09    5.796003e+02   2.923849e+01
+
+After 8 iterations the fit converged.
+final sum of squares of residuals : 0.000360586
+rel. change during last iteration : -1.1014e-11
+
+degrees of freedom    (FIT_NDF)                        : 1
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.0189891
+variance of residuals (reduced chisquare) = WSSR/ndf   : 0.000360586
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+a               = 579.6            +/- 363.2        (62.66%)
+b               = 29.2385          +/- 1.289        (4.409%)
+
+correlation matrix of the fit parameters:
+                a      b      
+a               1.000 
+b              -1.000  1.000 
+
+
+*******************************************************************************
+Sat Jun 25 21:02:56 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Sat Jun 25 21:03:54 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        

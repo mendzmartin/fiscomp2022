@@ -3,10 +3,10 @@ program brownian_dynamic_lennard_jones_01
     use module_precision;use module_bd_lennard_jones
     implicit none
     ! VARIABLES y PARAMETROS GENERALES
-    integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
+    integer(sp), parameter   :: n_p=500_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
-    integer(sp), parameter   :: time_eq=5000_sp,&                        ! pasos de equilibración
-                                time_run=5000_sp,&                    ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: time_eq=15000_sp,&                     ! pasos de equilibración
+                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=1._dp                       ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
@@ -21,7 +21,7 @@ program brownian_dynamic_lennard_jones_01
     real(dp)                 :: time_end,time_start                    ! tiempos de CPU
     ! VARIABLES LOGICAS PARA DECIDIR QUÉ ESCRIBIR
     logical, parameter       :: movie_switch=.false.,&      ! escribir pelicula con partículas en la caja
-                                fcc_init_switch=.false.,&   ! escribir estructura fcc inicial
+                                fcc_init_switch=.true.,&   ! escribir estructura fcc inicial
                                 energies_switch=.true.,&    ! escribir energías en el estado estacionario
                                 msd_switch=.true.,&         ! escribir coeficiente de difusión vs densidad
                                 gr_switch=.true.            ! escribir distribución de correlación espacial
@@ -29,11 +29,11 @@ program brownian_dynamic_lennard_jones_01
     real(dp)                 :: U_adim,time,press  ! observables
     real(dp)                 :: U_med,var_U,err_U
     real(dp)                 :: s1_U,s2_U
-    ! VARIABLES PARA COMPUTAR PRESIÓN HOSMÓTICA
+    ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
     real(dp)                 :: press_med,var_press,err_press
     real(dp)                 :: s1_press,s2_press
     ! VARIABLES PARA COMPUTAR DESPLAZAMIENTO CUADRÁTICO MEDIO
-    integer(sp), parameter   :: tau_max_corr=1000_sp                   ! pasos maximos de correlación
+    integer(sp), parameter   :: tau_max_corr=100_sp                   ! pasos maximos de correlación
     real(dp),    allocatable :: x_vector_noPBC(:),y_vector_noPBC(:),&  ! componentes de la posición sin PBC
                                 z_vector_noPBC(:)
     real(dp),    allocatable :: wxx_matrix(:,:),wyy_matrix(:,:),&      ! matrices auxiliares para cálculo de msd
@@ -79,7 +79,7 @@ program brownian_dynamic_lennard_jones_01
         index=10;call create_movie(index,x_vector,y_vector,z_vector,n_p)
     end if
     if (energies_switch.eqv..true.) then
-        open(12,file='../results/result_03.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/energies_vs_time.dat',status='replace',action='write',iostat=istat)
         write(*,*) 'istat(12file) = ',istat;write(12,"(2(A12,x),A12)") 'time','pot_ergy','press'
     end if
     if (msd_switch.eqv..true.) then
@@ -128,9 +128,10 @@ program brownian_dynamic_lennard_jones_01
             time=real(i,dp)*delta_time
             if (energies_switch.eqv..true.) then
                 U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                U_adim=U_adim*(1._dp/real(n_p,dp))
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
 
-                s1_U=s1_U+U_adim*(1._dp/real(n_p,dp));s2_U=s2_U+U_adim*U_adim
+                s1_U=s1_U+U_adim;s2_U=s2_U+U_adim*U_adim
                 U_med=s1_U*(1._dp/real(i,dp))
                 var_U=(real(i,dp)*s2_U-s1_U*s1_U)*(1._dp/real(i*i,dp))
 
@@ -153,8 +154,10 @@ program brownian_dynamic_lennard_jones_01
 
     if (energies_switch.eqv..true.) then
         ! computamos errores en el último paso
-        err_U=(var_U*0.25_dp)*(1._dp/real(i-1,dp))
-        err_press=(var_press*0.25_dp)*(1._dp/real(i-1,dp))
+        !err_U=(var_U*0.25_dp)*(1._dp/real(i-1,dp))
+        !err_press=(var_press*0.25_dp)*(1._dp/real(i-1,dp))
+        err_U=sqrt(var_U*(1._dp/real(i-1,dp)))
+        err_press=sqrt(var_press*(1._dp/real(i-1,dp)))
 
         write(*,'(A12,x,E12.4,x,E12.4)') 'U_med=',U_med,err_U
         write(*,'(A12,x,E12.4,x,E12.4)') 'press_med=',press_med,err_press
@@ -165,6 +168,7 @@ program brownian_dynamic_lennard_jones_01
     if (msd_switch.eqv..true.) then
         msd_med=0._dp;s1_msd=0._dp;s2_msd=0._dp
         do i=1,tau_max_corr
+            if (counter_data(i)==0_sp) stop
             time=real(i,dp)*delta_time
             ! computamos msd
             msd=(sum_wxx_vector(i)+sum_wyy_vector(i)+sum_wzz_vector(i))*&
@@ -177,7 +181,8 @@ program brownian_dynamic_lennard_jones_01
             write(13,"(E12.4,x,E12.4)") time,msd_med
         end do
         ! computamos errores en el último paso
-        err_msd=(var_msd*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
+        !err_msd=(var_msd*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
+        err_msd=sqrt(var_msd*(1._dp/real(tau_max_corr-1,dp)))
         write(*,'(A12,x,E12.4,x,E12.4)') 'msd_med=',msd_med,err_msd
 
         close(13)
@@ -241,6 +246,8 @@ subroutine mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_
     
     integer(sp)            :: i,j
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
+    ! NOTA: CONDICIÓN QUE SE DEBE CUMPLIR
+    ! nmax_tau_corr_0 < (time_eq+time_run)/(ensamble_step*tau_max_corr)
     integer(sp), parameter :: nmax_tau_corr_0=10_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina

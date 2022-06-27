@@ -35,14 +35,25 @@ LDFLAGS = $(flg_lib01)
 # ============================================================
 # binaries names
 bin_name_01 = brownian_dynamic_lennard_jones_01
+bin_name_02 = brownian_dynamic_lennard_jones_02
+bin_name_03 = molecular_dynamic_lennard_jones_02
 
 # object dependencies
 dependencies_01= module_precision.o module_mt19937.o module_bd_lennard_jones.o
+dependencies_02= module_precision.o module_mt19937.o module_md_lennard_jones.o
 
 # binaries rules
-# molecular_dynamic_lennard_jones_01 (inciso a)
+# brownian_dynamic_lennard_jones_01 (inciso a y b)
 $(bin_name_01).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_01).o $(dependencies_01) $(bin_name_01).f90
+
+# brownian_dynamic_lennard_jones_02 (inciso c)
+$(bin_name_02).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_02).o $(dependencies_01) $(bin_name_02).f90
+
+# molecular_dynamic_lennard_jones_02 (comparación con md)
+$(bin_name_03).o: $(dependencies_02)
+	$(FC) $(FFLAGS) -o $(bin_name_03).o $(dependencies_02) $(bin_name_03).f90
 
 # ============================================================
 # MODULES COMPILATION

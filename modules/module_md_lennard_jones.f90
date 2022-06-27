@@ -55,7 +55,8 @@ module module_md_lennard_jones
             end do
         end do
         T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
-        pressure=density*(T_adim+(1._dp/(3._dp*real(n_p,dp)))*result)
+        !pressure=density*(T_adim+(1._dp/(3._dp*real(n_p,dp)))*result)
+        pressure=density*(1._dp/(3._dp*real(n_p,dp)))*result            ! only osmotic pressure
     end function pressure
 
     ! compute individual lennard jones potential (simple truncation)
@@ -69,7 +70,7 @@ module module_md_lennard_jones
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do  ! (r12)^6
         u_lj_individual=4._dp*(1._dp/r12_pow06)*((1._dp/r12_pow06)-1._dp)
     end function u_lj_individual
-    ! compute total lennard jones potential
+    ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
     function u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
         integer(sp), intent(in) :: n_p
         real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
@@ -83,7 +84,7 @@ module module_md_lennard_jones
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
                 if (rij_pow02<=r_cutoff*r_cutoff) then
-                    u_indiv=u_lj_individual(rij_pow02)
+                    u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
                 u_lj_total=u_lj_total+u_indiv
             end do
