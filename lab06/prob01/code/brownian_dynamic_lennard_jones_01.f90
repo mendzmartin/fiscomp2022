@@ -6,7 +6,7 @@ program brownian_dynamic_lennard_jones_01
     integer(sp), parameter   :: n_p=500_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=15000_sp,&                     ! pasos de equilibración
-                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
+                                time_run=15000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=1._dp                       ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
@@ -20,11 +20,11 @@ program brownian_dynamic_lennard_jones_01
     integer(sp)              :: i,j,istat,index                        ! loop index
     real(dp)                 :: time_end,time_start                    ! tiempos de CPU
     ! VARIABLES LOGICAS PARA DECIDIR QUÉ ESCRIBIR
-    logical, parameter       :: movie_switch=.false.,&      ! escribir pelicula con partículas en la caja
-                                fcc_init_switch=.true.,&   ! escribir estructura fcc inicial
-                                energies_switch=.true.,&    ! escribir energías en el estado estacionario
-                                msd_switch=.true.,&         ! escribir coeficiente de difusión vs densidad
-                                gr_switch=.true.            ! escribir distribución de correlación espacial
+    logical, parameter       :: movie_switch=.true.,&      ! escribir pelicula con partículas en la caja
+                                fcc_init_switch=.false.,&   ! escribir estructura fcc inicial
+                                energies_switch=.false.,&    ! escribir energías en el estado estacionario
+                                msd_switch=.false.,&         ! escribir coeficiente de difusión vs densidad
+                                gr_switch=.false.            ! escribir distribución de correlación espacial
     ! VARIABLES PARA COMPUTAR ENERGÍA POTENCIAL
     real(dp)                 :: U_adim,time,press  ! observables
     real(dp)                 :: U_med,var_U,err_U
@@ -141,7 +141,7 @@ program brownian_dynamic_lennard_jones_01
 
                 write(12,"(2(E12.4,x),E12.4)") time,U_med,press_med
             end if
-            if ((movie_switch.eqv..true.).and.(mod(i,100)==0_sp)) then
+            if ((movie_switch.eqv..true.).and.(mod(j,100)==0_sp)) then
                 index=index+1;call create_movie(index,x_vector,y_vector,z_vector,n_p)
             end if
             if (msd_switch.eqv..true.) then
