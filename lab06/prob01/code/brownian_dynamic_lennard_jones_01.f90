@@ -20,11 +20,11 @@ program brownian_dynamic_lennard_jones_01
     integer(sp)              :: i,j,istat,index                        ! loop index
     real(dp)                 :: time_end,time_start                    ! tiempos de CPU
     ! VARIABLES LOGICAS PARA DECIDIR QUÉ ESCRIBIR
-    logical, parameter       :: movie_switch=.true.,&      ! escribir pelicula con partículas en la caja
+    logical, parameter       :: movie_switch=.false.,&      ! escribir pelicula con partículas en la caja
                                 fcc_init_switch=.false.,&   ! escribir estructura fcc inicial
-                                energies_switch=.false.,&    ! escribir energías en el estado estacionario
-                                msd_switch=.false.,&         ! escribir coeficiente de difusión vs densidad
-                                gr_switch=.false.            ! escribir distribución de correlación espacial
+                                energies_switch=.true.,&    ! escribir energías en el estado estacionario
+                                msd_switch=.true.,&         ! escribir coeficiente de difusión vs densidad
+                                gr_switch=.true.            ! escribir distribución de correlación espacial
     ! VARIABLES PARA COMPUTAR ENERGÍA POTENCIAL
     real(dp)                 :: U_adim,time,press  ! observables
     real(dp)                 :: U_med,var_U,err_U
@@ -45,7 +45,7 @@ program brownian_dynamic_lennard_jones_01
     real(dp)                 :: s1_msd,s2_msd
     integer(sp)              :: counter
     ! VARIABLES PARA COMPUTAR AUTOCORRELACIÓN ESPACIAL
-    integer(sp), parameter   :: n_bins=1000_sp          ! numero de bins
+    integer(sp), parameter   :: n_bins=100_sp          ! numero de bins
     real(dp),   allocatable  :: g(:)                    ! radial ditribution vector
 
     call cpu_time(time_start)
@@ -65,6 +65,7 @@ program brownian_dynamic_lennard_jones_01
 
     ! generamos configuración inicial (FCC structure)
     call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
+    x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
     ! computamos fuerzas en el tiempo inicial
     call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
 
@@ -79,11 +80,13 @@ program brownian_dynamic_lennard_jones_01
         index=10;call create_movie(index,x_vector,y_vector,z_vector,n_p)
     end if
     if (energies_switch.eqv..true.) then
-        open(12,file='../results/energies_vs_time.dat',status='replace',action='write',iostat=istat)
+        !open(12,file='../results/energies_vs_time.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/improved_energies_vs_time.dat',status='replace',action='write',iostat=istat)
         write(*,*) 'istat(12file) = ',istat;write(12,"(2(A12,x),A12)") 'time','pot_ergy','press'
     end if
     if (msd_switch.eqv..true.) then
-        open(13,file='../results/msd_vs_time.dat',status='replace',action='write',iostat=istat)
+        !open(13,file='../results/msd_vs_time.dat',status='replace',action='write',iostat=istat)
+        open(13,file='../results/improved_msd_vs_time.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(13,"(A12,x,A12)") 'time','msd'
         call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
@@ -98,11 +101,6 @@ program brownian_dynamic_lennard_jones_01
             x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
             delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
             dinamic_viscosity,diffusion_coeff)
-        if ((mod(i,ensamble_step)==0_sp).and.(msd_switch.eqv..true.)) then
-            call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
-                wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
-                counter_data,counter)
-        end if
     end do
 
     ! ESTACIONARIO
@@ -189,7 +187,9 @@ program brownian_dynamic_lennard_jones_01
     end if
 
     if (gr_switch.eqv..true.) then
-        call radial_ditribution_function('../results/radial_ditribution_function.dat',n_p,density,&
+        !call radial_ditribution_function('../results/radial_ditribution_function.dat',n_p,density,&
+        !                                x_vector,y_vector,z_vector,n_bins,g)
+        call radial_ditribution_function('../results/improved_radial_ditribution_function.dat',n_p,density,&
                                         x_vector,y_vector,z_vector,n_bins,g)
     end if
 

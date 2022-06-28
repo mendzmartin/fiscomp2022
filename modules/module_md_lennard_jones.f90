@@ -293,10 +293,13 @@ module module_md_lennard_jones
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,&
         delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
         integer(sp), intent(in)    :: n_p
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(inout) :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                      z_vector_noPBC(n_p)                       ! componentes del vector posición sin PBC
         real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
         real(dp),    intent(in)    :: delta_time,mass,r_cutoff,density
         real(dp),    intent(inout) :: force_x(n_p),force_y(n_p),force_z(n_p)
@@ -308,10 +311,13 @@ module module_md_lennard_jones
             vx_vector(i)=vx_vector(i)+force_x(i)*factor
             vy_vector(i)=vy_vector(i)+force_y(i)*factor
             vz_vector(i)=vz_vector(i)+force_z(i)*factor
-            ! COMPONENTES DE LA POSICION A TIEMPO EVOLUCIONADO
+            ! COMPONENTES DE LA POSICION A TIEMPO EVOLUCIONADO (con y sin pBC)
             x_vector(i)=x_vector(i)+vx_vector(i)*delta_time
+            x_vector_noPBC(i)=x_vector_noPBC(i)+vx_vector(i)*delta_time
             y_vector(i)=y_vector(i)+vy_vector(i)*delta_time
+            y_vector_noPBC(i)=y_vector_noPBC(i)+vx_vector(i)*delta_time
             z_vector(i)=z_vector(i)+vz_vector(i)*delta_time
+            z_vector_noPBC(i)=z_vector_noPBC(i)+vx_vector(i)*delta_time
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         end do
         ! ACTUALIZAMOS COMPONENTES DE LA FUERZA A TIEMPO EVOLUCIONADO

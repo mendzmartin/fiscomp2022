@@ -7,7 +7,7 @@ program brownian_dynamic_lennard_jones_02
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=15000_sp,&                        ! pasos de equilibración
                                 time_run=15000_sp,&                    ! pasos de evolucion en el estado estacionario
-                                ensamble_step=50_sp                    ! pasos de evolución para promedio en ensamble
+                                ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=1.1_dp                       ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
     real(dp),    parameter   :: dinamic_viscosity=2.87_dp
@@ -16,7 +16,7 @@ program brownian_dynamic_lennard_jones_02
                                  (1._dp/(3._dp*pi*dinamic_viscosity)) 
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
-    integer(sp)              :: i,j,k,istat,index                        ! loop index
+    integer(sp)              :: i,j,k,istat                            ! loop index
     real(dp)                 :: time_end,time_start                    ! tiempos de CPU
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
     real(dp)                 :: density                                ! densidad (particulas/volumen)
@@ -85,11 +85,12 @@ program brownian_dynamic_lennard_jones_02
 
         ! generamos configuración inicial (FCC structure)
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
+        x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
         ! computamos fuerzas en el tiempo inicial
         call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
 
         if (msd_switch.eqv..true.) then
-            call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+            call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
                 wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
                 counter_data,counter)
         end if
@@ -100,11 +101,6 @@ program brownian_dynamic_lennard_jones_02
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
                 dinamic_viscosity,diffusion_coeff)
-            if ((mod(i,ensamble_step)==0_sp).and.(msd_switch.eqv..true.)) then
-                call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
-                    wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
-                    counter_data,counter)
-            end if
         end do
 
         ! ESTACIONARIO

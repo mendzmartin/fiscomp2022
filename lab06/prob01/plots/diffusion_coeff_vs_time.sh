@@ -150,7 +150,7 @@ set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "es_AR.UTF-8"
+#set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -171,36 +171,47 @@ set terminal pdf size sizex,sizey;set output 'msd_vs_time.pdf'
 
 rows=2;columns=2
 set multiplot layout rows,columns
+    set xrange[0.001*0.03697:0.1*0.03697]; set yrange[0:7]
     f(x)=a*x+b
-    fit [(0.099*0.03697):(0.1*0.03697)] f(x) '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) via a,b
+    fit [(0.05*0.03697):(0.08*0.03697)] f(x) '../results/improved_msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) via a,b
+    g(x)=c*x+d
+    fit [(0.001*0.03697):(0.002*0.03697)] g(x) '../results/improved_msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) via c,d
 
-    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001,\n T_{adim}=1,{/Symbol r}=.8"
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001,\n\
+    T_{adim}=1,{/Symbol r}=.8,t_{ens}=10"
     set xlabel "Adimensional time (t/t_{0})"
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     set ylabel "diffusion coefficent (D/D_{0})"
-    p '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) w l lw 2 lc 'red' smooth mcsplines notitle,\
-    f(x) lc 'black' lw 2 dt 2 t 'fit: D/D_{0}=654.047*(t/t_{0})+28.9994'
+    p '../results/improved_msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) w l lw 2 lc 'red' smooth mcsplines notitle,\
+    f(x) lc 'black' lw 2 dt 2 t 'sub-diffusive (D/D_0\~5.96)',\
+    g(x) lc 'black' lw 2 dt 4 t 'diffusive'
 
     set logscale
-    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
-    T_{adim}=1,{/Symbol r}=.8,LOGSCALE"
-    p '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) w l lw 2 lc 'red' smooth mcsplines t 'logscale',\
-    f(x) lc 'black' lw 2 dt 2 t 'fit: D/D_{0}=654.047*(t/t_{0})+28.9994'
+    set xrange[0.001*0.03697:0.1*0.03697]
+    set yrange[1:10]
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001,\n\
+    T_{adim}=1,{/Symbol r}=.8,t_{ens}=10,LOGSCALE"
+    p '../results/improved_msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) w l lw 2 lc 'red' smooth mcsplines t 'logscale',\
+    f(x) lc 'black' lw 2 dt 2 t 'sub-diffusive (D/D_0\~5.96)',\
+    g(x) lc 'black' lw 2 dt 4 t 'diffusive'
 
     unset logscale; set autoscale
-    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
-    T_{adim}=1,{/Symbol r}=.8"
+    set xrange[0.001*0.03697:0.1*0.03697]
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001,\n\
+    T_{adim}=1,{/Symbol r}=.8,t_{ens}=10"
     set xlabel "Adimensional time (t/t_{0})"
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     set ylabel "mean squared displacment (MSD)"
-    p '../results/msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
+    p '../results/improved_msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
 
     set logscale; set autoscale
-    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
-    T_{adim}=1,{/Symbol r}=.8,LOGSCALE"
+    set xrange[:0.1*0.03697]
+    set yrange[0.1000E-02:]
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001,\n\
+    T_{adim}=1,{/Symbol r}=.8,t_{ens}=10,LOGSCALE"
     set xlabel "Adimensional time (t/t_{0})"
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     set ylabel "mean squared displacment (MSD)"
-    p '../results/msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
+    p '../results/improved_msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
 unset multiplot
 #    EOF

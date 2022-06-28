@@ -298,18 +298,19 @@ module module_bd_lennard_jones
 
         factor=3._dp*pi*dinamic_viscosity
 
+        ! COMPONENTES DE LA POSICION A TIEMPO EVOLUCIONADO (con y sin pBC)
         do i=1,n_p
             brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             x_vector(i)=x_vector(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
-            x_vector_noPBC=x_vector(i)
+            x_vector_noPBC(i)=x_vector_noPBC(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
 
             brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             y_vector(i)=y_vector(i)+force_y(i)*(1._dp/factor)*delta_time+brownian_position
-            y_vector_noPBC=y_vector(i)
+            y_vector_noPBC(i)=y_vector_noPBC(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
 
             brownian_position=gaussian_rnd(sqrt(2._dp*diffusion_coeff*delta_time),0._dp)
             z_vector(i)=z_vector(i)+force_z(i)*(1._dp/factor)*delta_time+brownian_position
-            z_vector_noPBC=z_vector(i)
+            z_vector_noPBC(i)=z_vector_noPBC(i)+force_x(i)*(1._dp/factor)*delta_time+brownian_position
 
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         end do

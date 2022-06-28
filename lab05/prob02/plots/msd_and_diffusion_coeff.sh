@@ -156,7 +156,7 @@ set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "es_AR.UTF-8"
+#set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -175,29 +175,35 @@ GNUTERM = "qt"
 set terminal pdf size 8,8;set output 'msd_and_diffusion_coeff.pdf'
 
 set multiplot layout 2,2
-    set grid
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
 
     set xlabel "correlation time (t_{corr})"
 
     set ylabel "mean squared displacement (MSD)"
-    set logscale;set xrange[0:25]
-    set title "logscale,n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=5000,{/Symbol D}t=0.005"
+    set logscale;set xrange[0:5];set autoscale y
+    set title "logscale,n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=1000,{/Symbol D}t=0.005\n\
+    t_{eq}=2000,t_{run}=15000"
     p '../results/msd_rho1.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines t '{/Symbol r}=0.8(liquid)',\
         '../results/msd_rho2.dat' u 1:2 w l lw 2 lc 'blue' smooth mcsplines t '{/Symbol r}=1.2(solid)'
     unset logscale
-    set title "n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=5000,{/Symbol D}t=0.005"
+    set yrange[:2.5]
+    set title "n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=1000,{/Symbol D}t=0.005\n\
+    t_{eq}=2000,t_{run}=15000"
     p '../results/msd_rho1.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines t '{/Symbol r}=0.8(liquid)',\
         '../results/msd_rho2.dat' u 1:2 w l lw 2 lc 'blue' smooth mcsplines t '{/Symbol r}=1.2(solid)'
     
     set ylabel "diffusion constant (D)"
+    set yrange[:0.15]
     set logscale
-    set title "logscale,n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=5000,{/Symbol D}t=0.005"
+    set title "logscale,n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=1000,{/Symbol D}t=0.005\n\
+    t_{eq}=2000,t_{run}=15000"
     p '../results/msd_rho1.dat' u 1:($2/(6*$1)) w l lw 2 lc 'red' smooth mcsplines t '{/Symbol r}=0.8(liquid)',\
         '../results/msd_rho2.dat' u 1:($2/(6*$1)) w l lw 2 lc 'blue' smooth mcsplines t '{/Symbol r}=1.2(solid)'
     
     unset logscale
-    set title "n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=5000,{/Symbol D}t=0.005"
+    set yrange[:0.08]
+    set title "n_{p}=500,T_{adim}=1.0,{/Symbol t}_{corr}^{max}=1000,{/Symbol D}t=0.005\n\
+    t_{eq}=2000,t_{run}=15000"
     p '../results/msd_rho1.dat' u 1:($2/(6*$1)) w l lw 2 lc 'red' smooth mcsplines t '{/Symbol r}=0.8(liquid)',\
         '../results/msd_rho2.dat' u 1:($2/(6*$1)) w l lw 2 lc 'blue' smooth mcsplines t '{/Symbol r}=1.2(solid)'
 

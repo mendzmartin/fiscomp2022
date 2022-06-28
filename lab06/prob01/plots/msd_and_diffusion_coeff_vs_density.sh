@@ -150,7 +150,7 @@ set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "es_AR.UTF-8"
+#set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -173,75 +173,42 @@ set multiplot layout rows,columns
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     set key left top
 
-    set xrange [0.2:1.05];set xtics 0.1
+    set xrange [0.2:1.050];set xtics 0.1
     set xlabel "density ({/Symbol r})"
-    set title "n_{p}=500,T_{adim}=1,r_{cutoff}=2.5\n\
+    set title "n_{p}=256,T_{adim}=1.1,r_{cutoff}=2.5\n\
     t_{eq}=15000,t_{ens}=50,t_{run}=15000,{/Symbol D}t=.001"
-    set parametric
-    rho1=0.3342;rho2=0.3789
-    rho3=0.4684;rho4=0.5132
-    rho5=0.6426;rho6=0.6921
-    rho7=0.8711;rho8=0.9158
-    set trange [0:8000]
+    set parametric;rho1=0.6921;rho2=0.7816;set trange [0:3000]
     set ylabel "diffusion constant (D)"
     p '../results/msd_vs_density.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines notitle,\
     "../results/msd_vs_density.dat" u 1:4:5 with yerrorbars lc 'black' t 'errorbars',\
-    rho1,t w l lw 3 lc 'black' dt 2 t 'transitions',\
-    rho2,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho3,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho4,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho5,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho6,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho7,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho8,t w l lw 3 lc 'black' dt 2 notitle
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
 
-    set autoscale y;set trange[0:80]
+    set autoscale y;set trange[0:60]
     set ylabel "mean squared displacement (MSD)"
     p '../results/msd_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
     "../results/msd_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
-    rho1,t w l lw 3 lc 'black' dt 2 t 'transitions',\
-    rho2,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho3,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho4,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho5,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho6,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho7,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho8,t w l lw 3 lc 'black' dt 2 notitle
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
 
     set logscale
+    ;set trange [0:3000]
     set xrange [0.2:1.05];set xtics 0.1
     set xlabel "density ({/Symbol r})"
-    set title "n_{p}=500,T_{adim}=1,r_{cutoff}=2.5\n\
+    set title "n_{p}=256,T_{adim}=1.1,r_{cutoff}=2.5\n\
     t_{eq}=15000,t_{ens}=50,t_{run}=15000,{/Symbol D}t=.001\n\
     LOGSCALE"
-    set parametric
-    rho1=0.3342;rho2=0.3789
-    rho3=0.4684;rho4=0.5132
-    rho5=0.6426;rho6=0.6921
-    rho7=0.8711;rho8=0.9158
-    set trange [0:6000]; set yrange[0.4982E+02:]
+    set yrange[0.4982E+02:]
     set ylabel "diffusion constant (D)"
     p '../results/msd_vs_density.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines notitle,\
     "../results/msd_vs_density.dat" u 1:4:5 with yerrorbars lc 'black' t 'errorbars',\
-    rho1,t w l lw 3 lc 'black' dt 2 t 'transitions',\
-    rho2,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho3,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho4,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho5,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho6,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho7,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho8,t w l lw 3 lc 'black' dt 2 notitle
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
 
     set autoscale y;set trange[0:60]; set yrange[0.6121:]
     set ylabel "mean squared displacement (MSD)"
     p '../results/msd_vs_density.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines notitle,\
     "../results/msd_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
-    rho1,t w l lw 3 lc 'black' dt 2 t 'transitions',\
-    rho2,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho3,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho4,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho5,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho6,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho7,t w l lw 3 lc 'black' dt 2 notitle,\
-    rho8,t w l lw 3 lc 'black' dt 2 notitle
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
 unset multiplot

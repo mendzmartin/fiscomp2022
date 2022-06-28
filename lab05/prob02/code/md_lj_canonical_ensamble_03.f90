@@ -5,11 +5,13 @@ program md_lj_canonical_ensamble_03
     integer(sp), parameter   :: n_p=500_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=2000_sp,&                      ! pasos de equilibración
-                                time_run=5000_sp                       ! pasos de evolucion en el estado estacionario
-    integer(sp), parameter   :: tau_max_corr=5000_sp                   ! pasos maximos de correlación
+                                time_run=15000_sp                       ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: tau_max_corr=1000_sp                   ! pasos maximos de correlación
     real(dp),    parameter   :: T_adim_ref=1.0_dp                      ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
+    real(dp),    allocatable :: x_vector_noPBC(:),y_vector_noPBC(:),&  ! componentes de la posición sin PBC
+                                z_vector_noPBC(:)
     real(dp),    allocatable :: vx_vector(:),vy_vector(:),vz_vector(:) ! componentes de la velocidad/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
     real(dp),    allocatable :: wxx_matrix(:,:),wyy_matrix(:,:),&      ! matrices auxiliares para cálculo de msd
@@ -21,13 +23,13 @@ program md_lj_canonical_ensamble_03
     real(dp)                 :: vx_mc,vy_mc,vz_mc                      ! componentes de la velocidad del centro de masas
     real(dp)                 :: time,time_end,time_start               ! tiempos de CPU
     real(dp)                 :: msd                                    ! desplazamiento cuadrático medio
-    real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
-    !real(dp),    parameter   :: density=1.2_dp                         ! densidad (particulas/volumen)
+    !real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
+    real(dp),    parameter   :: density=1.2_dp                         ! densidad (particulas/volumen)
 
     ! DESCOMENTAR PARA density=0.8
-    open(10,file='../results/msd_rho1.dat',status='replace',action='write',iostat=istat)
+    !open(10,file='../results/msd_rho1.dat',status='replace',action='write',iostat=istat)
     ! DESCOMENTAR PARA density=1.2
-    !open(10,file='../results/msd_rho2.dat',status='replace',action='write',iostat=istat)
+    open(10,file='../results/msd_rho2.dat',status='replace',action='write',iostat=istat)
     if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
     24 format(E12.4,x,E12.4);25 format(A12,x,A12)
     write(10,25) 'time','msd'
@@ -36,19 +38,22 @@ program md_lj_canonical_ensamble_03
 
     allocate(x_vector(n_p),y_vector(n_p),z_vector(n_p))
     x_vector(:)=0._dp;y_vector(:)=0._dp;z_vector(:)=0._dp
+    allocate(x_vector_noPBC(n_p),y_vector_noPBC(n_p),z_vector_noPBC(n_p))
+    x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
 
     ! generamos configuración inicial (FCC structure)
     call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
+    x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
 
-    counter=0
+    counter=0_sp
     allocate(wxx_matrix(n_p,tau_max_corr),wyy_matrix(n_p,tau_max_corr),wzz_matrix(n_p,tau_max_corr))
     allocate(sum_wxx_vector(tau_max_corr),sum_wyy_vector(tau_max_corr),sum_wzz_vector(tau_max_corr))
     allocate(counter_data(tau_max_corr))
 
     sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
-    counter_data(:)=0_sp
+    counter_data(:)=0._dp
 
-    call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+    call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
     counter_data,counter)
 
@@ -70,6 +75,7 @@ program md_lj_canonical_ensamble_03
         write(*,*) 'paso temporal =',index,' de',time_eq+time_run
         call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
         call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
         ! velocity center of mass to zero
         vx_mc=sum(vx_vector(:))*(1._dp/real(n_p,dp));vx_vector(:)=(vx_vector(:)-vx_mc)
@@ -77,9 +83,9 @@ program md_lj_canonical_ensamble_03
         vz_mc=sum(vz_vector(:))*(1._dp/real(n_p,dp));vz_vector(:)=(vz_vector(:)-vz_mc)
         T_adim=temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
         time=real(i,dp)*delta_time
-        call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
-        wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
-        counter_data,counter)
+        ! call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
+        ! wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
+        ! counter_data,counter)
     end do
 
     ! ESTACIONARIO
@@ -89,9 +95,10 @@ program md_lj_canonical_ensamble_03
         write(*,*) 'paso temporal =',index,' de',time_eq+time_run
         call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
         call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
         time=(real(time_eq,dp)+real(i,dp))*delta_time
-        call mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+        call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
         wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
         counter_data,counter)
     end do
@@ -116,7 +123,7 @@ program md_lj_canonical_ensamble_03
 end program md_lj_canonical_ensamble_03
 
 ! subrutina para calcular el desplazamiento cuadrático medio
-subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr,&
+subroutine mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
     counter_data,counter)
     use module_precision
@@ -124,7 +131,8 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     implicit none
     integer(sp), intent(in)    :: n_p                                       ! numero total de partículas
     integer(sp), intent(in)    :: tau_max_corr                              ! pasos maximos de autocorrelación
-    real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! componentes del vector posición
+    real(dp),    intent(in)    :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                  z_vector_noPBC(n_p) ! componentes del vector posición
     real(dp),    intent(inout) :: wxx_matrix(n_p,tau_max_corr),&            ! matrices de acumulación
                                   wyy_matrix(n_p,tau_max_corr),&
                                   wzz_matrix(n_p,tau_max_corr)
@@ -136,7 +144,7 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     
     integer(sp)            :: i,j
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
-    integer(sp), parameter :: nmax_tau_corr_0=500_sp ! maximo número de tau_corr_0 que almacenamos
+    integer(sp), parameter :: nmax_tau_corr_0=10_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina
     tau_corr_0=mod(counter-1,tau_max_corr)+1 ! tiempo de correlación actual tau_corr_0={1,2,...,tau_max_corr}
@@ -144,9 +152,9 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     ! guardamos cíclicamente los últimos tau_max_corr valores
     !  de las componentes x,y,z de cada partícula
     do i=1,n_p
-        wxx_matrix(i,tau_corr_0)=x_vector(i)
-        wyy_matrix(i,tau_corr_0)=y_vector(i)
-        wzz_matrix(i,tau_corr_0)=z_vector(i)
+        wxx_matrix(i,tau_corr_0)=x_vector_noPBC(i)
+        wyy_matrix(i,tau_corr_0)=y_vector_noPBC(i)
+        wzz_matrix(i,tau_corr_0)=z_vector_noPBC(i)
     end do
 
     if ((mod(counter,nmax_tau_corr_0)==0).and.(counter>tau_max_corr)) then
