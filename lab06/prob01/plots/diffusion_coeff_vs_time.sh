@@ -166,10 +166,10 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "msd_vs_time.dat"
-sizey=4;sizex=8
+sizey=8;sizex=8
 set terminal pdf size sizex,sizey;set output 'msd_vs_time.pdf'
 
-rows=1;columns=2
+rows=2;columns=2
 set multiplot layout rows,columns
     f(x)=a*x+b
     fit [(0.099*0.03697):(0.1*0.03697)] f(x) '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) via a,b
@@ -182,7 +182,25 @@ set multiplot layout rows,columns
     f(x) lc 'black' lw 2 dt 2 t 'fit: D/D_{0}=654.047*(t/t_{0})+28.9994'
 
     set logscale
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
+    T_{adim}=1,{/Symbol r}=.8,LOGSCALE"
     p '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697)) w l lw 2 lc 'red' smooth mcsplines t 'logscale',\
     f(x) lc 'black' lw 2 dt 2 t 'fit: D/D_{0}=654.047*(t/t_{0})+28.9994'
+
+    unset logscale; set autoscale
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
+    T_{adim}=1,{/Symbol r}=.8"
+    set xlabel "Adimensional time (t/t_{0})"
+    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set ylabel "mean squared displacment (MSD)"
+    p '../results/msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
+
+    set logscale; set autoscale
+    set title "n_{p}=500,t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
+    T_{adim}=1,{/Symbol r}=.8,LOGSCALE"
+    set xlabel "Adimensional time (t/t_{0})"
+    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set ylabel "mean squared displacment (MSD)"
+    p '../results/msd_vs_time.dat' u ($1*0.03697):2 w l lw 2 lc 'red' smooth mcsplines notitle
 unset multiplot
 #    EOF

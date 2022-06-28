@@ -175,8 +175,8 @@ set multiplot layout rows,columns
 
     set xrange [0.2:1.05];set xtics 0.1
     set xlabel "density ({/Symbol r})"
-    set title "n_{p}=500,T_{adim}=1,{/Symbol r}=.8\n\
-    t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001"
+    set title "n_{p}=500,T_{adim}=1,r_{cutoff}=2.5\n\
+    t_{eq}=15000,t_{ens}=50,t_{run}=15000,{/Symbol D}t=.001"
     set parametric
     rho1=0.3342;rho2=0.3789
     rho3=0.4684;rho4=0.5132
@@ -211,8 +211,8 @@ set multiplot layout rows,columns
     set logscale
     set xrange [0.2:1.05];set xtics 0.1
     set xlabel "density ({/Symbol r})"
-    set title "n_{p}=500,T_{adim}=1,{/Symbol r}=.8\n\
-    t_{eq}=15000,t_{ens}=10,t_{run}=5000,{/Symbol D}t=.001\n\
+    set title "n_{p}=500,T_{adim}=1,r_{cutoff}=2.5\n\
+    t_{eq}=15000,t_{ens}=50,t_{run}=15000,{/Symbol D}t=.001\n\
     LOGSCALE"
     set parametric
     rho1=0.3342;rho2=0.3789

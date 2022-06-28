@@ -248,3 +248,201 @@ Final set of parameters
 
 a               = 654.047        
 b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:36:41 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:37:01 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:37:10 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:37:35 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:38:39 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
+
+
+*******************************************************************************
+Mon Jun 27 19:39:30 2022
+
+
+FIT:    data read from '../results/msd_vs_time.dat' u ($1*0.03697):($2/(6*$1*0.03697))
+        format = x:z
+        x range restricted to [0.00366003 : 0.00369700]
+        #datapoints = 2
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x)=a*x+b
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   a             b            
+   0 1.8485144737e+03   0.00e+00  7.07e-01    1.000000e+00   1.000000e+00
+   9 0.0000000000e+00  -inf       7.07e-10    6.540473e+02   2.899935e+01
+
+After 9 iterations the fit converged.
+final sum of squares of residuals : 0
+abs. change during last iteration : -2.99094e-23
+
+
+Exactly as many data points as there are parameters.
+In this degenerate case, all errors are zero by definition.
+
+Final set of parameters 
+======================= 
+
+a               = 654.047        
+b               = 28.9994        
