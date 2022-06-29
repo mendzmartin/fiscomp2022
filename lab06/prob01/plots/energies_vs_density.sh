@@ -166,5 +166,29 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "energies_vs_density.dat"
-p 'energies_vs_density.dat' u 1:2 w l lw 2 smooth mcsplines
+sizex=4;sizey=8
+set terminal pdf size sizey,sizex;set output 'energies_vs_density.pdf'
+
+rows=1;columns=2
+set multiplot layout rows,columns
+    set xrange[0.2:1.05];set xtics 0.1
+    set yrange[-6:-1.5]
+    set title "n_{p}=256,T_{adim}=1.1,r_{cutoff}=2.5\n\
+    t_{eq}=15000,t_{ens}=50,t_{run}=15000,{/Symbol D}t=.001"
+    set xlabel "density ({/Symbol r})"
+    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set parametric;rho1=0.6921;rho2=0.7816;set trange [-6:-3]
+    set ylabel "Adimensional potential energy/particles (U_{adim}/n_{p})"
+    p '../results/energies_vs_density.dat' u 1:2 w l lw 2 lc 'red' smooth mcsplines notitle,\
+    "../results/energies_vs_density.dat" u 1:2:3 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
+
+    set ylabel "Osmotic adimensional pressure (P_{adim})"
+    set trange [-2:4];set yrange[-1.5:13]
+    p '../results/energies_vs_density.dat' u 1:4 w l lw 2 lc 'red' smooth mcsplines notitle,\
+    "../results/energies_vs_density.dat" u 1:4:5 with yerrorbars lc 'black' t 'errorbars',\
+    rho1,t w l lw 3 lc 'black' dt 2 t '{/Symbol r}_1=0.6921',\
+    rho2,t w l lw 3 lc 'black' dt 4 t '{/Symbol r}_2=0.7816'
+unset multiplot
 #    EOF
