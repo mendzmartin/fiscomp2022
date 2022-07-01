@@ -150,6 +150,123 @@ module module_md_lennard_jones
         end do
     end subroutine f_lj_total
 
+    subroutine f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+        fx_lj_total_vector,fy_lj_total_vector,fz_lj_total_vector,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in)    :: r_cutoff,density
+        real(dp),    intent(inout) :: fx_lj_total_vector(n_p),fy_lj_total_vector(n_p),&
+                                      fz_lj_total_vector(n_p) ! vector de fuerzas netas
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)                   :: rij_pow02
+        real(dp)                   :: force_indiv ! fuerza neta acuando en una determinada partícula
+        integer(sp)                :: i,j
+        real(dp)                   :: dx,dy,dz,L
+        integer(sp)                :: icell,jcell,jcell0,nabor
+
+        fx_lj_total_vector(:)=0._dp;fy_lj_total_vector(:)=0._dp;fz_lj_total_vector(:)=0._dp
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+
+        do icell=1,m*m*m ! celdas
+            i=head(icell)
+            do while (i/=0)
+                j=list(i)
+                do while (j/=0) ! en la celda
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        force_indiv=f_lj_individual(rij_pow02)
+                    else; force_indiv=0._dp;end if
+                    dx=pbc_correction((x_vector(i)-x_vector(j)),n_p,density)
+                    dy=pbc_correction((y_vector(i)-y_vector(j)),n_p,density)
+                    dz=pbc_correction((z_vector(i)-z_vector(j)),n_p,density)
+                    ! COMPONENTES DE LA FUERZA
+                    fx_lj_total_vector(i)=fx_lj_total_vector(i)+force_indiv*dx
+                    fx_lj_total_vector(j)=fx_lj_total_vector(j)-force_indiv*dx
+                    fy_lj_total_vector(i)=fy_lj_total_vector(i)+force_indiv*dy
+                    fy_lj_total_vector(j)=fy_lj_total_vector(j)-force_indiv*dy
+                    fz_lj_total_vector(i)=fz_lj_total_vector(i)+force_indiv*dz
+                    fz_lj_total_vector(j)=fz_lj_total_vector(j)-force_indiv*dz
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                end do
+                jcell0=13*(icell-1)
+                do nabor=1,13 ! celdas vecinas
+                    jcell=map(jcell0+nabor)
+                    j=head(jcell)
+                    do while (j/=0) ! en la celda
+                        rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                            x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02<=r_cutoff*r_cutoff) then
+                            force_indiv=f_lj_individual(rij_pow02)
+                        else; force_indiv=0._dp;end if
+                        dx=pbc_correction((x_vector(i)-x_vector(j)),n_p,density)
+                        dy=pbc_correction((y_vector(i)-y_vector(j)),n_p,density)
+                        dz=pbc_correction((z_vector(i)-z_vector(j)),n_p,density)
+                        ! COMPONENTES DE LA FUERZA
+                        fx_lj_total_vector(i)=fx_lj_total_vector(i)+force_indiv*dx
+                        fx_lj_total_vector(j)=fx_lj_total_vector(j)-force_indiv*dx
+                        fy_lj_total_vector(i)=fy_lj_total_vector(i)+force_indiv*dy
+                        fy_lj_total_vector(j)=fy_lj_total_vector(j)-force_indiv*dy
+                        fz_lj_total_vector(i)=fz_lj_total_vector(i)+force_indiv*dz
+                        fz_lj_total_vector(j)=fz_lj_total_vector(j)-force_indiv*dz
+                        j=list(j)
+                    end do
+                end do
+                i=list(i)
+            end do
+        end do ! celdas   
+    end subroutine f_lj_total_linkedlist
+
+    subroutine maps(m,map)
+        integer(sp), intent(in)    :: m
+        integer(sp), intent(inout) :: map(13*m*m*m)
+        integer(sp)                :: index_x,index_y,index_z,imap
+        do index_x=1,m;do index_y=1,m;do index_z=1,m
+            imap=(icell_function(index_x,index_y,index_z,m)-1)*13
+            map(imap+1)=icell_function(index_x+1,index_y,index_z,M)
+            map(imap+2)=icell_function(index_x+1,index_y+1,index_z,M)
+            map(imap+3)=icell_function(index_x,index_y+1,index_z,M)
+            map(imap+4)=icell_function(index_x-1,index_y+1, index_z,M)
+            map(imap+5)=icell_function(index_x+1,index_y,index_z-1,M)
+            map(imap+6)=icell_function(index_x+1,index_y+1,index_z-1,M)
+            map(imap+7)=icell_function(index_x,index_y+1,index_z-1,M)
+            map(imap+8)=icell_function(index_x-1,index_y+1,index_z-1,M)
+            map(imap+9)=icell_function(index_x+1,index_y,index_z+1,M)
+            map(imap+10)=icell_function(index_x+1,index_y+1,index_z+1,M)
+            map(imap+11)=icell_function(index_x,index_y+1,index_z+1,M)
+            map(imap+12)=icell_function(index_x-1,index_y+1,index_z+1,M)
+            map(imap+13)=icell_function(index_x,index_y,index_z+1,M)
+        end do;end do;end do
+    end subroutine maps
+
+    function icell_function(index_x,index_y,index_z,m)
+        integer(sp), intent(in) :: index_x,index_y,index_z,m
+        integer(sp) :: icell_function
+        icell_function=1+mod(index_x-1+m,m)+mod(index_y-1+m,m)*m+mod(index_z-1+m,m)*m*m
+    end function icell_function
+    
+    subroutine links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+        integer(sp), intent(in)    :: m,n_p
+        real(dp),    intent(in)    :: L,x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        integer(sp), intent(inout) :: head(m*m*m),list(n_p)
+        real(dp)                   :: Lc_inv  ! inversa del lado de la celda
+        integer(sp)                :: i,icell 
+        ! celda de -L/2 a L/2
+        head(:)=0_sp;Lc_inv=real(m,dp)*(1._dp/L)
+        do i=1,n_p
+            icell=1+int((x_vector(i)+0.5_dp*L)*Lc_inv,sp)+&
+                    int((y_vector(i)+0.5_dp*L)*Lc_inv,sp)*m+&
+                    int((z_vector(i)+0.5_dp*L)*Lc_inv,sp)*m*m
+            ! icell=1+int(x_vector(i)*Lc_inv,sp)+&
+            ! int(y_vector(i)*Lc_inv,sp)*m+&
+            ! int(z_vector(i)*Lc_inv,sp)*m*m
+            list(i)=head(icell);head(icell)=i
+        end do
+    end subroutine links
+
     function temperature(n_p,mass,vx_vector,vy_vector,vz_vector)
         integer(sp), intent(in) :: n_p
         real(dp),    intent(in) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
@@ -329,6 +446,52 @@ module module_md_lennard_jones
             vz_vector(i)=vz_vector(i)+force_z(i)*factor
         end do
     end subroutine velocity_verlet
+
+    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
+    subroutine velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+        vx_vector,vy_vector,vz_vector,&
+        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+        m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(inout) :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                      z_vector_noPBC(n_p)                       ! componentes del vector posición sin PBC
+        real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)
+        real(dp),    intent(in)    :: delta_time,mass,r_cutoff,density
+        real(dp),    intent(inout) :: force_x(n_p),force_y(n_p),force_z(n_p)
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        integer(sp)                :: i
+        real(dp)                   :: factor,L
+        L=(n_p*(1._dp/density))**(1._dp/3._dp)
+        factor=delta_time*0.5_dp*(1._dp/mass)
+        do i=1,n_p
+            ! COMPONENTES DE LA VELOCIDAD A TIEMPO SEMI-EVOLUCIONADO
+            vx_vector(i)=vx_vector(i)+force_x(i)*factor
+            vy_vector(i)=vy_vector(i)+force_y(i)*factor
+            vz_vector(i)=vz_vector(i)+force_z(i)*factor
+            ! COMPONENTES DE LA POSICION A TIEMPO EVOLUCIONADO (con y sin pBC)
+            x_vector(i)=x_vector(i)+vx_vector(i)*delta_time
+            x_vector_noPBC(i)=x_vector_noPBC(i)+vx_vector(i)*delta_time
+            y_vector(i)=y_vector(i)+vy_vector(i)*delta_time
+            y_vector_noPBC(i)=y_vector_noPBC(i)+vx_vector(i)*delta_time
+            z_vector(i)=z_vector(i)+vz_vector(i)*delta_time
+            z_vector_noPBC(i)=z_vector_noPBC(i)+vx_vector(i)*delta_time
+            call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
+        end do
+        ! ACTUALIZAMOS LISTA DE VECINOS
+        !call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+        ! ACTUALIZAMOS COMPONENTES DE LA FUERZA A TIEMPO EVOLUCIONADO
+        call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+            force_x,force_y,force_z,m,map,list,head)
+        do i=1,n_p
+            ! COMPONENTES DE LA VELOCIDAD A TIEMPO EVOLUCIONADO
+            vx_vector(i)=vx_vector(i)+force_x(i)*factor
+            vy_vector(i)=vy_vector(i)+force_y(i)*factor
+            vz_vector(i)=vz_vector(i)+force_z(i)*factor
+        end do
+    end subroutine velocity_verlet_linked_list
+
 
     ! SUBRUTINA PARA DEFINIR PARAMETRO INICIALES DE DINAMICA MOLECULAR
     subroutine md_initial_parameters(n_p,x_vector,y_vector,z_vector,&

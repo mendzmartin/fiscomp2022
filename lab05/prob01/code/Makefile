@@ -40,6 +40,7 @@ bin_name_03 = molecular_dynamic_lennard_jones_03
 bin_name_04 = molecular_dynamic_lennard_jones_04
 bin_name_05 = molecular_dynamic_lennard_jones_05
 bin_name_06 = molecular_dynamic_lennard_jones_06
+bin_name_07 = molecular_dynamic_lennard_jones_01_linked_list
 
 # object dependencies
 dependencies_01= module_precision.o module_mt19937.o module_md_lennard_jones.o
@@ -68,6 +69,10 @@ $(bin_name_05).o: $(dependencies_01)
 # molecular_dynamic_lennard_jones_06 (iniciso g)
 $(bin_name_06).o: $(dependencies_01)
 	$(FC) $(FFLAGS) -o $(bin_name_06).o $(dependencies_01) $(bin_name_06).f90
+
+# molecular_dynamic_lennard_jones_01_linked_list
+$(bin_name_07).o: $(dependencies_01)
+	$(FC) $(FFLAGS) -o $(bin_name_07).o $(dependencies_01) $(bin_name_07).f90
 
 # ============================================================
 # MODULES COMPILATION
