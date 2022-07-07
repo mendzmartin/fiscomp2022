@@ -343,17 +343,13 @@ module module_md_lennard_jones
                 a=L*(1._dp/(n_unitcells-1._dp))!a=(4*(1._dp/density))**(1._dp/3._dp)
                 ! cargamos vectores de coordenadas
                 index=0
-                do i=1,int(n_unitcells,sp)
-                    do j=1,int(n_unitcells,sp)
-                        do k=1,int(n_unitcells,sp)
-                            index=index+1
-                            ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
-                            x_vector(index)=real(i-1,dp)*a-0.5_dp*L
-                            y_vector(index)=real(j-1,dp)*a-0.5_dp*L
-                            z_vector(index)=real(k-1,dp)*a-0.5_dp*L
-                        end do
-                    end do
-                end do
+                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp)
+                    index=index+1
+                    ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
+                    x_vector(index)=real(i-1,dp)*a-0.5_dp*L
+                    y_vector(index)=real(j-1,dp)*a-0.5_dp*L
+                    z_vector(index)=real(k-1,dp)*a-0.5_dp*L
+                end do;end do;end do
             case(2) ! fcc laticce
                 points_unitcells=4._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
@@ -364,51 +360,43 @@ module module_md_lennard_jones
                 aux_matrix(3,2)=0.0_dp;aux_matrix(4,1)=0.0_dp
                 ! cargamos vectores de coordenadas
                 index=0
-                do i=1,int(n_unitcells,sp)
-                    do j=1,int(n_unitcells,sp)
-                        do k=1,int(n_unitcells,sp)
-                            do index2=1,4
-                                index=index+1
-                                ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
-                                x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
-                                y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
-                                z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
-                            end do
-                        end do
+                do i=1,int(n_unitcells,sp);do j=1,int(n_unitcells,sp);do k=1,int(n_unitcells,sp)
+                    do index2=1,4
+                        index=index+1
+                        ! CENTRAMOS LA CELDA EN EL RANGO [-L/2:L/2]
+                        x_vector(index)=(aux_matrix(index2,1)+real(i-1,dp)*a)-0.5_dp*L
+                        y_vector(index)=(aux_matrix(index2,2)+real(j-1,dp)*a)-0.5_dp*L
+                        z_vector(index)=(aux_matrix(index2,3)+real(k-1,dp)*a)-0.5_dp*L
                     end do
-                end do
+                end do;end do;end do
                 deallocate(aux_matrix)
             case(3) ! fcc laticce (other method)
                 points_unitcells=4._dp     
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=(points_unitcells*(1._dp/density))**(1._dp/3._dp)
                 index=0
-                do i=0,int(n_unitcells,sp)-1
-                    do j=0,int(n_unitcells,sp)-1
-                        do k=0,int(n_unitcells,sp)-1
-                            index=index+1
-                            x_vector(index)=a*real(i,dp)-L*0.5_dp
-                            y_vector(index)=a*real(j,dp)-L*0.5_dp
-                            z_vector(index)=a*real(k,dp)-L*0.5_dp
-                            index=index+1
-                            x_vector(index)=a*(real(i,dp)+0.5_dp)-L*0.5_dp
-                            y_vector(index)=a*(real(j,dp)+0.5_dp)-L*0.5_dp
-                            z_vector(index)=a*real(k,dp)-L*0.5_dp
-                            index=index+1
-                            x_vector(index)=a*real(i,dp)-L*0.5_dp
-                            y_vector(index)=a*(real(j,dp)+0.5_dp)-L*0.5_dp
-                            z_vector(index)=a*(real(k,dp)+0.5_dp)-L*0.5_dp
-                            index=index+1
-                            x_vector(index)=a*(real(i,dp)+0.5_dp)-L*0.5_dp
-                            y_vector(index)=a*real(j,dp)-L*0.5_dp
-                            z_vector(index)=a*(real(k,dp)+0.5_dp)-L*0.5_dp
-                        enddo
-                    enddo
-                enddo
+                do i=0,int(n_unitcells,sp)-1;do j=0,int(n_unitcells,sp)-1;do k=0,int(n_unitcells,sp)-1
+                    index=index+1
+                    x_vector(index)=a*real(i,dp)-L*0.5_dp
+                    y_vector(index)=a*real(j,dp)-L*0.5_dp
+                    z_vector(index)=a*real(k,dp)-L*0.5_dp
+                    index=index+1
+                    x_vector(index)=a*(real(i,dp)+0.5_dp)-L*0.5_dp
+                    y_vector(index)=a*(real(j,dp)+0.5_dp)-L*0.5_dp
+                    z_vector(index)=a*real(k,dp)-L*0.5_dp
+                    index=index+1
+                    x_vector(index)=a*real(i,dp)-L*0.5_dp
+                    y_vector(index)=a*(real(j,dp)+0.5_dp)-L*0.5_dp
+                    z_vector(index)=a*(real(k,dp)+0.5_dp)-L*0.5_dp
+                    index=index+1
+                    x_vector(index)=a*(real(i,dp)+0.5_dp)-L*0.5_dp
+                    y_vector(index)=a*real(j,dp)-L*0.5_dp
+                    z_vector(index)=a*(real(k,dp)+0.5_dp)-L*0.5_dp
+                end do;end do;end do
             end select
     end subroutine initial_lattice_configuration
 
-    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
+    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (método acelerado)
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&
         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,&
@@ -439,8 +427,8 @@ module module_md_lennard_jones
         end do
         ! ACTUALIZAMOS COMPONENTES DE LA FUERZA A TIEMPO EVOLUCIONADO
         call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+        ! COMPONENTES DE LA VELOCIDAD A TIEMPO EVOLUCIONADO
         do i=1,n_p
-            ! COMPONENTES DE LA VELOCIDAD A TIEMPO EVOLUCIONADO
             vx_vector(i)=vx_vector(i)+force_x(i)*factor
             vy_vector(i)=vy_vector(i)+force_y(i)*factor
             vz_vector(i)=vz_vector(i)+force_z(i)*factor
