@@ -59,7 +59,7 @@ program lennard_jones_fluid
     
 end program lennard_jones_fluid
 
-subroutine lennard_jones_relaxation(n,MC_step,MC_step_trans,m,file_num,aux_matrix_pbc,T_start,T_end,Tc_adim,U_adim,Madim)
+subroutine lennard_jones_relaxation(n,MC_step,MC_step_trans,m,file_num,aux_matrix_pbc,T_start,T_end,Tc_adim,U_adim)
     use module_precision;use module_mc_lennard_jones
     implicit none 
     real(dp),    intent(in)     :: T_end,T_start,Tc_adim
@@ -79,22 +79,24 @@ subroutine lennard_jones_relaxation(n,MC_step,MC_step_trans,m,file_num,aux_matri
         T_adim=T_start+T_step*real(j-1_sp,dp)
         write(*,'(A12,E12.4)') 'T_adim=',T_adim
         do i=1,MC_step
-            call MC_step_relaxation(1_sp,n,aux_matrix_pbc,T_adim,U_adim)
+            call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                U_adim,T_adim,r_cutoff,density)
         end do
     end do
     ! termalizo a la temperatura buscada
     write(*,'(A12,E12.4)') 'T_adim=',T_end
     s0=0._dp;s1_U=0._dp;s2_U=0._dp;s1_M=0._dp;s2_M=0._dp
     do i=1,MC_step
-        call MC_step_relaxation(1_sp,n,aux_matrix_pbc,T_end,U_adim)
-        Madim=M_adim(aux_matrix_pbc,n) ! Magnetización
+        call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+            x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+            U_adim,T_adim,r_cutoff,density)
         ! datos para hacer estadística en steady state
         if (i>=MC_step_trans) then
             s0=s0+1._dp
             s2_U=s2_U+U_adim*U_adim;s1_U=s1_U+U_adim ! energía
-            s2_M=s2_M+Madim*Madim;s1_M=s1_M+Madim    ! magnetización
         end if
-        write(file_num,20) i,U_adim,Madim
+        write(file_num,20) i,U_adim
     end do
 
     !calculamos media,desviacion estándar, varianza y error
