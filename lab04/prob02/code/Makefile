@@ -37,7 +37,7 @@ LDFLAGS = $(flg_lib01)
 bin_name_01 = lennard_jones_fluid
 
 # object dependencies
-dependencies_01= module_precision.o
+dependencies_01= module_precision.o module_mt19937.o module_mc_lennard_jones.o
 
 # binaries rules
 # lennard_jones_fluid
@@ -65,6 +65,9 @@ mod_name_12 = module_random_generator
 mod_name_13 = module_mzran
 mod_name_14 = module_mt19937
 mod_name_15 = module_2D_ferromagnetic_ising
+mod_name_16 = module_md_lennard_jones
+mod_name_17 = module_bd_lennard_jones
+mod_name_18 = module_mc_lennard_jones
 
 # modules recipes
 $(mod_name_01).o:
@@ -77,6 +80,12 @@ $(mod_name_14).o:
 	$(FC) -c $(mod_path)$(mod_name_14).f90
 $(mod_name_15).o: $(mod_name_01).o $(mod_name_14).o
 	$(FC) -c $(mod_path)$(mod_name_15).f90
+$(mod_name_16).o: $(mod_name_01).o $(mod_name_14).o
+	$(FC) -c $(mod_path)$(mod_name_16).f90
+$(mod_name_17).o: $(mod_name_01).o $(mod_name_14).o
+	$(FC) -c $(mod_path)$(mod_name_17).f90
+$(mod_name_18).o: $(mod_name_01).o $(mod_name_14).o
+	$(FC) -c $(mod_path)$(mod_name_18).f90
 	
 # ============================================================
 # PONY rules

@@ -1,5 +1,6 @@
-! module of monte carlo dynamic to lennard jones potential
-! gfortran -c module_precision.f90 module_mt19937.f90 module_mc_lennard_jones.f90
+! Module of monte carlo dynamic (metropolis method) to lennard jones potential
+! Compile command
+!   gfortran -c module_precision.f90 module_mt19937.f90 module_mc_lennard_jones.f90
 module module_mc_lennard_jones
     use module_precision;use module_mt19937, only: sgrnd,grnd
     implicit none
@@ -145,7 +146,8 @@ module module_mc_lennard_jones
                                       fz_lj_total_vector(n_p) ! vector de fuerzas netas
         integer(sp), intent(inout) :: list(n_p),head(m*m*m)
         real(dp)                   :: rij_pow02
-        real(dp)                   :: force_indiv ! fuerza neta acuando en una determinada partícula
+        ! fuerza neta actuando en una determinada partícula
+        real(dp)                   :: force_indiv
         integer(sp)                :: i,j
         real(dp)                   :: dx,dy,dz,L
         integer(sp)                :: icell,jcell,jcell0,nabor
@@ -298,7 +300,7 @@ module module_mc_lennard_jones
         real(dp),   allocatable    :: aux_matrix(:,:)    ! matriz auxiliar con vectores primitivos (FCC)
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
         select case (type_structure)
-            case(1) ! sc laticce
+            case(1) ! sc laticce (1st method)
                 points_unitcells=1._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=L*(1._dp/(n_unitcells-1._dp))!a=(4*(1._dp/density))**(1._dp/3._dp)
@@ -311,7 +313,7 @@ module module_mc_lennard_jones
                     y_vector(index)=real(j-1,dp)*a-0.5_dp*L
                     z_vector(index)=real(k-1,dp)*a-0.5_dp*L
                 end do;end do;end do
-            case(2) ! fcc laticce
+            case(2) ! fcc laticce (2nd method)
                 points_unitcells=4._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=L*(1._dp/(n_unitcells))!a=(4*(1._dp/density))**(1._dp/3._dp)
@@ -331,7 +333,7 @@ module module_mc_lennard_jones
                     end do
                 end do;end do;end do
                 deallocate(aux_matrix)
-            case(3) ! fcc laticce (other method)
+            case(3) ! fcc laticce (3rd method)
                 points_unitcells=4._dp     
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=(points_unitcells*(1._dp/density))**(1._dp/3._dp)
@@ -378,7 +380,12 @@ module module_mc_lennard_jones
 
         call date_and_time(values=seed_val)
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
-        delta_x=0.05_dp;delta_y=0.05_dp;delta_z=0.05_dp ! ¿CÓMO DEFINO ESTOS VALORES?
+
+        ! ###############################################
+        ! ### ¿CÓMO DEFINO ESTOS VALORES?
+        ! ###############################################
+        delta_x=0.05_dp;delta_y=0.05_dp;delta_z=0.05_dp
+
         ! hago un paso de Monte Carlo (MC_step)
         do MC_index=1,n_p
             U_adim_old=U_adim ! energía sin desplazar
@@ -419,47 +426,6 @@ module module_mc_lennard_jones
                     end if cond1
         end do
     end subroutine evolution_monte_carlo
-
-    ! SUBRUTINA PARA DEFINIR PARAMETRO INICIALES DE DINAMICA MOLECULAR
-    subroutine md_initial_parameters(n_p,x_vector,y_vector,z_vector,&
-                                     vx_vector,vy_vector,vz_vector,&
-                                     T_adim_ref,delta_time,density,mass)
-
-        integer(sp), intent(in)    :: n_p ! number of particles
-        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)    ! position vectors
-        real(dp),    intent(inout) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p) ! velocities vectors
-        real(dp),    intent(in)    :: T_adim_ref,delta_time,density,mass ! temperature,time step,densidad,masa
-        real(dp)    :: nrand
-        integer(sp) :: seed,seed_val(8),i
-        real(dp)    :: vx_mc,vy_mc,vz_mc ! velocity center of mass
-
-        call date_and_time(values=seed_val)
-        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
-        do i=1,n_p ! give random velocities
-            nrand=real(grnd(),dp);vx_vector(i)=(nrand-0.5_dp)
-            nrand=real(grnd(),dp);vy_vector(i)=(nrand-0.5_dp)
-            nrand=real(grnd(),dp);vz_vector(i)=(nrand-0.5_dp)
-        end do
-        ! calculamos velocidad del centro de masa
-        vx_mc=sum(vx_vector(:))*(1._dp/real(n_p,dp))
-        vy_mc=sum(vy_vector(:))*(1._dp/real(n_p,dp))
-        vz_mc=sum(vz_vector(:))*(1._dp/real(n_p,dp))
-        ! velocity center of mass to zero and rescaling
-        vx_vector(:)=vx_vector(:)-vx_mc
-        vy_vector(:)=vy_vector(:)-vy_mc
-        vz_vector(:)=vz_vector(:)-vz_mc
-        call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
-
-        ! descomentar si se quere re-asignar posiciones según velocidades iniciales
-        ! do i=1,n_p
-        !     ! position previous time step
-        !     x_vector(i)=x_vector(i)-vx_vector(i)*delta_time
-        !     y_vector(i)=y_vector(i)-vy_vector(i)*delta_time
-        !     z_vector(i)=z_vector(i)-vz_vector(i)*delta_time
-        !     ! corregimos posiciones según PBC
-        !     call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
-        ! end do
-    end subroutine md_initial_parameters
 
     ! SUBRUTINA PARA CALCULAR LA FUNCION DE DISTRIBUCIÓN RADIAL (FUNCION DE CORRELACIÓN)
     subroutine radial_ditribution_function(file_name,n_p,density,x_vector,y_vector,z_vector,n_bins,g)
