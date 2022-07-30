@@ -2,7 +2,7 @@
 program lennard_jones_fluid
     use module_precision;use module_mc_lennard_jones
     implicit none
-    integer(sp), parameter   :: MC_step=10_sp,MC_step_trans=10_sp ! total and transitory Monte Carlo step
+    integer(sp), parameter   :: MC_step=3000_sp,MC_step_trans=1000_sp ! total and transitory Monte Carlo step
     ! VARIABLES y PARAMETROS GENERALES
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículas
     real(dp),    parameter   :: T_adim=1._dp                           ! temperatura de referencia adimensional
@@ -104,7 +104,7 @@ subroutine lennard_jones_relaxation(n_p,MC_step,MC_step_trans,file_num,&
     sigma_P=sqrt((s2_P-s0*P_med_adim*P_med_adim)*(1._dp/(s0-1._dp)))
     error_P=sigma_P*(1._dp/sqrt(s0-1._dp))
 
-    write(*,'(A9,I2,A2,I2)')  'Lattice=',n_p,'x',n_p
+    write(*,'(A9,I4,x,A2,x,I4)')  'Lattice=',n_p,'x',n_p
     write(*,'(2(A14,E12.4))') 'P_med_adim=',P_med_adim,'error_M',error_P
     write(*,'(2(A14,E12.4))') 'U_med_adim=',U_med_adim,'error_U',error_U
 
