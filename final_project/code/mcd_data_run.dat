@@ -1,0 +1,2 @@
+cpu_time                delta_t r_cutoff T_ref n_p t_eq t_run tau_max_corr
+71174.747826999999      0.005   2.5      0.75  256 3000 2000  100 

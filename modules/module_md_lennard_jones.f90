@@ -258,11 +258,8 @@ module module_md_lennard_jones
         head(:)=0_sp;Lc_inv=real(m,dp)*(1._dp/L)
         do i=1,n_p
             icell=1+int((x_vector(i)+0.5_dp*L)*Lc_inv,sp)+&
-                    int((y_vector(i)+0.5_dp*L)*Lc_inv,sp)*m+&
-                    int((z_vector(i)+0.5_dp*L)*Lc_inv,sp)*m*m
-            ! icell=1+int(x_vector(i)*Lc_inv,sp)+&
-            ! int(y_vector(i)*Lc_inv,sp)*m+&
-            ! int(z_vector(i)*Lc_inv,sp)*m*m
+                int((y_vector(i)+0.5_dp*L)*Lc_inv,sp)*m+&
+                int((z_vector(i)+0.5_dp*L)*Lc_inv,sp)*m*m
             list(i)=head(icell);head(icell)=i
         end do
     end subroutine links
@@ -468,7 +465,7 @@ module module_md_lennard_jones
             call position_correction(n_p,density,x_vector(i),y_vector(i),z_vector(i))
         end do
         ! ACTUALIZAMOS LISTA DE VECINOS
-        !call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+        call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
         ! ACTUALIZAMOS COMPONENTES DE LA FUERZA A TIEMPO EVOLUCIONADO
         call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
             force_x,force_y,force_z,m,map,list,head)
