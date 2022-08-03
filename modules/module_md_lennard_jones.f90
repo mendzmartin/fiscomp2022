@@ -150,6 +150,7 @@ module module_md_lennard_jones
         end do
     end subroutine f_lj_total
 
+    ! SUBRUTINAS PARA CALCULAR FUERZAS USANDO LINKED LIST
     subroutine f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
         fx_lj_total_vector,fy_lj_total_vector,fz_lj_total_vector,m,map,list,head)
         integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
@@ -393,7 +394,7 @@ module module_md_lennard_jones
             end select
     end subroutine initial_lattice_configuration
 
-    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (método acelerado)
+    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (MÉTODO ACELERADO SIN LINKED LIST)
     subroutine velocity_verlet(n_p,x_vector,y_vector,z_vector,&
         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,&
@@ -432,7 +433,7 @@ module module_md_lennard_jones
         end do
     end subroutine velocity_verlet
 
-    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
+    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (MÉTODO ACELERADO CON LINKED LIST)
     subroutine velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         vx_vector,vy_vector,vz_vector,&

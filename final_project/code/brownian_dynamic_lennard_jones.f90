@@ -5,8 +5,8 @@ program brownian_dynamic_lennard_jones
     ! VARIABLES y PARAMETROS GENERALES
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
-    integer(sp), parameter   :: time_eq=15000_sp,&                     ! pasos de equilibración
-                                time_run=15000_sp,&                    ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: time_eq=30000_sp,&                     ! pasos de equilibración
+                                time_run=5000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=0.75_dp                     ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
@@ -57,6 +57,9 @@ program brownian_dynamic_lennard_jones
     real(dp)                 :: msd,msd_med,var_msd,err_msd
     real(dp)                 :: s1_msd,s2_msd
 
+    ! Mensaje del progreso de la simulación
+    print *, 'STARTING SIMULATION'
+
     call cpu_time(time_start)
 
     ! FORMATOS DE ESCRITURA A UTILIZAR
@@ -92,7 +95,7 @@ program brownian_dynamic_lennard_jones
 
         force_x(:)=0._dp;force_y(:)=0._dp;force_z(:)=0._dp
         map(:)=0_sp;list(:)=0_sp;head(:)=0_sp
-        ! call maps(m,map) ! inicializo map
+        call maps(m,map) ! inicializo map (para usar linked list)
 
         sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
         x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
@@ -100,17 +103,17 @@ program brownian_dynamic_lennard_jones
 
         ! definimos densidad en el rango [density_min;density_max]
         density=density_min+step_density*real(k-1,dp)
-        print *, 'rho=',density
 
         ! generamos configuración inicial (FCC structure)
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
         x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
         ! computamos fuerzas en el tiempo inicial
-        ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
-        call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-        ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
-        ! call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-        !     force_x,force_y,force_z,m,map,list,head)
+
+        ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
+        ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+        ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
+        call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+            force_x,force_y,force_z,m,map,list,head)
 
         ! computamos desplazamiendo cuadrático medio
         if (diffusion_coeff_switch.eqv..true.) then
@@ -133,18 +136,24 @@ program brownian_dynamic_lennard_jones
         end if
         do i=1,time_eq
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',time_eq+time_run,k
 
-            call evolution_bd(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                dinamic_viscosity,diffusion_coeff)
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',anint((real(index,dp)/real(time_eq+time_run,dp))*100._dp),'%'
 
             ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
-            call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-            ! ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
-            ! call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-            !     force_x,force_y,force_z,m,map,list,head)
+            ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+            !     dinamic_viscosity,diffusion_coeff)
+            ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+            
+           ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
+            call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
+                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                dinamic_viscosity,diffusion_coeff,m,map,list,head)
+            call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+                force_x,force_y,force_z,m,map,list,head)
 
             time=real(index,dp)*delta_time
             if (energie_switch.eqv..true.) then
@@ -162,18 +171,24 @@ program brownian_dynamic_lennard_jones
 
         do j=1,time_run
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',time_eq+time_run,j
 
-            call evolution_bd(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                dinamic_viscosity,diffusion_coeff)
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',anint((real(index,dp)/real(time_eq+time_run,dp))*100._dp),'%'
 
             ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
-            call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-            ! ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
-            ! call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-            !     force_x,force_y,force_z,m,map,list,head)
+            ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+            !     dinamic_viscosity,diffusion_coeff)
+            ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+            
+            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
+            call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
+                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                dinamic_viscosity,diffusion_coeff,m,map,list,head)
+            call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+                force_x,force_y,force_z,m,map,list,head)
 
             ! ESCRIBIMOS DATOS (y acumulamos según ensamble)
             time=real(index,dp)*delta_time
@@ -265,6 +280,9 @@ program brownian_dynamic_lennard_jones
         write(50,'(7(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref','n_p','t_eq','t_run','tau_max_corr'
         write(50,'(4(E12.4,x),3(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,n_p,time_eq,time_run,tau_max_corr
     close(50)
+
+    ! Mensaje del progreso de la simulación
+    print *, 'FINISHING SIMULATION'
 end program brownian_dynamic_lennard_jones
 
 ! subrutina para calcular el desplazamiento cuadrático medio

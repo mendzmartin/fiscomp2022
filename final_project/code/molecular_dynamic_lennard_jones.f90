@@ -54,6 +54,9 @@ program molecular_dynamic_lennard_jones
     real(dp)                 :: msd,msd_med,var_msd,err_msd
     real(dp)                 :: s1_msd,s2_msd
 
+    ! Mensaje del progreso de la simulación
+    print *, 'STARTING SIMULATION'
+
     ! comenzamos a medir tiempo de cpu
     call cpu_time(time_start)
 
@@ -93,7 +96,7 @@ program molecular_dynamic_lennard_jones
 
         force_x(:)=0._dp;force_y(:)=0._dp;force_z(:)=0._dp
         map(:)=0_sp;list(:)=0_sp;head(:)=0_sp
-        call maps(m,map) ! inicializo map
+        call maps(m,map) ! inicializo map (para usar linked list)
 
         sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
         x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
@@ -110,10 +113,11 @@ program molecular_dynamic_lennard_jones
         call md_initial_parameters(n_p,x_vector,y_vector,z_vector,&
             vx_vector,vy_vector,vz_vector,T_adim_ref,delta_time,density,mass)
 
-        ! computamos fuerzas en el tiempo inicial
-        ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
+        ! computamos fuerzas en el tiempo inicia
+        ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
         ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-        ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
+
+        ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
         call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
             force_x,force_y,force_z,m,map,list,head)
 
@@ -138,19 +142,24 @@ program molecular_dynamic_lennard_jones
         end if
         do i=1,time_eq
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',time_eq+time_run,j
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',int(index/(time_eq+time_run)),'%'
+
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
-            ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
             ! call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
             !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
             !     vx_vector,vy_vector,vz_vector,&
             !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
-            ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
             call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 vx_vector,vy_vector,vz_vector,&
                 delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
                 m,map,list,head)
+
             ! velocity center of mass to zero
             vx_mc=sum(vx_vector(:))*(1._dp/real(n_p,dp));vx_vector(:)=(vx_vector(:)-vx_mc)
             vy_mc=sum(vy_vector(:))*(1._dp/real(n_p,dp));vy_vector(:)=(vy_vector(:)-vy_mc)
@@ -169,14 +178,18 @@ program molecular_dynamic_lennard_jones
 
         do i=1,time_run
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',time_eq+time_run,j
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',int(index/(time_eq+time_run)),'%'
+
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
-            ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
             ! call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
             !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
             !     vx_vector,vy_vector,vz_vector,&
             !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
-            ! DESCOMENTAR PARA CORRER USANDO LINKED LIST
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
             call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 vx_vector,vy_vector,vz_vector,&
@@ -271,6 +284,9 @@ program molecular_dynamic_lennard_jones
         write(50,'(7(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref','n_p','t_eq','t_run','tau_max_corr'
         write(50,'(4(E12.4,x),3(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,n_p,time_eq,time_run,tau_max_corr
     close(50)
+
+    ! Mensaje del progreso de la simulación
+    print *, 'FINISHING SIMULATION'
 end program molecular_dynamic_lennard_jones
 
 ! subrutina para calcular el desplazamiento cuadrático medio

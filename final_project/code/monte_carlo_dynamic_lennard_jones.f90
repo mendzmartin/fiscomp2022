@@ -17,7 +17,8 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
     logical                  :: pressure_switch=.true.,&                    ! presión vs densidad
                                 structure_factor_switch=.true.,&            ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.true.               ! coeficiente de difusión vs densidad
+                                diffusion_coeff_switch=.true.,&             ! coeficiente de difusión vs densidad
+                                energie_switch=.true.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
     real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades
     integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas
@@ -25,7 +26,7 @@ program monte_carlo_dynamic_lennard_jones
                                              (1._dp/real(n_density-1,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
-    real(dp)                 :: U_adim                                      ! energía interna adimensional
+    real(dp)                 :: Uadim                                      ! energía interna adimensional
     ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
     real(dp)                 :: press,press_med,var_press,err_press         ! presión osmótica
     real(dp)                 :: s1_press,s2_press                           ! 1er y 2do momento
@@ -47,7 +48,15 @@ program monte_carlo_dynamic_lennard_jones
     real(dp)                 :: msd,msd_med,var_msd,err_msd
     real(dp)                 :: s1_msd,s2_msd
 
-    20 format(2(E12.4,x),x,E12.4);22 format(4(E12.4,x),x,E12.4)
+    ! Mensaje del progreso de la simulación
+    print *, 'STARTING SIMULATION'
+
+    ! comenzamos a medir tiempo de cpu
+    call cpu_time(time_start)
+
+    ! FORMATOS DE ESCRITURA A UTILIZAR
+    20 format(2(E12.4,x),x,E12.4);21 format(E12.4,x,E12.4);22 format(4(E12.4,x),x,E12.4)
+    ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
         open(10,file='../results/mcd_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
@@ -61,7 +70,6 @@ program monte_carlo_dynamic_lennard_jones
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
-    call cpu_time(time_start)
 
     ! allocación de memoria
     allocate(x_vector(n_p),y_vector(n_p),z_vector(n_p))
@@ -71,6 +79,7 @@ program monte_carlo_dynamic_lennard_jones
     allocate(x_vector_noPBC(n_p),y_vector_noPBC(n_p),z_vector_noPBC(n_p))
     allocate(counter_data(tau_max_corr))
     
+    ! barrido de densidades
     do j=1,n_density
         ! seteo de variables y parámetros
         x_vector(:)=0._dp;y_vector(:)=0._dp;z_vector(:)=0._dp
@@ -88,8 +97,18 @@ program monte_carlo_dynamic_lennard_jones
 
 
         ! computamos energía interna, presión en el tiempo inicial
-        U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+        Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
         press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
+
+        index=0
+        time=real(index,dp)*delta_time
+        if (energie_switch.eqv..true.) then
+            ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
+            open(13,file='../results/mcd_energies.dat',status='replace',action='write',iostat=istat)
+            if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
+            write(13,'(A12,x,A12)') 'time','Uadim'
+            write(13,21) time,Uadim
+        end if
 
         ! computamos desplazamiendo cuadrático medio
         if (diffusion_coeff_switch.eqv..true.) then
@@ -99,33 +118,36 @@ program monte_carlo_dynamic_lennard_jones
         end if
 
         ! RÉGIMEN TRANSITORIO
-        index=0
-        time=0._dp
         do i=1,MC_step_eq
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',MC_step_eq+MC_step_run,j
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%'
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                U_adim,T_adim_ref,r_cutoff,density)
-            U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                Uadim,T_adim_ref,r_cutoff,density)
+            ! actualizamos valor de la energía según nueva configuración    
+            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
 
-            time=real(i,dp)*delta_time
+            time=real(index,dp)*delta_time
+            if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
         end do
 
         ! RÉGIMEN ESTACIONARIO
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
         Sk_med=0._dp;s1_Sk=0._dp;s2_Sk=0._dp
 
-        time=0._dp
+
         do i=1,MC_step_run
             index=index+1
-            write(*,*) 'paso temporal =',index,' de',MC_step_eq+MC_step_run,j
+            ! Mensaje del progreso de la simulación
+            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%'
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                U_adim,T_adim_ref,r_cutoff,density)
-            U_adim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                Uadim,T_adim_ref,r_cutoff,density)
+            ! actualizamos valor de la energía según nueva configuración
+            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
 
             if (pressure_switch.eqv..true.) then
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
@@ -144,8 +166,11 @@ program monte_carlo_dynamic_lennard_jones
                     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
                     counter_data,counter)
             end if
-            time=real(i,dp)*delta_time
+            
+            time=real(index,dp)*delta_time
+            if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
         end do
+        if (energie_switch.eqv..true.) close(13)
 
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
@@ -195,10 +220,21 @@ program monte_carlo_dynamic_lennard_jones
     deallocate(x_vector_noPBC,y_vector_noPBC,z_vector_noPBC)
     deallocate(counter_data)
 
-    ! mostramos tiempo de cpu transcurrido
+
+    ! terminamos de medir tiempo de cpu
     call cpu_time(time_end)
-    write(*,*) 'elapsed time = ',time_end-time_start,'[s]'
-    
+
+    ! escribimos información de la simulación
+    open(50,file='../results/mcd_data_run.dat',status='replace',action='write',iostat=istat)
+        if (istat/=0) write(*,*) 'ERROR! istat(50file) = ',istat
+        write(50,'(7(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref',&
+                                     'n_p','MC_step_eq','MC_step_run','tau_max_corr'
+        write(50,'(4(E12.4,x),3(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,&
+                                              n_p,MC_step_eq,MC_step_run,tau_max_corr
+    close(50)
+
+    ! Mensaje del progreso de la simulación
+    print *, 'FINISHING SIMULATION'  
 end program monte_carlo_dynamic_lennard_jones
 
 ! subrutina para calcular el desplazamiento cuadrático medio
