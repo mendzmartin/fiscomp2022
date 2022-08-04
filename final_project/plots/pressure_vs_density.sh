@@ -181,8 +181,8 @@ rows=1;columns=1;set multiplot layout rows,columns
     '../results/bd_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'red' t 'T_{adim}=0.75(BD)' smooth mcsplines,\
     '../results/bd_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
     '../results/md_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'blue' t 'T_{adim}=0.75(MD)' smooth mcsplines,\
-    '../results/md_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'green' t 'T_{adim}=0.75(MC)' smooth mcsplines,\
-    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+    '../results/md_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+#    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'green' t 'T_{adim}=0.75(MC)' smooth mcsplines,\
+#    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
 unset multiplot
 #    EOF

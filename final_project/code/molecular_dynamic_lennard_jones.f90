@@ -16,18 +16,18 @@ program molecular_dynamic_lennard_jones
     real(dp)                 :: time                                        ! tiempo
     real(dp)                 :: vx_mc,vy_mc,vz_mc                           ! componentes de la velocidad del centro de masa
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
-    integer(sp), parameter   :: m=5_sp                                      ! numero de celdas por dimensión 
+    integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
     integer(sp), allocatable :: map(:),list(:),head(:)
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
-                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.false.,&              ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                       ! energía interna
+    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
+                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.true.,&              ! coeficiente de difusión vs densidad
+                                energie_switch=.false.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=2_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=10_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
                                              (1._dp/real(n_density-1,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
@@ -143,7 +143,7 @@ program molecular_dynamic_lennard_jones
         do i=1,time_eq
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',int(index/(time_eq+time_run)),'%'
+            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%'
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 
@@ -179,7 +179,7 @@ program molecular_dynamic_lennard_jones
         do i=1,time_run
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',int(index/(time_eq+time_run)),'%'
+            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%'
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 

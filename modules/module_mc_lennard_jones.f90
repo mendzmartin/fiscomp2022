@@ -88,6 +88,59 @@ module module_mc_lennard_jones
         end do
     end function u_lj_total
 
+    ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
+    function u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        integer(sp), intent(in) :: n_p,index
+        real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in) :: r_cutoff,density
+        real(dp)                :: u_lj_reduced,u_indiv,rij_pow02
+        integer(sp)             :: i,j
+        
+        u_lj_reduced=0._dp
+        j=index
+        do i=1,index-1
+            ! calculamos distancia relativa corregida según PBC
+            rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                x_vector(j),y_vector(j),z_vector(j),n_p,density)
+            if (rij_pow02<=r_cutoff*r_cutoff) then
+                u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+            else; u_indiv=0._dp; end if
+            u_lj_reduced=u_lj_reduced+u_indiv
+        end do
+
+        i=index
+        do j=index+1,n_p
+            ! calculamos distancia relativa corregida según PBC
+            rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                x_vector(j),y_vector(j),z_vector(j),n_p,density)
+            if (rij_pow02<=r_cutoff*r_cutoff) then
+                u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+            else; u_indiv=0._dp; end if
+            u_lj_reduced=u_lj_reduced+u_indiv
+        end do
+    end function u_lj_reduced
+
+    function delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_value,y_value,z_value,index)
+        integer(sp), intent(in) :: n_p,index
+        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in) :: x_value,y_value,z_value ! valores posición originales
+        real(dp),    intent(in) :: r_cutoff,density
+        real(dp)                :: delta_u_lj,u_indiv,rij_pow02
+        real(dp)                :: x_value_new,y_value_new,z_value_new
+
+        ! guardamos las posiciones desplazadas
+        x_value_new=x_vector(index);y_value_new=y_vector(index);z_value_new=z_vector(index)
+        delta_u_lj=0._dp
+        ! (valores evolucionados)
+        delta_u_lj=delta_u_lj-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        ! computamos energía con posiciones sin desplazar (valores originales)
+        x_vector(index)=x_value;y_vector(index)=y_value;z_vector(index)=z_value
+        delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        ! devolvemos los vectores posición cómo estaban
+        x_vector(index)=x_value_new;y_vector(index)=y_value_new;z_vector(index)=z_value_new
+    end function delta_u_lj
+    
+
     ! caclulo de la fuerza individual (par de partículas)
     function f_lj_individual(r12_pow02)
         real(dp), intent(in) :: r12_pow02   ! distancia adimensional entre pares de particulas
@@ -371,12 +424,14 @@ module module_mc_lennard_jones
         real(dp),    intent(in)    :: T_adim                                    ! Temperatura de equilibrio
         real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
         real(dp),    intent(in)    :: density
-        real(dp)    :: U_adim_new,U_adim_old,deltaU_adim    ! energías con/sin despl. y variación de energía
+        real(dp)    :: deltaU_adim                          ! variación de energía
         real(dp)    :: x_old,y_old,z_old                    ! posiciones sin deplazar
         real(dp)    :: x_old_noPBC,y_old_noPBC,z_old_noPBC
-        real(dp)    :: delta_x,delta_y,delta_z              ! desplazamientos
+        real(dp)    :: L,delta_x,delta_y,delta_z              ! desplazamientos
         real(dp)    :: nrand                                ! numero random
         integer(sp) :: seed,seed_val(8),MC_index,index
+
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
 
         call date_and_time(values=seed_val)
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
@@ -384,11 +439,10 @@ module module_mc_lennard_jones
         ! ###############################################
         ! ### ¿CÓMO DEFINO ESTOS VALORES?
         ! ###############################################
-        delta_x=0.05_dp;delta_y=0.05_dp;delta_z=0.05_dp
+        delta_x=L;delta_y=L;delta_z=L
 
         ! hago un paso de Monte Carlo (MC_step)
         do MC_index=1,n_p
-            U_adim_old=U_adim ! energía sin desplazar
             ! random integer from 1 to n_p (elijo particulas al azar y desplazo)
             nrand=real(grnd(),dp);index=1_sp+floor(n_p*nrand,sp)
             ! guardamos posicion en tiempo actual
@@ -404,21 +458,18 @@ module module_mc_lennard_jones
             z_vector_noPBC(index)=z_old_noPBC+(nrand-0.5_dp)*delta_z
             ! corrección de posiciones según PBC
             call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
-            ! calculo energía desplazada
-            U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
             ! variación de energía interna
-            deltaU_adim=(U_adim_new-U_adim_old)
-            cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim_new;exit cond1
+            deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+            cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                     else
                         if (T_adim==0._dp) exit cond1
                         nrand=real(grnd(),dp)
                         if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                             ! método de metrópolis
-                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim_new
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim+deltaU_adim
                             exit cond1
                         else
-                            if (nrand==0._dp) then;U_adim=U_adim_new;exit cond1;end if
-                            U_adim=U_adim_old
+                            if (nrand==0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1;end if
                             x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
                             y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
                             z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC

@@ -121,13 +121,11 @@ program monte_carlo_dynamic_lennard_jones
         do i=1,MC_step_eq
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%',j
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 Uadim,T_adim_ref,r_cutoff,density)
-            ! actualizamos valor de la energía según nueva configuración    
-            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
 
             time=real(index,dp)*delta_time
             if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
@@ -141,13 +139,11 @@ program monte_carlo_dynamic_lennard_jones
         do i=1,MC_step_run
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%',j
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 Uadim,T_adim_ref,r_cutoff,density)
-            ! actualizamos valor de la energía según nueva configuración
-            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
 
             if (pressure_switch.eqv..true.) then
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)

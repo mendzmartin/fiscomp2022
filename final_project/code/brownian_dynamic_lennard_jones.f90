@@ -6,7 +6,7 @@ program brownian_dynamic_lennard_jones
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=30000_sp,&                     ! pasos de equilibración
-                                time_run=5000_sp,&                    ! pasos de evolucion en el estado estacionario
+                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=0.75_dp                     ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
@@ -19,13 +19,13 @@ program brownian_dynamic_lennard_jones
     integer(sp)              :: i,j,k,index,istat                      ! loop index
     real(dp)                 :: time
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
-    integer(sp), parameter   :: m=5_sp                                      ! numero de celdas por dimensión 
+    integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
     integer(sp), allocatable :: map(:),list(:),head(:)
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=2_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
                                              (1._dp/real(n_density-1,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
@@ -33,7 +33,7 @@ program brownian_dynamic_lennard_jones
     logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
                                 structure_factor_switch=.true.,&           ! factor de estructura vs densidad
                                 diffusion_coeff_switch=.true.,&            ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                      ! energía interna
+                                energie_switch=.false.                      ! energía interna
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
     real(dp)                 :: Uadim
     ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
@@ -138,7 +138,7 @@ program brownian_dynamic_lennard_jones
             index=index+1
 
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',anint((real(index,dp)/real(time_eq+time_run,dp))*100._dp),'%'
+            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%'
 
             ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
             ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
@@ -173,7 +173,7 @@ program brownian_dynamic_lennard_jones
             index=index+1
 
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',anint((real(index,dp)/real(time_eq+time_run,dp))*100._dp),'%'
+            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%'
 
             ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
             ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
