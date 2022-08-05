@@ -4,10 +4,10 @@ program monte_carlo_dynamic_lennard_jones
     implicit none
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
-    real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
+    real(dp),    parameter   :: delta_time=0.05_dp
     integer(sp), parameter   :: MC_step_eq=1000_sp!1_sp!                         ! monte carlo step para equilibración (transitorio)
     integer(sp), parameter   :: MC_step_run=1_sp!1000_sp!0_sp!                         ! monete carlo step para corrida (estacionario)
-    real(dp),    parameter   :: T_adim_ref=0.75_dp!0.75_dp                          ! temperatura de referencia adimensional
+    real(dp),    parameter   :: T_adim_ref=1._dp!0.75_dp!0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp)                 :: delta_x,delta_y,delta_z
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
@@ -63,7 +63,7 @@ program monte_carlo_dynamic_lennard_jones
     call cpu_time(time_start)
 
     ! FORMATOS DE ESCRITURA A UTILIZAR
-    20 format(2(E12.4,x),x,E12.4);21 format(E12.4,x,E12.4);22 format(4(E12.4,x),x,E12.4)
+    20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
         open(10,file='../results/mcd_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
@@ -105,17 +105,16 @@ program monte_carlo_dynamic_lennard_jones
 
         ! computamos energía interna, presión en el tiempo inicial
         Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-        Uadim=Uadim*(0.5_dp/real(n_p,dp))
+        Uadim=Uadim*(1._dp/real(n_p,dp))
         press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
 
-        index=0
-        time=real(index,dp)*delta_time
+        index=0_sp
         if (energie_switch.eqv..true.) then
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
             open(13,file='../results/mcd_energies.dat',status='replace',action='write',iostat=istat)
             if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
-            write(13,'(A12,x,A12)') 'time','Uadim'
-            write(13,21) time,Uadim
+            write(13,'(A12,x,A12)') 'MC_step','Uadim'
+            write(13,21) index,Uadim
         end if
 
         ! computamos desplazamiendo cuadrático medio
@@ -127,20 +126,17 @@ program monte_carlo_dynamic_lennard_jones
 
         ! Termalizados hasta una temperatura anterior a la buscada
         do i=1,n_Temp
-            !print *, '#Temp=',i
             Tadim=T_adim_min+step_Temp*real(i,dp)
             ! calcular desplazamiento optimizados para acceptancia del 50%
-            delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
             call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
                     Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
-            Uadim=Uadim*(0.5_dp/real(n_p,dp))
+            Uadim=Uadim*(1._dp/real(n_p,dp))
         end do
 
         ! calcular desplazamiento optimizados para acceptancia del 50%
-        delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
         call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
                 T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
 
@@ -153,10 +149,9 @@ program monte_carlo_dynamic_lennard_jones
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
-            Uadim=Uadim*(0.5_dp/real(n_p,dp))
+                Uadim=Uadim*(1._dp/real(n_p,dp))
 
-            time=real(index,dp)*delta_time
-            if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
+            if (energie_switch.eqv..true.) then; write(13,21) index,Uadim; end if
         end do
 
         ! RÉGIMEN ESTACIONARIO
@@ -172,10 +167,7 @@ program monte_carlo_dynamic_lennard_jones
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                 Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
-            if (i==MC_step_run) then;print *, 'Uadim1=',Uadim;end if
-            Uadim=Uadim*(0.5_dp/real(n_p,dp))
-            if (i==MC_step_run) then;print *, 'Uadim2=',Uadim;end if
-
+            Uadim=Uadim*(1._dp/real(n_p,dp))
 
             if (pressure_switch.eqv..true.) then
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
@@ -194,9 +186,8 @@ program monte_carlo_dynamic_lennard_jones
                     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
                     counter_data,counter)
             end if
-            
-            time=real(index,dp)*delta_time
-            if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
+
+            if (energie_switch.eqv..true.) then; write(13,21) index,Uadim; end if
         end do
         if (energie_switch.eqv..true.) close(13)
 

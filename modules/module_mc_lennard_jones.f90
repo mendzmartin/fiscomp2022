@@ -86,7 +86,7 @@ module module_mc_lennard_jones
                 u_lj_total=u_lj_total+u_indiv
             end do
         end do
-        !u_lj_total=u_lj_total*(1._dp/real(n_p,dp))
+        u_lj_total=2._dp*u_lj_total
     end function u_lj_total
 
     ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
@@ -119,6 +119,8 @@ module module_mc_lennard_jones
             else; u_indiv=0._dp; end if
             u_lj_reduced=u_lj_reduced+u_indiv
         end do
+
+        u_lj_reduced=2._dp*u_lj_reduced
     end function u_lj_reduced
 
     function delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_value,y_value,z_value,index)
@@ -135,10 +137,10 @@ module module_mc_lennard_jones
         ! computamos energía con posiciones sin desplazar (valores originales)
         x_vector(index)=x_value;y_vector(index)=y_value;z_vector(index)=z_value
         delta_u_lj=-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
-        ! computamos energía con posiciones desplazadas (valores originales)
+        ! computamos energía con posiciones desplazadas
         x_vector(index)=x_value_new;y_vector(index)=y_value_new;z_vector(index)=z_value_new
         delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
-        delta_u_lj=delta_u_lj*(0.5_dp/real(n_p,dp))
+        delta_u_lj=delta_u_lj*(1._dp/real(n_p,dp))
     end function delta_u_lj
 
     ! caclulo de la fuerza individual (par de partículas)
@@ -435,6 +437,8 @@ module module_mc_lennard_jones
         call date_and_time(values=seed_val)
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
 
+        ! seteamos los desplazamientos a valores iniciales
+        delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
         end_loop=.false.
         do while (end_loop.eqv..false.)
             counter=0_sp
@@ -519,6 +523,7 @@ module module_mc_lennard_jones
             call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
             ! variación de energía interna
             deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+            ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
             !U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
             !deltaU_adim=U_adim_new-U_adim_old
             !write(*,*) MC_index,deltaU_adim,deltaU_adim_good
@@ -536,6 +541,7 @@ module module_mc_lennard_jones
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
                     end if
             end if cond1
+
             ! x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
             ! y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
             ! z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
