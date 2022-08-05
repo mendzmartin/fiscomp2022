@@ -5,25 +5,33 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
-    integer(sp), parameter   :: MC_step_eq=3000_sp                          ! monte carlo step para equilibración (transitorio)
-    integer(sp), parameter   :: MC_step_run=2000_sp                         ! monete carlo step para corrida (estacionario)
-    real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
+    integer(sp), parameter   :: MC_step_eq=1000_sp!1_sp!                         ! monte carlo step para equilibración (transitorio)
+    integer(sp), parameter   :: MC_step_run=1_sp!1000_sp!0_sp!                         ! monete carlo step para corrida (estacionario)
+    real(dp),    parameter   :: T_adim_ref=0.75_dp!0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
+    real(dp)                 :: delta_x,delta_y,delta_z
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
     integer(sp)              :: i,j,k,index,istat                           ! loop index
     real(dp)                 :: time                                        ! tiempo de evolución
+    ! VARIABLES PARA REALIZAR TERMALIZACIÓN GRADUAL (EVITANDO QUENCHIN)
+    real(dp),   parameter    :: T_adim_min=T_adim_ref*0.1_dp,&              ! Temperatura mínima
+                                T_adim_max=T_adim_ref*0.95_dp               ! Temperatura máxima
+    integer(sp), parameter   :: n_Temp=10_sp                                ! cantidad de temperaturas simuladas
+    real(dp),    parameter   :: step_Temp=abs(T_adim_max-T_adim_min)*&      ! paso de variación de temperaturas
+                                             (1._dp/real(n_Temp,dp))
+    real(dp)                 :: Tadim
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.true.,&                    ! presión vs densidad
-                                structure_factor_switch=.true.,&            ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.true.,&             ! coeficiente de difusión vs densidad
+    logical                  :: pressure_switch=.false.,&                    ! presión vs densidad
+                                structure_factor_switch=.false.,&            ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.false.,&             ! coeficiente de difusión vs densidad
                                 energie_switch=.true.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades
-    integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades
+    integer(sp), parameter   :: n_density=1_sp                             ! cantidad de densidades simuladas
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
-                                             (1._dp/real(n_density-1,dp))
+                                             (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
     real(dp)                 :: Uadim                                      ! energía interna adimensional
@@ -89,15 +97,15 @@ program monte_carlo_dynamic_lennard_jones
         counter=0;counter_data(:)=0_sp
 
         ! definimos densidad en el rango [density_min;density_max]
-        density=density_min+step_density*real(j-1,dp)
+        density=density_min+step_density*real(j,dp)
 
         ! generamos configuración inicial (FCC structure)
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
         x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
 
-
         ! computamos energía interna, presión en el tiempo inicial
         Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+        Uadim=Uadim*(0.5_dp/real(n_p,dp))
         press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
 
         index=0
@@ -117,6 +125,25 @@ program monte_carlo_dynamic_lennard_jones
                 counter_data,counter)
         end if
 
+        ! Termalizados hasta una temperatura anterior a la buscada
+        do i=1,n_Temp
+            !print *, '#Temp=',i
+            Tadim=T_adim_min+step_Temp*real(i,dp)
+            ! calcular desplazamiento optimizados para acceptancia del 50%
+            delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
+            call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                    Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+            call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+            Uadim=Uadim*(0.5_dp/real(n_p,dp))
+        end do
+
+        ! calcular desplazamiento optimizados para acceptancia del 50%
+        delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
+        call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+
         ! RÉGIMEN TRANSITORIO
         do i=1,MC_step_eq
             index=index+1
@@ -125,7 +152,8 @@ program monte_carlo_dynamic_lennard_jones
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                Uadim,T_adim_ref,r_cutoff,density)
+                Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+            Uadim=Uadim*(0.5_dp/real(n_p,dp))
 
             time=real(index,dp)*delta_time
             if (energie_switch.eqv..true.) then; write(13,21) time,Uadim; end if
@@ -143,7 +171,11 @@ program monte_carlo_dynamic_lennard_jones
 
             call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                 x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                Uadim,T_adim_ref,r_cutoff,density)
+                Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+            if (i==MC_step_run) then;print *, 'Uadim1=',Uadim;end if
+            Uadim=Uadim*(0.5_dp/real(n_p,dp))
+            if (i==MC_step_run) then;print *, 'Uadim2=',Uadim;end if
+
 
             if (pressure_switch.eqv..true.) then
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)

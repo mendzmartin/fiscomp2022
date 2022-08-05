@@ -86,6 +86,7 @@ module module_mc_lennard_jones
                 u_lj_total=u_lj_total+u_indiv
             end do
         end do
+        !u_lj_total=u_lj_total*(1._dp/real(n_p,dp))
     end function u_lj_total
 
     ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
@@ -94,7 +95,7 @@ module module_mc_lennard_jones
         real(dp),    intent(in) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
         real(dp),    intent(in) :: r_cutoff,density
         real(dp)                :: u_lj_reduced,u_indiv,rij_pow02
-        integer(sp)             :: i,j
+        integer(sp)             :: i,j ! indices para etiquetar par de partículas
         
         u_lj_reduced=0._dp
         j=index
@@ -121,25 +122,24 @@ module module_mc_lennard_jones
     end function u_lj_reduced
 
     function delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_value,y_value,z_value,index)
-        integer(sp), intent(in) :: n_p,index
+        integer(sp), intent(in)    :: n_p,index ! numero de partículas e indície de la partícula desplazada
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
-        real(dp),    intent(in) :: x_value,y_value,z_value ! valores posición originales
-        real(dp),    intent(in) :: r_cutoff,density
-        real(dp)                :: delta_u_lj,u_indiv,rij_pow02
-        real(dp)                :: x_value_new,y_value_new,z_value_new
+        real(dp),    intent(in)    :: x_value,y_value,z_value ! valores posición originales
+        real(dp),    intent(in)    :: r_cutoff,density
+        real(dp)                   :: delta_u_lj
+        real(dp)                   :: x_value_new,y_value_new,z_value_new
 
         ! guardamos las posiciones desplazadas
         x_value_new=x_vector(index);y_value_new=y_vector(index);z_value_new=z_vector(index)
-        delta_u_lj=0._dp
-        ! (valores evolucionados)
-        delta_u_lj=delta_u_lj-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+
         ! computamos energía con posiciones sin desplazar (valores originales)
         x_vector(index)=x_value;y_vector(index)=y_value;z_vector(index)=z_value
-        delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
-        ! devolvemos los vectores posición cómo estaban
+        delta_u_lj=-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        ! computamos energía con posiciones desplazadas (valores originales)
         x_vector(index)=x_value_new;y_vector(index)=y_value_new;z_vector(index)=z_value_new
+        delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        delta_u_lj=delta_u_lj*(0.5_dp/real(n_p,dp))
     end function delta_u_lj
-    
 
     ! caclulo de la fuerza individual (par de partículas)
     function f_lj_individual(r12_pow02)
@@ -412,10 +412,72 @@ module module_mc_lennard_jones
             end select
     end subroutine initial_lattice_configuration
 
+    ! SUBRUTINA PARA AJUSTE DE DESPLAZAMIENTO MÁXIMO (optimizado)
+    subroutine max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+        T_adim,r_cutoff,density,delta_x,delta_y,delta_z)
+        integer(sp), intent(in)    :: n_p                                    ! cantidad de partículas
+        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! vectores posicion
+        real(dp),    intent(in)    :: T_adim                                 ! Temperatura de equilibrio
+        real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
+        real(dp),    intent(in)    :: density
+        real(dp),    intent(inout) :: delta_x,delta_y,delta_z
+        real(dp)    :: deltaU_adim,U_adim_old ! variación de energía
+        real(dp)    :: x_old,y_old,z_old ! posiciones sin deplazar con PBC
+        real(dp)    :: L                 ! desplazamientos
+        real(dp)    :: nrand             ! numero random
+        integer(sp) :: seed,seed_val(8),MC_index,index
+        integer(sp) :: counter           ! contador de aceptaciones
+        real(dp)    :: accept_prob       ! acceptance_probability
+        logical     :: end_loop           
+        
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+
+        call date_and_time(values=seed_val)
+        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
+
+        end_loop=.false.
+        do while (end_loop.eqv..false.)
+            counter=0_sp
+            ! hago un paso de Monte Carlo (MC_step)
+            do MC_index=1,n_p
+                ! random integer from 1 to n_p (elijo particulas al azar y desplazo)
+                nrand=real(grnd(),dp);index=1_sp+floor(n_p*nrand,sp)
+                ! guardamos posicion en tiempo actual
+                x_old=x_vector(index);y_old=y_vector(index);z_old=z_vector(index)
+                ! evolucionamos posiciones con y sin PBC
+                nrand=real(grnd(),dp);x_vector(index)=x_old+(nrand-0.5_dp)*delta_x
+                nrand=real(grnd(),dp);y_vector(index)=y_old+(nrand-0.5_dp)*delta_y
+                nrand=real(grnd(),dp);z_vector(index)=z_old+(nrand-0.5_dp)*delta_z
+                ! corrección de posiciones según PBC
+                call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
+                ! variación de energía interna
+                deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+                cond1:  if (deltaU_adim<0._dp) then;counter=counter+1_sp;exit cond1
+                    else
+                        if (T_adim==0._dp) exit cond1
+                        nrand=real(grnd(),dp)
+                        if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
+                            ! método de metrópolis
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>nrand) then;counter=counter+1_sp;end if
+                            exit cond1
+                        end if
+                end if cond1
+                x_vector(index)=x_old;y_vector(index)=y_old;z_vector(index)=z_old
+            end do
+            ! evaluamos según probabilidad de aceptación
+            accept_prob=real(counter,dp)/real(n_p,dp)
+            if(accept_prob>0.52_dp) then
+                delta_x=delta_x*1.05_dp;delta_y=delta_y*1.05_dp;delta_z=delta_z*1.05_dp
+            else if(accept_prob<0.48_dp) then
+                delta_x=delta_x*0.95_dp;delta_y=delta_y*0.95_dp;delta_z=delta_z*0.95_dp
+            else;end_loop=.true.;end if
+        end do
+    end subroutine max_displacement_adjusting
+
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-        U_adim,T_adim,r_cutoff,density)
+        U_adim,T_adim,r_cutoff,density,delta_x,delta_y,delta_z)
         integer(sp), intent(in)    :: n_p                                       ! cantidad de partículas
         real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! vectores posicion
         real(dp),    intent(inout) :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
@@ -424,22 +486,19 @@ module module_mc_lennard_jones
         real(dp),    intent(in)    :: T_adim                                    ! Temperatura de equilibrio
         real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
         real(dp),    intent(in)    :: density
+        real(dp),    intent(in)    :: delta_x,delta_y,delta_z                   ! desplazamientos optimizados
         real(dp)    :: deltaU_adim                          ! variación de energía
         real(dp)    :: x_old,y_old,z_old                    ! posiciones sin deplazar
         real(dp)    :: x_old_noPBC,y_old_noPBC,z_old_noPBC
-        real(dp)    :: L,delta_x,delta_y,delta_z              ! desplazamientos
+        real(dp)    :: L
         real(dp)    :: nrand                                ! numero random
         integer(sp) :: seed,seed_val(8),MC_index,index
+        real(dp)    :: U_adim_old,U_adim_new,deltaU_adim_good
 
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
 
         call date_and_time(values=seed_val)
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
-
-        ! ###############################################
-        ! ### ¿CÓMO DEFINO ESTOS VALORES?
-        ! ###############################################
-        delta_x=L;delta_y=L;delta_z=L
 
         ! hago un paso de Monte Carlo (MC_step)
         do MC_index=1,n_p
@@ -460,21 +519,27 @@ module module_mc_lennard_jones
             call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
             ! variación de energía interna
             deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
-            cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
+            !U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            !deltaU_adim=U_adim_new-U_adim_old
+            !write(*,*) MC_index,deltaU_adim,deltaU_adim_good
+            cond1:  if (deltaU_adim<0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
+                else
+                    if (T_adim==0._dp) exit cond1
+                    nrand=real(grnd(),dp)
+                    if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
+                        ! método de metrópolis
+                        if (exp(-deltaU_adim*(1._dp/T_adim))>nrand) U_adim=U_adim+deltaU_adim
+                        exit cond1
                     else
-                        if (T_adim==0._dp) exit cond1
-                        nrand=real(grnd(),dp)
-                        if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
-                            ! método de metrópolis
-                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim+deltaU_adim
-                            exit cond1
-                        else
-                            if (nrand==0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1;end if
-                            x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
-                            y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
-                            z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
-                        end if
-                    end if cond1
+                        x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                        y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                        z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                    end if
+            end if cond1
+            ! x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+            ! y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+            ! z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+            ! U_adim=U_adim_old
         end do
     end subroutine evolution_monte_carlo
 
