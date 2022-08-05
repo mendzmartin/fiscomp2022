@@ -1,2 +1,2 @@
     cpu_time      delta_t     r_cutoff        T_ref          n_p   MC_step_eq  MC_step_run  tau_max_corr
-  0.2790E+02   0.5000E-01   0.2500E+01   0.1000E+01          256         1000            1          100
+  0.2706E+02   0.5000E-01   0.2500E+01   0.1000E+01          256         1000            1          100

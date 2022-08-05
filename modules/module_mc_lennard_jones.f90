@@ -119,7 +119,7 @@ module module_mc_lennard_jones
             else; u_indiv=0._dp; end if
             u_lj_reduced=u_lj_reduced+u_indiv
         end do
-
+        ! multiplico por dos para tener en cuenta la zona triangular inferior
         u_lj_reduced=2._dp*u_lj_reduced
     end function u_lj_reduced
 
@@ -140,7 +140,7 @@ module module_mc_lennard_jones
         ! computamos energía con posiciones desplazadas
         x_vector(index)=x_value_new;y_vector(index)=y_value_new;z_vector(index)=z_value_new
         delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
-        delta_u_lj=delta_u_lj*(1._dp/real(n_p,dp))
+        !delta_u_lj=delta_u_lj*(1._dp/real(n_p,dp))
     end function delta_u_lj
 
     ! caclulo de la fuerza individual (par de partículas)
@@ -456,7 +456,7 @@ module module_mc_lennard_jones
                 call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
                 ! variación de energía interna
                 deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
-                cond1:  if (deltaU_adim<0._dp) then;counter=counter+1_sp;exit cond1
+                cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
                     else
                         if (T_adim==0._dp) exit cond1
                         nrand=real(grnd(),dp)
@@ -470,11 +470,14 @@ module module_mc_lennard_jones
             end do
             ! evaluamos según probabilidad de aceptación
             accept_prob=real(counter,dp)/real(n_p,dp)
-            if(accept_prob>0.52_dp) then
-                delta_x=delta_x*1.05_dp;delta_y=delta_y*1.05_dp;delta_z=delta_z*1.05_dp
-            else if(accept_prob<0.48_dp) then
-                delta_x=delta_x*0.95_dp;delta_y=delta_y*0.95_dp;delta_z=delta_z*0.95_dp
-            else;end_loop=.true.;end if
+            cond2: if(0.28<=accept_prob.or.accept_prob>=0.32) then; end_loop=.true.;exit cond2
+            else
+                if(accept_prob>0.32_dp) then
+                    delta_x=delta_x*1.05_dp;delta_y=delta_y*1.05_dp;delta_z=delta_z*1.05_dp
+                    exit cond2
+                else;delta_x=delta_x*0.95_dp;delta_y=delta_y*0.95_dp;delta_z=delta_z*0.95_dp
+                end if
+            end if cond2
         end do
     end subroutine max_displacement_adjusting
 
@@ -527,7 +530,7 @@ module module_mc_lennard_jones
             !U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
             !deltaU_adim=U_adim_new-U_adim_old
             !write(*,*) MC_index,deltaU_adim,deltaU_adim_good
-            cond1:  if (deltaU_adim<0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
+            cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                 else
                     if (T_adim==0._dp) exit cond1
                     nrand=real(grnd(),dp)
@@ -541,11 +544,6 @@ module module_mc_lennard_jones
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
                     end if
             end if cond1
-
-            ! x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
-            ! y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
-            ! z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
-            ! U_adim=U_adim_old
         end do
     end subroutine evolution_monte_carlo
 
