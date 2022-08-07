@@ -5,8 +5,8 @@ program molecular_dynamic_lennard_jones
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
-    integer(sp), parameter   :: time_eq=2000_sp,&                           ! pasos de equilibración
-                                time_run=1000_sp                            ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: time_eq=0_sp,&                           ! pasos de equilibración
+                                time_run=3000_sp                            ! pasos de evolucion en el estado estacionario
     real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
@@ -21,18 +21,19 @@ program molecular_dynamic_lennard_jones
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
-                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.true.,&              ! coeficiente de difusión vs densidad
-                                energie_switch=.false.                       ! energía interna
+    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
+                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.false.,&              ! coeficiente de difusión vs densidad
+                                energie_switch=.true.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=10_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=1_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
-                                             (1._dp/real(n_density-1,dp))
+                                             (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
-    real(dp)                 :: Uadim
+    real(dp)                 :: Uadim,Uadim_med,var_Uadim,err_Uadim
+    real(dp)                 :: s1_Uadim,s2_Uadim
     ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
     real(dp)                 :: press,press_med,var_press,err_press
     real(dp)                 :: s1_press,s2_press
@@ -61,7 +62,7 @@ program molecular_dynamic_lennard_jones
     call cpu_time(time_start)
 
     ! FORMATOS DE ESCRITURA A UTILIZAR
-    20 format(2(E12.4,x),x,E12.4);21 format(E12.4,x,E12.4);22 format(4(E12.4,x),x,E12.4)
+    20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
         open(10,file='../results/md_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
@@ -103,7 +104,7 @@ program molecular_dynamic_lennard_jones
         counter=0_sp;counter_data(:)=0_sp
 
         ! definimos densidad en el rango [density_min;density_max]
-        density=density_min+step_density*real(j-1,dp)
+        density=density_min+step_density*real(j,dp)
 
         ! generamos configuración inicial (FCC structure)
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
@@ -128,7 +129,6 @@ program molecular_dynamic_lennard_jones
                 counter_data,counter)
         end if
 
-        ! RÉGIMEN TRANSITORIO
         index=0
         time=real(index,dp)*delta_time
         ! computamos energía interna en el paso inicial
@@ -136,14 +136,22 @@ program molecular_dynamic_lennard_jones
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
             open(13,file='../results/md_energies.dat',status='replace',action='write',iostat=istat)
             if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
-            write(13,'(A12,x,A12)') 'time','Uadim'
-            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            write(13,21) time,Uadim
+            write(13,'(A12,x,A12)') 'MD_step','Uadim'
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
+            ! Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+
+            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
+            Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+
+            write(13,21) index,Uadim
         end if
+
+        ! RÉGIMEN TRANSITORIO
         do i=1,time_eq
             index=index+1
             ! Mensaje del progreso de la simulación
-            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%',j
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 
@@ -166,20 +174,17 @@ program molecular_dynamic_lennard_jones
             vz_mc=sum(vz_vector(:))*(1._dp/real(n_p,dp));vz_vector(:)=(vz_vector(:)-vz_mc)
 
             time=real(index,dp)*delta_time
-            if (energie_switch.eqv..true.) then
-                Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                write(13,21) time,Uadim
-            end if
         end do
 
         ! RÉGIMEN ESTACIONARIO
+        Uadim_med=0._dp;s1_Uadim=0._dp;s2_Uadim=0._dp
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
         Sk_med=0._dp;s1_Sk=0._dp;s2_Sk=0._dp
 
         do i=1,time_run
             index=index+1
             ! Mensaje del progreso de la simulación
-            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*j,dp))*100._dp,'%',j
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 
@@ -217,11 +222,24 @@ program molecular_dynamic_lennard_jones
             end if
             time=real(index,dp)*delta_time
             if (energie_switch.eqv..true.) then
-                Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                write(13,21) time,Uadim
+                ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
+                ! Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+
+                ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
+                Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+
+                s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
+                Uadim_med=s1_Uadim*(1._dp/real(i,dp))
+                var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
+                write(13,21) index,Uadim_med
             end if
         end do
-        if (energie_switch.eqv..true.) close(13)
+
+        if (energie_switch.eqv..true.) then
+            ! computamos errores en el último paso
+            err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
+            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+        end if
 
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
@@ -262,6 +280,7 @@ program molecular_dynamic_lennard_jones
     if (pressure_switch.eqv..true.) close(10)
     if (structure_factor_switch.eqv..true.) close(11)
     if (diffusion_coeff_switch.eqv..true.) close(12)
+    if (energie_switch.eqv..true.) close(13)
 
     ! liberamos memoria
     deallocate(x_vector,y_vector,z_vector)

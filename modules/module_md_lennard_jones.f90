@@ -91,6 +91,54 @@ module module_md_lennard_jones
         end do
     end function u_lj_total
 
+    ! FUNCIÓN PARA CALCULAR ENERGÍA TOTAL USANDO LINKED LIST
+    function u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in)    :: r_cutoff,density
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)                   :: u_lj_total_linkedlist,u_indiv,rij_pow02
+        integer(sp)                :: i,j
+        integer(sp)                :: icell,jcell,jcell0,nabor
+        u_lj_total_linkedlist=0._dp
+        do icell=1,m*m*m ! celdas
+            i=head(icell)
+            do while (i/=0)
+                j=list(i)
+                do while (j/=0) ! en la celda
+                    ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    else; u_indiv=0._dp; end if
+                    u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                end do
+                jcell0=13*(icell-1)
+                do nabor=1,13 ! celdas vecinas
+                    jcell=map(jcell0+nabor)
+                    j=head(jcell)
+                    do while (j/=0) ! en la celda
+                        ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    else; u_indiv=0._dp; end if
+                    u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                    end do
+                end do
+                i=list(i)
+            end do
+        end do ! celdas   
+    end function u_lj_total_linkedlist
+
     function kinetic_ergy_total(n_p,vx_vector,vy_vector,vz_vector,mass)
         integer(sp), intent(in) :: n_p
         real(dp),    intent(in) :: vx_vector(n_p),vy_vector(n_p),vz_vector(n_p)

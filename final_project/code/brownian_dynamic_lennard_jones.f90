@@ -5,8 +5,8 @@ program brownian_dynamic_lennard_jones
     ! VARIABLES y PARAMETROS GENERALES
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
-    integer(sp), parameter   :: time_eq=30000_sp,&                     ! pasos de equilibración
-                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: time_eq=0_sp,&                     ! pasos de equilibración
+                                time_run=7000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=0.75_dp                     ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
@@ -17,25 +17,27 @@ program brownian_dynamic_lennard_jones
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
     integer(sp)              :: i,j,k,index,istat                      ! loop index
-    real(dp)                 :: time
+    real(dp)                 :: time,L
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
-    integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
+    integer(sp), parameter   :: m=3_sp                                  ! numero de celdas por dimensión 
     integer(sp), allocatable :: map(:),list(:),head(:)
+    integer(sp), parameter   :: linkedlist_type=1_sp                    ! simular con(1)/sin(0) linkedlist
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.1_dp,density_max=1.2_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=1_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
-                                             (1._dp/real(n_density-1,dp))
+                                             (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
-                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.true.,&            ! coeficiente de difusión vs densidad
-                                energie_switch=.false.                      ! energía interna
+    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
+                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.false.,&            ! coeficiente de difusión vs densidad
+                                energie_switch=.true.                      ! energía interna
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
-    real(dp)                 :: Uadim
+    real(dp)                 :: Uadim,Uadim_med,var_Uadim,err_Uadim
+    real(dp)                 :: s1_Uadim,s2_Uadim
     ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
     real(dp)                 :: press,press_med,var_press,err_press
     real(dp)                 :: s1_press,s2_press
@@ -63,7 +65,7 @@ program brownian_dynamic_lennard_jones
     call cpu_time(time_start)
 
     ! FORMATOS DE ESCRITURA A UTILIZAR
-    20 format(2(E12.4,x),x,E12.4);21 format(E12.4,x,E12.4);22 format(4(E12.4,x),x,E12.4)
+    20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
         open(10,file='../results/bd_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
@@ -95,25 +97,33 @@ program brownian_dynamic_lennard_jones
 
         force_x(:)=0._dp;force_y(:)=0._dp;force_z(:)=0._dp
         map(:)=0_sp;list(:)=0_sp;head(:)=0_sp
-        call maps(m,map) ! inicializo map (para usar linked list)
 
         sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
         x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
         counter=0_sp;counter_data(:)=0_sp
 
         ! definimos densidad en el rango [density_min;density_max]
-        density=density_min+step_density*real(k-1,dp)
+        density=density_min+step_density*real(k,dp)
 
         ! generamos configuración inicial (FCC structure)
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
         x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
-        ! computamos fuerzas en el tiempo inicial
 
-        ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-        ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-        ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-        call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-            force_x,force_y,force_z,m,map,list,head)
+        select case (linkedlist_type)
+            case(1) ! simulation whit linked-list
+                ! INICIALIZAMOS LISTA DE VECINOS
+                L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+                ! inicializo map (para usar linked list)
+                call maps(m,map)
+                ! ACTUALIZAMOS LISTA DE VECINOS
+                call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                ! computamos fuerzas en el tiempo inicial
+                call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+                    force_x,force_y,force_z,m,map,list,head)
+            case(0) ! simulation whitout linked-list
+                ! computamos fuerzas en el tiempo inicial
+                call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+        end select
 
         ! computamos desplazamiendo cuadrático medio
         if (diffusion_coeff_switch.eqv..true.) then
@@ -122,76 +132,77 @@ program brownian_dynamic_lennard_jones
                 counter_data,counter)
         end if
 
-        ! RÉGIMEN TRANSITORIO
         index=0
-        time=real(index,dp)*delta_time
+        time=real(index,dp)*delta_time ! tiempo real
         ! computamos energía interna en el paso inicial
         if (energie_switch.eqv..true.) then
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
             open(13,file='../results/bd_energies.dat',status='replace',action='write',iostat=istat)
             if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
-            write(13,'(A12,x,A12)') 'time','Uadim'
-            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            write(13,21) time,Uadim
+            write(13,'(A12,x,A12)') 'MD_step','Uadim'
+
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        r_cutoff,density,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            end select
+            
+            write(13,21) index,Uadim
         end if
+
+        ! RÉGIMEN TRANSITORIO
         do i=1,time_eq
             index=index+1
 
             ! Mensaje del progreso de la simulación
-            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%',k
 
-            ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
-            ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
-            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-            !     dinamic_viscosity,diffusion_coeff)
-            ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-            
-           ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-            call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                dinamic_viscosity,diffusion_coeff,m,map,list,head)
-            call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-                force_x,force_y,force_z,m,map,list,head)
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        dinamic_viscosity,diffusion_coeff,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        dinamic_viscosity,diffusion_coeff)
+            end select
 
-            time=real(index,dp)*delta_time
-            if (energie_switch.eqv..true.) then
-                Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                write(13,21) time,Uadim
-            end if
+            time=real(index,dp)*delta_time ! tiempo real
         end do
 
         ! RÉGIMEN ESTACIONARIO
+        Uadim_med=0._dp;s1_Uadim=0._dp;s2_Uadim=0._dp
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
         Sk_med=0._dp;s1_Sk=0._dp;s2_Sk=0._dp
 
-        ! seteamos indice
-        i=0_sp
-
+        i=0_sp ! seteamos indice del ensamble (estadística)
         do j=1,time_run
             index=index+1
 
             ! Mensaje del progreso de la simulación
-            write(*,'(A12,x,E12.2,x,A2)') 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%'
+            print *, 'RUNNING...',(real(index,dp)/real((time_eq+time_run)*k,dp))*100._dp,'%',k
 
-            ! DESCOMENTAR PARA CORRER SIN USAR LINKED LIST
-            ! call evolution_bd(n_p,x_vector,y_vector,z_vector,&
-            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-            !     dinamic_viscosity,diffusion_coeff)
-            ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-            
-            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-            call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                dinamic_viscosity,diffusion_coeff,m,map,list,head)
-            call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-                force_x,force_y,force_z,m,map,list,head)
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call evolution_bd_linked_list(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        dinamic_viscosity,diffusion_coeff,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    call evolution_bd(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        dinamic_viscosity,diffusion_coeff)
+            end select
+
+            time=real(index,dp)*delta_time ! tiempo real
 
             ! ESCRIBIMOS DATOS (y acumulamos según ensamble)
-            time=real(index,dp)*delta_time
             if (mod(j,ensamble_step)==0_sp) then
                 i=i+1_sp
                 if (pressure_switch.eqv..true.) then
@@ -212,13 +223,27 @@ program brownian_dynamic_lennard_jones
                         counter_data,counter)
                 end if
                 if (energie_switch.eqv..true.) then
-                    Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                    write(13,21) time,Uadim
+                    select case (linkedlist_type)
+                        case(1) ! simulation whit linked-list
+                            Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                                r_cutoff,density,m,map,list,head)
+                        case(0) ! simulation whitout linked-list
+                            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                    end select
+
+                    s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
+                    Uadim_med=s1_Uadim*(1._dp/real(i,dp))
+                    var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
+                    write(13,21) index,Uadim_med
                 end if
             end if
         end do
-        if (energie_switch.eqv..true.) close(13)
-
+        
+        if (energie_switch.eqv..true.) then
+            ! computamos errores en el último paso
+            err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
+            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+        end if
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
             err_press=sqrt(var_press*(1._dp/real(i-1,dp)))
@@ -259,6 +284,7 @@ program brownian_dynamic_lennard_jones
     if (pressure_switch.eqv..true.) close(10)
     if (structure_factor_switch.eqv..true.) close(11)
     if (diffusion_coeff_switch.eqv..true.) close(12)
+    if (energie_switch.eqv..true.) close(13)
 
     ! liberamos memoria
     deallocate(x_vector,y_vector,z_vector)

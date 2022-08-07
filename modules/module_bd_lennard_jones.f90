@@ -79,6 +79,58 @@ module module_bd_lennard_jones
         osmotic_pressure=density*(1._dp/(3._dp*real(n_p,dp)))*result
     end function osmotic_pressure
 
+    ! FUNCIÓN PARA CALCULAR ENERGÍA TOTAL USANDO LINKED LIST
+    function osmotic_pressure_linkedlist(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in)    :: r_cutoff,density,mass
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)                   :: osmotic_pressure_linkedlist,u_indiv,rij_pow02,result,force_indiv,L
+        integer(sp)                :: i,j
+        integer(sp)                :: icell,jcell,jcell0,nabor
+        result=0._dp
+        ! INICIALIZAMOS LISTA DE VECINOS
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+        !call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+        do icell=1,m*m*m ! celdas
+            i=head(icell)
+            do while (i/=0)
+                j=list(i)
+                do while (j/=0) ! en la celda
+                    ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        force_indiv=f_lj_individual(rij_pow02)
+                    else; force_indiv=0._dp; end if
+                    result=result+force_indiv*rij_pow02
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                end do
+                jcell0=13*(icell-1)
+                do nabor=1,13 ! celdas vecinas
+                    jcell=map(jcell0+nabor)
+                    j=head(jcell)
+                    do while (j/=0) ! en la celda
+                        ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        force_indiv=f_lj_individual(rij_pow02)
+                    else; force_indiv=0._dp; end if
+                    result=result+force_indiv*rij_pow02
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                    end do
+                end do
+                i=list(i)
+            end do
+        end do ! celdas
+        osmotic_pressure_linkedlist=density*(1._dp/(3._dp*real(n_p,dp)))*result
+    end function osmotic_pressure_linkedlist
+
     ! compute individual lennard jones potential (simple truncation)
     function u_lj_individual(r12_pow02)
         real(dp), intent(in) :: r12_pow02 ! distancia adimensional entre pares de particulas
@@ -110,6 +162,57 @@ module module_bd_lennard_jones
             end do
         end do
     end function u_lj_total
+
+    ! FUNCIÓN PARA CALCULAR ENERGÍA TOTAL USANDO LINKED LIST
+    function u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in)    :: r_cutoff,density
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)                   :: u_lj_total_linkedlist,u_indiv,rij_pow02,L
+        integer(sp)                :: i,j
+        integer(sp)                :: icell,jcell,jcell0,nabor
+        u_lj_total_linkedlist=0._dp
+        ! INICIALIZAMOS LISTA DE VECINOS
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+        !call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+        do icell=1,m*m*m ! celdas
+            i=head(icell)
+            do while (i/=0)
+                j=list(i)
+                do while (j/=0) ! en la celda
+                    ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    else; u_indiv=0._dp; end if
+                    u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                end do
+                jcell0=13*(icell-1)
+                do nabor=1,13 ! celdas vecinas
+                    jcell=map(jcell0+nabor)
+                    j=head(jcell)
+                    do while (j/=0) ! en la celda
+                        ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    else; u_indiv=0._dp; end if
+                    u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                    end do
+                end do
+                i=list(i)
+            end do
+        end do ! celdas   
+    end function u_lj_total_linkedlist
 
     ! caclulo de la fuerza individual (par de partículas)
     function f_lj_individual(r12_pow02)
@@ -159,7 +262,7 @@ module module_bd_lennard_jones
         end do
     end subroutine f_lj_total
 
-        ! SUBRUTINAS PARA CALCULAR FUERZAS USANDO LINKED LIST
+    ! SUBRUTINAS PARA CALCULAR FUERZAS USANDO LINKED LIST
     subroutine f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
         fx_lj_total_vector,fy_lj_total_vector,fz_lj_total_vector,m,map,list,head)
         integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
@@ -176,6 +279,8 @@ module module_bd_lennard_jones
 
         fx_lj_total_vector(:)=0._dp;fy_lj_total_vector(:)=0._dp;fz_lj_total_vector(:)=0._dp
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+        ! INICIALIZAMOS LISTA DE VECINOS
+        !call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
 
         do icell=1,m*m*m ! celdas
             i=head(icell)

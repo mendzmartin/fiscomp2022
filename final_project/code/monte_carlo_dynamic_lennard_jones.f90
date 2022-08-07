@@ -5,14 +5,18 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.05_dp
-    integer(sp), parameter   :: MC_step_eq=1000_sp!1_sp!                         ! monte carlo step para equilibración (transitorio)
-    integer(sp), parameter   :: MC_step_run=1_sp!1000_sp!0_sp!                         ! monete carlo step para corrida (estacionario)
-    real(dp),    parameter   :: T_adim_ref=1._dp!0.75_dp!0.75_dp                          ! temperatura de referencia adimensional
+    integer(sp), parameter   :: MC_step_eq=0_sp!1_sp!                       ! monte carlo step para equilibración (transitorio)
+    integer(sp), parameter   :: MC_step_run=100_sp!1000_sp!0_sp!           ! monete carlo step para corrida (estacionario)
+    real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp)                 :: delta_x,delta_y,delta_z
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
     integer(sp)              :: i,j,k,index,istat                           ! loop index
-    real(dp)                 :: time                                        ! tiempo de evolución
+    real(dp)                 :: time,L                                        ! tiempo de evolución
+    ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
+    integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
+    integer(sp), allocatable :: map(:),list(:),head(:)
+    integer(sp), parameter   :: linkedlist_type=1_sp                    ! simular con(1)/sin(0) linkedlist
     ! VARIABLES PARA REALIZAR TERMALIZACIÓN GRADUAL (EVITANDO QUENCHIN)
     real(dp),   parameter    :: T_adim_min=T_adim_ref*0.1_dp,&              ! Temperatura mínima
                                 T_adim_max=T_adim_ref*0.95_dp               ! Temperatura máxima
@@ -21,20 +25,21 @@ program monte_carlo_dynamic_lennard_jones
                                              (1._dp/real(n_Temp,dp))
     real(dp)                 :: Tadim
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
-    real(dp)                 :: time_end,time_start                         ! tiempos de CPU
+    real(dp)                 :: time_end,time_start                          ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
     logical                  :: pressure_switch=.false.,&                    ! presión vs densidad
                                 structure_factor_switch=.false.,&            ! factor de estructura vs densidad
                                 diffusion_coeff_switch=.false.,&             ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                       ! energía interna
+                                energie_switch=.true.                        ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
     real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades
-    integer(sp), parameter   :: n_density=1_sp                             ! cantidad de densidades simuladas
-    real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
-                                             (1._dp/real(n_density,dp))
+    integer(sp), parameter   :: n_density=1_sp                              ! cantidad de densidades simuladas
+    real(dp),    parameter   :: step_density=abs(density_max-density_min)*&
+                                (1._dp/real(n_density,dp))                  ! paso de variación de densidades
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
-    real(dp)                 :: Uadim                                      ! energía interna adimensional
+    real(dp)                 :: Uadim,Uadim_med,var_Uadim,err_Uadim         ! energía interna adimensional
+    real(dp)                 :: s1_Uadim,s2_Uadim                           ! 1er y 2do momento
     ! VARIABLES PARA COMPUTAR PRESIÓN OSMÓTICA
     real(dp)                 :: press,press_med,var_press,err_press         ! presión osmótica
     real(dp)                 :: s1_press,s2_press                           ! 1er y 2do momento
@@ -82,15 +87,20 @@ program monte_carlo_dynamic_lennard_jones
     ! allocación de memoria
     allocate(x_vector(n_p),y_vector(n_p),z_vector(n_p))
 
+    allocate(map(13*m*m*m),list(n_p),head(m*m*m))
+
     allocate(wxx_matrix(n_p,tau_max_corr),wyy_matrix(n_p,tau_max_corr),wzz_matrix(n_p,tau_max_corr))
     allocate(sum_wxx_vector(tau_max_corr),sum_wyy_vector(tau_max_corr),sum_wzz_vector(tau_max_corr))
     allocate(x_vector_noPBC(n_p),y_vector_noPBC(n_p),z_vector_noPBC(n_p))
     allocate(counter_data(tau_max_corr))
     
+
     ! barrido de densidades
     do j=1,n_density
         ! seteo de variables y parámetros
         x_vector(:)=0._dp;y_vector(:)=0._dp;z_vector(:)=0._dp
+
+        map(:)=0_sp;list(:)=0_sp;head(:)=0_sp
 
         sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
         x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
@@ -103,10 +113,21 @@ program monte_carlo_dynamic_lennard_jones
         call initial_lattice_configuration(n_p,density,x_vector,y_vector,z_vector,2)
         x_vector_noPBC(:)=x_vector(:);y_vector_noPBC(:)=y_vector(:);z_vector_noPBC(:)=z_vector(:)
 
-        ! computamos energía interna, presión en el tiempo inicial
-        Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-        Uadim=Uadim*(1._dp/real(n_p,dp))
-        press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
+        select case (linkedlist_type)
+            case(1) ! simulation whit linked-list
+                ! INICIALIZAMOS LISTA DE VECINOS
+                L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+                ! inicializo map (para usar linked list)
+                call maps(m,map)
+                ! INICIALIZAMOS LISTA DE VECINOS
+                call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                ! computamos energía interna en el tiempo inicial
+                Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                    r_cutoff,density,m,map,list,head)
+            case(0) ! simulation whitout linked-list
+                ! computamos energía interna en el tiempo inicial
+                Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+        end select
 
         index=0_sp
         if (energie_switch.eqv..true.) then
@@ -127,47 +148,75 @@ program monte_carlo_dynamic_lennard_jones
         ! Termalizados hasta una temperatura anterior a la buscada
         do i=1,n_Temp
             Tadim=T_adim_min+step_Temp*real(i,dp)
-            ! calcular desplazamiento optimizados para acceptancia del 50%
-            call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                    Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
-            call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
-            Uadim=Uadim*(1._dp/real(n_p,dp))
+            print*,i
+
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    ! calcular desplazamiento optimizados para acceptancia del 50%
+                    call max_displacement_adjusting_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+                    call evolution_monte_carlo_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    ! calcular desplazamiento optimizados para acceptancia del 50%
+                    call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                        Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+                    call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+            end select
         end do
 
-        ! calcular desplazamiento optimizados para acceptancia del 50%
-        call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+        select case (linkedlist_type)
+            case(1) ! simulation whit linked-list
+                ! calcular desplazamiento optimizados para acceptancia del 50%
+                call max_displacement_adjusting_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+            case(0) ! simulation whitout linked-list
+                ! calcular desplazamiento optimizados para acceptancia del 50%
+                call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                        T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+        end select
 
         ! RÉGIMEN TRANSITORIO
         do i=1,MC_step_eq
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%',j
+            print *, 'RUNNING...',(real(index,dp)/real((MC_step_eq+MC_step_run)*j,dp))*100._dp,'%',j
 
-            call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
-                Uadim=Uadim*(1._dp/real(n_p,dp))
-
-            if (energie_switch.eqv..true.) then; write(13,21) index,Uadim; end if
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call evolution_monte_carlo_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+            end select
         end do
 
         ! RÉGIMEN ESTACIONARIO
+        Uadim_med=0._dp;s1_Uadim=0._dp;s2_Uadim=0._dp
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
         Sk_med=0._dp;s1_Sk=0._dp;s2_Sk=0._dp
-
 
         do i=1,MC_step_run
             index=index+1
             ! Mensaje del progreso de la simulación
-            print *, 'RUNNING...',(real(index,dp)/real(MC_step_eq+MC_step_run,dp))*100._dp,'%',j
+            print *, 'RUNNING...',(real(index,dp)/real((MC_step_eq+MC_step_run)*j,dp))*100._dp,'%',j
 
-            call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
-            Uadim=Uadim*(1._dp/real(n_p,dp))
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call evolution_monte_carlo_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+            end select
 
             if (pressure_switch.eqv..true.) then
                 press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
@@ -186,11 +235,20 @@ program monte_carlo_dynamic_lennard_jones
                     wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
                     counter_data,counter)
             end if
-
-            if (energie_switch.eqv..true.) then; write(13,21) index,Uadim; end if
+            if (energie_switch.eqv..true.) then
+                s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
+                Uadim_med=s1_Uadim*(1._dp/real(i,dp))
+                var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
+                print*,Uadim_med
+                write(13,21) index,Uadim_med
+            end if
         end do
-        if (energie_switch.eqv..true.) close(13)
 
+        if (energie_switch.eqv..true.) then
+            ! computamos errores en el último paso
+            err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
+            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+        end if
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
             err_press=sqrt(var_press*(1._dp/real(i-1,dp)))
@@ -230,9 +288,12 @@ program monte_carlo_dynamic_lennard_jones
     if (pressure_switch.eqv..true.) close(10)
     if (structure_factor_switch.eqv..true.) close(11)
     if (diffusion_coeff_switch.eqv..true.) close(12)
+    if (energie_switch.eqv..true.) close(13)
 
     ! liberamos memoria
     deallocate(x_vector,y_vector,z_vector)
+
+    deallocate(map,list,head)
 
     deallocate(wxx_matrix,wyy_matrix,wzz_matrix)
     deallocate(sum_wxx_vector,sum_wyy_vector,sum_wzz_vector)

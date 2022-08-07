@@ -168,15 +168,13 @@ GNUTERM = "qt"
 ## Last datafile plotted: "md_energies_without_linked_list.dat"
 sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'energies_vs_time.pdf'
 rows=1;columns=1;set multiplot layout rows,columns
-    set xrange[0:15];set xtics 1
-    set autoscale y
+    set xtics 1000
+    set autoscale
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    MD:{/Symbol D}t=.005;BD:{/Symbol D}t=.001;MCD:{/Symbol D}t=.001"
-    set xlabel "time (t)"
-    set ylabel "Potential adimensional energie (U_{adim})"
+    MD:{/Symbol D}t=.005;BD:{/Symbol D}t=.001"
+    set xlabel "MD_{step}/BD_{step}/MC_{step}"
+    set ylabel "Potential adimensional energie (U_{adim}/{n_{p}})"
     set key right
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-    p '../results/md_energies_without_linked_list.dat' u 1:($2/256) w l lw 1 lc 'red' t 'MD:t_{eq}=2000,t_{ens}=1000',\
-    '../results/bd_energies.dat' u 1:($2/256) w l lw 1 lc 'blue' t 'BD:t_{eq}=30000,t_{ens}=5000'
-    #'../results/mcd_energies.dat' u u 1:($2/256) w l lw 1 lc 'green' t 'MCD:MCstep_{eq}=3000,MCstep_{run}=2000'
-#    EOF
+    p '../results/md_energies.dat' u 0:($2/256) w l lw 2 lc 'red' t 'MD_{step}=3000' smooth mcsplines,\
+    '../results/bd_energies.dat' u 1:($2/256) w l lw 2 lc 'blue' t 'BD_{step}=7000' smooth mcsplines

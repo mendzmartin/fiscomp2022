@@ -81,13 +81,62 @@ module module_mc_lennard_jones
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
                 if (rij_pow02<=r_cutoff*r_cutoff) then
-                    u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
                 u_lj_total=u_lj_total+u_indiv
             end do
         end do
-        u_lj_total=2._dp*u_lj_total
+        u_lj_total=u_lj_total*(1._dp/real(n_p,dp))
     end function u_lj_total
+
+    ! FUNCIÓN PARA CALCULAR ENERGÍA TOTAL USANDO LINKED LIST
+    function u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)
+        real(dp),    intent(in)    :: x_vector(n_p),y_vector(n_p),z_vector(n_p)
+        real(dp),    intent(in)    :: r_cutoff,density
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)                   :: u_lj_total_linkedlist,u_indiv,rij_pow02
+        integer(sp)                :: i,j
+        integer(sp)                :: icell,jcell,jcell0,nabor
+        u_lj_total_linkedlist=0._dp
+        do icell=1,m*m*m ! celdas
+            i=head(icell)
+            do while (i/=0)
+                j=list(i)
+                do while (j/=0) ! en la celda
+                    ! calculamos distancia relativa corregida según PBC
+                    rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                        x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02<=r_cutoff*r_cutoff) then
+                        u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                    else; u_indiv=0._dp; end if
+                    u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                    ! actualizo el indice que recorre list(:)
+                    j = list(j)
+                end do
+                jcell0=13*(icell-1)
+                do nabor=1,13 ! celdas vecinas
+                    jcell=map(jcell0+nabor)
+                    j=head(jcell)
+                    do while (j/=0) ! en la celda
+                        ! calculamos distancia relativa corregida según PBC
+                        rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
+                            x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02<=r_cutoff*r_cutoff) then
+                            u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                        else; u_indiv=0._dp; end if
+                        u_lj_total_linkedlist=u_lj_total_linkedlist+u_indiv
+                        ! actualizo el indice que recorre list(:)
+                        j = list(j)
+                    end do
+                end do
+                i=list(i)
+            end do
+        end do ! celdas
+        u_lj_total_linkedlist=u_lj_total_linkedlist*(1._dp/real(n_p,dp)) 
+    end function u_lj_total_linkedlist
 
     ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
     function u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
@@ -104,7 +153,7 @@ module module_mc_lennard_jones
             rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
             if (rij_pow02<=r_cutoff*r_cutoff) then
-                u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
             else; u_indiv=0._dp; end if
             u_lj_reduced=u_lj_reduced+u_indiv
         end do
@@ -115,12 +164,10 @@ module module_mc_lennard_jones
             rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
             if (rij_pow02<=r_cutoff*r_cutoff) then
-                u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
+                u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
             else; u_indiv=0._dp; end if
             u_lj_reduced=u_lj_reduced+u_indiv
         end do
-        ! multiplico por dos para tener en cuenta la zona triangular inferior
-        u_lj_reduced=2._dp*u_lj_reduced
     end function u_lj_reduced
 
     function delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_value,y_value,z_value,index)
@@ -134,13 +181,14 @@ module module_mc_lennard_jones
         ! guardamos las posiciones desplazadas
         x_value_new=x_vector(index);y_value_new=y_vector(index);z_value_new=z_vector(index)
 
+        delta_u_lj=0._dp
         ! computamos energía con posiciones sin desplazar (valores originales)
         x_vector(index)=x_value;y_vector(index)=y_value;z_vector(index)=z_value
-        delta_u_lj=-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
+        delta_u_lj=delta_u_lj-u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
         ! computamos energía con posiciones desplazadas
         x_vector(index)=x_value_new;y_vector(index)=y_value_new;z_vector(index)=z_value_new
         delta_u_lj=delta_u_lj+u_lj_reduced(n_p,x_vector,y_vector,z_vector,r_cutoff,density,index)
-        !delta_u_lj=delta_u_lj*(1._dp/real(n_p,dp))
+        delta_u_lj=delta_u_lj*(1._dp/real(n_p,dp))
     end function delta_u_lj
 
     ! caclulo de la fuerza individual (par de partículas)
@@ -204,12 +252,10 @@ module module_mc_lennard_jones
         ! fuerza neta actuando en una determinada partícula
         real(dp)                   :: force_indiv
         integer(sp)                :: i,j
-        real(dp)                   :: dx,dy,dz,L
+        real(dp)                   :: dx,dy,dz
         integer(sp)                :: icell,jcell,jcell0,nabor
 
         fx_lj_total_vector(:)=0._dp;fy_lj_total_vector(:)=0._dp;fz_lj_total_vector(:)=0._dp
-        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
-
         do icell=1,m*m*m ! celdas
             i=head(icell)
             do while (i/=0)
@@ -301,8 +347,8 @@ module module_mc_lennard_jones
         head(:)=0_sp;Lc_inv=real(m,dp)*(1._dp/L)
         do i=1,n_p
             icell=1+int((x_vector(i)+0.5_dp*L)*Lc_inv,sp)+&
-                    int((y_vector(i)+0.5_dp*L)*Lc_inv,sp)*m+&
-                    int((z_vector(i)+0.5_dp*L)*Lc_inv,sp)*m*m
+                int((y_vector(i)+0.5_dp*L)*Lc_inv,sp)*m+&
+                int((z_vector(i)+0.5_dp*L)*Lc_inv,sp)*m*m
             list(i)=head(icell);head(icell)=i
         end do
     end subroutine links
@@ -423,13 +469,14 @@ module module_mc_lennard_jones
         real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
         real(dp),    intent(in)    :: density
         real(dp),    intent(inout) :: delta_x,delta_y,delta_z
-        real(dp)    :: deltaU_adim,U_adim_old ! variación de energía
+        real(dp)    :: deltaU_adim ! variación de energía
         real(dp)    :: x_old,y_old,z_old ! posiciones sin deplazar con PBC
         real(dp)    :: L                 ! desplazamientos
         real(dp)    :: nrand             ! numero random
         integer(sp) :: seed,seed_val(8),MC_index,index
         integer(sp) :: counter           ! contador de aceptaciones
         real(dp)    :: accept_prob       ! acceptance_probability
+        real(dp),parameter    :: value_prob=0.5_dp,epsilon_prob=0.05_dp  ! variables para definir cota adimisible
         logical     :: end_loop           
         
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
@@ -438,7 +485,7 @@ module module_mc_lennard_jones
         seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
 
         ! seteamos los desplazamientos a valores iniciales
-        delta_x=1._dp;delta_y=1._dp;delta_z=1._dp
+        delta_x=1._dp;delta_y=1.1_dp;delta_z=1.2_dp
         end_loop=.false.
         do while (end_loop.eqv..false.)
             counter=0_sp
@@ -462,17 +509,20 @@ module module_mc_lennard_jones
                         nrand=real(grnd(),dp)
                         if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                             ! método de metrópolis
-                            if (exp(-deltaU_adim*(1._dp/T_adim))>nrand) then;counter=counter+1_sp;end if
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then;counter=counter+1_sp;end if
                             exit cond1
+                        else
+                            if (nrand==0._dp) counter=counter+1_sp
                         end if
                 end if cond1
                 x_vector(index)=x_old;y_vector(index)=y_old;z_vector(index)=z_old
             end do
-            ! evaluamos según probabilidad de aceptación
+            ! evaluamos según probabilidad de aceptación y ajustamos desplazamiento
             accept_prob=real(counter,dp)/real(n_p,dp)
-            cond2: if(0.28<=accept_prob.or.accept_prob>=0.32) then; end_loop=.true.;exit cond2
+            cond2: if((value_prob-epsilon_prob)<accept_prob.and.accept_prob<(value_prob+epsilon_prob)) then
+                end_loop=.true.;exit cond2
             else
-                if(accept_prob>0.32_dp) then
+                if(accept_prob>(value_prob+epsilon_prob)) then
                     delta_x=delta_x*1.05_dp;delta_y=delta_y*1.05_dp;delta_z=delta_z*1.05_dp
                     exit cond2
                 else;delta_x=delta_x*0.95_dp;delta_y=delta_y*0.95_dp;delta_z=delta_z*0.95_dp
@@ -480,6 +530,86 @@ module module_mc_lennard_jones
             end if cond2
         end do
     end subroutine max_displacement_adjusting
+
+    ! SUBRUTINA PARA AJUSTE DE DESPLAZAMIENTO MÁXIMO (OPTIMIZADO Y USANDO LINKED LIST)
+    subroutine max_displacement_adjusting_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                U_adim,T_adim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)                                    ! cantidad de partículas
+        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! vectores posicion
+        real(dp),    intent(in)    :: T_adim,U_adim                                 ! Temperatura de equilibrio
+        real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
+        real(dp),    intent(in)    :: density
+        real(dp),    intent(inout) :: delta_x,delta_y,delta_z
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)    :: deltaU_adim,U_adim_old,U_adim_new ! variación de energía
+        real(dp)    :: x_old,y_old,z_old ! posiciones sin deplazar con PBC
+        real(dp)    :: L                 ! desplazamientos
+        real(dp)    :: nrand             ! numero random
+        integer(sp) :: seed,seed_val(8),MC_index,index
+        integer(sp) :: counter           ! contador de aceptaciones
+        real(dp)    :: accept_prob       ! acceptance_probability
+        real(dp),parameter    :: value_prob=0.5_dp,epsilon_prob=0.05_dp  ! variables para definir cota adimisible
+        logical     :: end_loop       
+        
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+
+        call date_and_time(values=seed_val)
+        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
+
+        ! seteamos los desplazamientos a valores iniciales
+        delta_x=1._dp;delta_y=1.1_dp;delta_z=1.2_dp
+        end_loop=.false.
+        do while (end_loop.eqv..false.)
+            counter=0_sp
+            ! hago un paso de Monte Carlo (MC_step)
+            do MC_index=1,n_p
+                ! random integer from 1 to n_p (elijo particulas al azar y desplazo)
+                nrand=real(grnd(),dp);index=1_sp+floor(n_p*nrand,sp)
+                ! guardamos posicion en tiempo actual
+                x_old=x_vector(index);y_old=y_vector(index);z_old=z_vector(index)
+                ! evolucionamos posiciones con y sin PBC
+                nrand=real(grnd(),dp);x_vector(index)=x_old+(nrand-0.5_dp)*delta_x
+                nrand=real(grnd(),dp);y_vector(index)=y_old+(nrand-0.5_dp)*delta_y
+                nrand=real(grnd(),dp);z_vector(index)=z_old+(nrand-0.5_dp)*delta_z
+                ! corrección de posiciones según PBC
+                call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
+                ! variación de energía interna
+                deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+
+                ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL (CON LINKED LIST) +++
+                ! ACTUALIZAMOS LISTA DE VECINOS
+                ! call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                ! U_adim_old=U_adim
+                ! U_adim_new=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+                ! deltaU_adim=U_adim_new-U_adim_old
+
+                cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
+                    else
+                        if (T_adim==0._dp) exit cond1
+                        nrand=real(grnd(),dp)
+                        if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
+                            ! método de metrópolis
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then;counter=counter+1_sp;end if
+                            exit cond1
+                        else
+                            if (nrand==0._dp) counter=counter+1_sp
+                        end if
+                end if cond1
+                x_vector(index)=x_old;y_vector(index)=y_old;z_vector(index)=z_old
+            end do
+            ! evaluamos según probabilidad de aceptación y ajustamos desplazamiento
+            accept_prob=real(counter,dp)/real(n_p,dp)
+            cond2: if((value_prob-epsilon_prob)<accept_prob.and.accept_prob<(value_prob+epsilon_prob)) then
+                end_loop=.true.;exit cond2
+            else
+                if(accept_prob>(value_prob+epsilon_prob)) then
+                    delta_x=delta_x*1.05_dp;delta_y=delta_y*1.05_dp;delta_z=delta_z*1.05_dp
+                    exit cond2
+                else;delta_x=delta_x*0.95_dp;delta_y=delta_y*0.95_dp;delta_z=delta_z*0.95_dp
+                end if
+            end if cond2
+        end do
+    end subroutine max_displacement_adjusting_linkedlist
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
     subroutine evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
@@ -528,17 +658,25 @@ module module_mc_lennard_jones
             deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
             ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
             !U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            !U_adim_old=U_adim
             !deltaU_adim=U_adim_new-U_adim_old
             !write(*,*) MC_index,deltaU_adim,deltaU_adim_good
             cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                 else
-                    if (T_adim==0._dp) exit cond1
+                    if (T_adim==0._dp) then ! no aceptamos el cambio
+                        x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                        y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                        z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                        exit cond1
+                    end if
                     nrand=real(grnd(),dp)
                     if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                         ! método de metrópolis
-                        if (exp(-deltaU_adim*(1._dp/T_adim))>nrand) U_adim=U_adim+deltaU_adim
+                        if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim+deltaU_adim
                         exit cond1
                     else
+                        if (nrand==0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1;end if
+                        ! no aceptamos el cambio
                         x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
                         y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
@@ -546,6 +684,86 @@ module module_mc_lennard_jones
             end if cond1
         end do
     end subroutine evolution_monte_carlo
+
+    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (USANDO LINKED LIST)
+    subroutine evolution_monte_carlo_linkedlist(n_p,x_vector,y_vector,z_vector,&
+        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+        U_adim,T_adim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
+        integer(sp), intent(in)    :: n_p,m,map(13*m*m*m)                       ! cantidad de partículas
+        real(dp),    intent(inout) :: x_vector(n_p),y_vector(n_p),z_vector(n_p) ! vectores posicion
+        real(dp),    intent(inout) :: x_vector_noPBC(n_p),y_vector_noPBC(n_p),&
+                                      z_vector_noPBC(n_p)                       ! componentes del vector posición sin PBC
+        real(dp),    intent(inout) :: U_adim                                    ! Energía interna
+        real(dp),    intent(in)    :: T_adim                                    ! Temperatura de equilibrio
+        real(dp),    intent(in)    :: r_cutoff ! distancia de truncado
+        real(dp),    intent(in)    :: density
+        real(dp),    intent(in)    :: delta_x,delta_y,delta_z                   ! desplazamientos optimizados
+        integer(sp), intent(inout) :: list(n_p),head(m*m*m)
+        real(dp)    :: deltaU_adim                          ! variación de energía
+        real(dp)    :: x_old,y_old,z_old                    ! posiciones sin deplazar
+        real(dp)    :: x_old_noPBC,y_old_noPBC,z_old_noPBC
+        real(dp)    :: L
+        real(dp)    :: nrand                                ! numero random
+        integer(sp) :: seed,seed_val(8),MC_index,index
+        real(dp)    :: U_adim_old,U_adim_new,deltaU_adim_good
+
+        L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+
+        call date_and_time(values=seed_val)
+        seed=seed_val(8)*seed_val(7)*seed_val(6)+seed_val(5);call sgrnd(seed)
+
+        ! hago un paso de Monte Carlo (MC_step)
+        do MC_index=1,n_p
+            ! random integer from 1 to n_p (elijo particulas al azar y desplazo)
+            nrand=real(grnd(),dp);index=1_sp+floor(n_p*nrand,sp)
+            ! guardamos posicion en tiempo actual
+            x_old=x_vector(index);x_old_noPBC=x_vector_noPBC(index)
+            y_old=y_vector(index);y_old_noPBC=y_vector_noPBC(index)
+            z_old=z_vector(index);z_old_noPBC=z_vector_noPBC(index)
+            ! evolucionamos posiciones con y sin PBC
+            nrand=real(grnd(),dp);x_vector(index)=x_old+(nrand-0.5_dp)*delta_x
+            x_vector_noPBC(index)=x_old_noPBC+(nrand-0.5_dp)*delta_x
+            nrand=real(grnd(),dp);y_vector(index)=y_old+(nrand-0.5_dp)*delta_y
+            y_vector_noPBC(index)=y_old_noPBC+(nrand-0.5_dp)*delta_y
+            nrand=real(grnd(),dp);z_vector(index)=z_old+(nrand-0.5_dp)*delta_z
+            z_vector_noPBC(index)=z_old_noPBC+(nrand-0.5_dp)*delta_z
+            ! corrección de posiciones según PBC
+            call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
+            ! variación de energía interna
+            !deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+            ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL (CON LINKED LIST) +++
+            U_adim_old=U_adim
+            ! actualizamos lista de vecinos
+            call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+            U_adim_new=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
+            deltaU_adim=(U_adim_new-U_adim_old)
+            cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
+                else
+                    if (T_adim==0._dp) then ! no aceptamos el cambio
+                        x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                        y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                        z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                        ! ACTUALIZAMOS LISTA DE VECINOS
+                        call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                        exit cond1
+                    end if
+                    nrand=real(grnd(),dp)
+                    if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
+                        ! método de metrópolis
+                        if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim+deltaU_adim
+                        exit cond1
+                    else
+                        if (nrand==0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1;end if
+                        ! no aceptamos el cambio
+                        x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                        y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                        z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                        ! ACTUALIZAMOS LISTA DE VECINOS
+                        call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                    end if
+            end if cond1
+        end do
+    end subroutine evolution_monte_carlo_linkedlist
 
     ! SUBRUTINA PARA CALCULAR LA FUNCION DE DISTRIBUCIÓN RADIAL (FUNCION DE CORRELACIÓN)
     subroutine radial_ditribution_function(file_name,n_p,density,x_vector,y_vector,z_vector,n_bins,g)
