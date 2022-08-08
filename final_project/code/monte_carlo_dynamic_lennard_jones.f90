@@ -6,7 +6,7 @@ program monte_carlo_dynamic_lennard_jones
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.05_dp
     integer(sp), parameter   :: MC_step_eq=0_sp!1_sp!                       ! monte carlo step para equilibración (transitorio)
-    integer(sp), parameter   :: MC_step_run=100_sp!1000_sp!0_sp!           ! monete carlo step para corrida (estacionario)
+    integer(sp), parameter   :: MC_step_run=1000_sp!1000_sp!0_sp!           ! monete carlo step para corrida (estacionario)
     real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp)                 :: delta_x,delta_y,delta_z
@@ -16,7 +16,7 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
     integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
     integer(sp), allocatable :: map(:),list(:),head(:)
-    integer(sp), parameter   :: linkedlist_type=1_sp                    ! simular con(1)/sin(0) linkedlist
+    integer(sp), parameter   :: linkedlist_type=0_sp                    ! simular con(1)/sin(0) linkedlist
     ! VARIABLES PARA REALIZAR TERMALIZACIÓN GRADUAL (EVITANDO QUENCHIN)
     real(dp),   parameter    :: T_adim_min=T_adim_ref*0.1_dp,&              ! Temperatura mínima
                                 T_adim_max=T_adim_ref*0.95_dp               ! Temperatura máxima
@@ -160,8 +160,9 @@ program monte_carlo_dynamic_lennard_jones
                         Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
                 case(0) ! simulation whitout linked-list
                     ! calcular desplazamiento optimizados para acceptancia del 50%
-                    call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                        Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+                    ! call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                    !     Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
+                    delta_x=0.21_dp;delta_y=0.21_dp;delta_z=0.21_dp
                     call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                         Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
@@ -175,8 +176,9 @@ program monte_carlo_dynamic_lennard_jones
                         Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
             case(0) ! simulation whitout linked-list
                 ! calcular desplazamiento optimizados para acceptancia del 50%
-                call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                        T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+                ! call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                !         T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
+                delta_x=0.21_dp;delta_y=0.21_dp;delta_z=0.21_dp
         end select
 
         ! RÉGIMEN TRANSITORIO
@@ -239,7 +241,6 @@ program monte_carlo_dynamic_lennard_jones
                 s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
                 Uadim_med=s1_Uadim*(1._dp/real(i,dp))
                 var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
-                print*,Uadim_med
                 write(13,21) index,Uadim_med
             end if
         end do
