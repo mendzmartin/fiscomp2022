@@ -165,17 +165,19 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "energies_test.dat"
-sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'energies_test.pdf'
+## Last datafile plotted: "temperature_vs_density.dat"
+sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'temperature_vs_density.pdf'
 rows=1;columns=1;set multiplot layout rows,columns
-    set ylabel "Adimensional potential energy variation (|{/Symbol D}U_{adim}|/{n_{p}})"
-    set key right
+    set xrange[0.8:1.2];set xtics 0.1
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
+    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
+    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
+    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005"
+    set xlabel "density ({/Symbol r})"
+    set ylabel "Adimensional Temperature (T_{adim})"
+    set key left
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-
-    set autoscale; set xrange[0:257]
-    set xlabel "Number of particle (index)"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000"
-    p 'energies_test.dat' u 1:(abs($2-$3)/256) w p pt 7 ps 0.2 lc 'red' notitle
+    p '../results/paper_temperature_vs_density.dat' u 1:2 w p pt 7 ps 0.5 lc 'black' t 'theoretical result',\
+    '../results/temperature_vs_density.dat' u 2:1 w lp lw 1 pt 7 dt 2 lc 'red' t 'simulation result'
 unset multiplot
 #    EOF

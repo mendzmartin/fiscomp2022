@@ -7,7 +7,7 @@ program brownian_dynamic_lennard_jones_01
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=15000_sp,&                     ! pasos de equilibración
                                 time_run=15000_sp,&                    ! pasos de evolucion en el estado estacionario
-                                ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
+                                ensamble_step=1000_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=1._dp                       ! temperatura de referencia adimensional
     real(dp),    parameter   :: density=0.8_dp                         ! densidad (particulas/volumen)
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    

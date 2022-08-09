@@ -5,8 +5,8 @@ program brownian_dynamic_lennard_jones
     ! VARIABLES y PARAMETROS GENERALES
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
-    integer(sp), parameter   :: time_eq=0_sp,&                     ! pasos de equilibración
-                                time_run=7000_sp,&                    ! pasos de evolucion en el estado estacionario
+    integer(sp), parameter   :: time_eq=100000_sp,&                     ! pasos de equilibración
+                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
                                 ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
     real(dp),    parameter   :: T_adim_ref=0.75_dp                     ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
@@ -25,8 +25,8 @@ program brownian_dynamic_lennard_jones
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=1_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=1.1_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
                                              (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
@@ -137,18 +137,17 @@ program brownian_dynamic_lennard_jones
         ! computamos energía interna en el paso inicial
         if (energie_switch.eqv..true.) then
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
-            open(13,file='../results/bd_energies.dat',status='replace',action='write',iostat=istat)
-            if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
-            write(13,'(A12,x,A12)') 'MD_step','Uadim'
-
             select case (linkedlist_type)
                 case(1) ! simulation whit linked-list
+                    open(13,file='../results/bd_energies_with_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
                     Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
                         r_cutoff,density,m,map,list,head)
-                case(0) ! simulation whitout linked-list
+                case(0)  ! simulation whitout linked-list
+                    open(13,file='../results/bd_energies_without_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
                     Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
             end select
-            
             write(13,21) index,Uadim
         end if
 
@@ -242,7 +241,7 @@ program brownian_dynamic_lennard_jones
         if (energie_switch.eqv..true.) then
             ! computamos errores en el último paso
             err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
-            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+            print*, 'Uadim_med=',Uadim_med*(1._dp/real(n_p,dp)),'+-',err_Uadim
         end if
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
@@ -303,8 +302,10 @@ program brownian_dynamic_lennard_jones
     ! escribimos información de la simulación
     open(50,file='../results/bd_data_run.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(50file) = ',istat
-        write(50,'(7(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref','n_p','t_eq','t_run','tau_max_corr'
-        write(50,'(4(E12.4,x),3(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,n_p,time_eq,time_run,tau_max_corr
+        write(50,'(8(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref','n_p','t_eq',&
+            't_run','tau_max_corr','t_ens'
+        write(50,'(4(E12.4,x),4(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,&
+            n_p,time_eq,time_run,tau_max_corr,ensamble_step
     close(50)
 
     ! Mensaje del progreso de la simulación

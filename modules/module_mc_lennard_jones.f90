@@ -82,7 +82,7 @@ module module_mc_lennard_jones
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
                 if (rij_pow02<=r_cutoff*r_cutoff) then
-                    u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
+                    u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
                 u_lj_total=u_lj_total+u_indiv
             end do
@@ -147,7 +147,7 @@ module module_mc_lennard_jones
         
         u_lj_reduced=0._dp
         do j=1,n_p
-            if (j/=index) then
+            if (j/=index) then ! i=index
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(index),y_vector(index),z_vector(index),&
                     x_vector(j),y_vector(j),z_vector(j),n_p,density)
@@ -195,7 +195,7 @@ module module_mc_lennard_jones
             do while (i/=0)
                 j=list(i)
                 do while (j/=0) ! en la celda
-                    if (j<n_p.and.j/=index) then;logical_var01=.true.
+                    if ((j<=n_p).and.(j/=index)) then;logical_var01=.true.
                         else;logical_var01=.false.;end if
                     if (i==index) then;logical_var02=.true.
                         else;logical_var02=.false.;end if
@@ -217,7 +217,7 @@ module module_mc_lennard_jones
                     jcell=map(jcell0+nabor)
                     j=head(jcell)
                     do while (j/=0) ! en la celda
-                        if (j<n_p.and.j/=index) then;logical_var01=.true.
+                        if ((j<=n_p).and.(j/=index)) then;logical_var01=.true.
                             else;logical_var01=.false.;end if
                         if (i==index) then;logical_var02=.true.
                             else;logical_var02=.false.;end if
@@ -587,14 +587,20 @@ module module_mc_lennard_jones
                 deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
                 cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
                     else
-                        if (T_adim==0._dp) exit cond1
+                        if (T_adim==0._dp) then
+                            exit cond1 ! no aceptamos el cambio y salimos
+                        end if
                         nrand=real(grnd(),dp)
                         if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                             ! método de metrópolis
-                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then;counter=counter+1_sp;end if
-                            exit cond1
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then 
+                                counter=counter+1_sp
+                                exit cond1 ! aceptamos el cambio y salimos
+                            else
+                                exit cond1 ! no aceptamos el cambio y salimos
+                            end if
                         else
-                            if (nrand==0._dp) counter=counter+1_sp
+                            if (nrand==0._dp) then;counter=counter+1_sp;exit cond1;end if
                         end if
                 end if cond1
                 x_vector(index)=x_old;y_vector(index)=y_old;z_vector(index)=z_old
@@ -655,6 +661,7 @@ module module_mc_lennard_jones
                 nrand=real(grnd(),dp);z_vector(index)=z_old+(nrand-0.5_dp)*delta_z
                 ! corrección de posiciones según PBC
                 call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
+                
                 ! variación de energía interna
                 deltaU_adim=delta_u_lj_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,&
                     x_old,y_old,z_old,index,m,map,list,head)
@@ -668,14 +675,20 @@ module module_mc_lennard_jones
 
                 cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
                     else
-                        if (T_adim==0._dp) exit cond1
+                        if (T_adim==0._dp) then
+                            exit cond1 ! no aceptamos el cambio y salimos
+                        end if
                         nrand=real(grnd(),dp)
                         if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                             ! método de metrópolis
-                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then;counter=counter+1_sp;end if
-                            exit cond1
+                            if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then 
+                                counter=counter+1_sp
+                                exit cond1 ! aceptamos el cambio y salimos
+                            else
+                                exit cond1 ! no aceptamos el cambio y salimos
+                            end if
                         else
-                            if (nrand==0._dp) counter=counter+1_sp
+                            if (nrand==0._dp) then;counter=counter+1_sp;exit cond1;end if
                         end if
                 end if cond1
                 x_vector(index)=x_old;y_vector(index)=y_old;z_vector(index)=z_old
@@ -744,17 +757,24 @@ module module_mc_lennard_jones
             !deltaU_adim=U_adim_new-U_adim_old
             cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                 else
-                    if (T_adim==0._dp) then ! no aceptamos el cambio
+                    if (T_adim==0._dp) then
                         x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
                         y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
-                        exit cond1
+                        exit cond1 ! no aceptamos el cambio y salimos
                     end if
                     nrand=real(grnd(),dp)
                     if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
                         ! método de metrópolis
-                        if (exp(deltaU_adim*(1._dp/T_adim))>=nrand) U_adim=U_adim+deltaU_adim
-                        exit cond1
+                        if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then 
+                            U_adim=U_adim+deltaU_adim
+                            exit cond1 ! aceptamos el cambio y salimos
+                        else
+                            x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                            y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                            z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                            exit cond1 ! no aceptamos el cambio y salimos
+                        end if
                     else
                         if (nrand==0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1;end if
                         ! no aceptamos el cambio
@@ -831,7 +851,7 @@ module module_mc_lennard_jones
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
                         ! ACTUALIZAMOS LISTA DE VECINOS
                         call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
-                        exit cond1
+                        exit cond1 ! no aceptamos el cambio y salimos
                     end if
                     nrand=real(grnd(),dp)
                     if ((deltaU_adim*(1._dp/T_adim))<abs(log(tiny(1._dp)))) then
@@ -839,12 +859,21 @@ module module_mc_lennard_jones
                         if (exp(-deltaU_adim*(1._dp/T_adim))>=nrand) then
                             U_adim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
                                 r_cutoff,density,m,map,list,head)
+                            exit cond1 ! aceptamos el cambio y salimos
+                        else
+                            x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC
+                            y_vector(index)=y_old;y_vector_noPBC(index)=y_old_noPBC
+                            z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
+                            ! ACTUALIZAMOS LISTA DE VECINOS
+                            call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                            exit cond1 ! no aceptamos el cambio y salimos
                         end if
                         exit cond1
                     else
                         if (nrand==0._dp) then
                             U_adim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
                                 r_cutoff,density,m,map,list,head)
+                            exit cond1 ! aceptamos el cambio y salimos
                         end if
                         ! no aceptamos el cambio
                         x_vector(index)=x_old;x_vector_noPBC(index)=x_old_noPBC

@@ -5,29 +5,30 @@ program molecular_dynamic_lennard_jones
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
-    integer(sp), parameter   :: time_eq=0_sp,&                           ! pasos de equilibración
-                                time_run=3000_sp                            ! pasos de evolucion en el estado estacionario
-    real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
+    integer(sp), parameter   :: time_eq=5000_sp,&                              ! pasos de equilibración
+                                time_run=1000_sp                            ! pasos de evolucion en el estado estacionario
+    real(dp),    parameter   :: T_adim_ref=2.74_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
     real(dp),    allocatable :: vx_vector(:),vy_vector(:),vz_vector(:)      ! componentes de la velocidad/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)            ! componentes de la fuerza/particula
     integer(sp)              :: i,j,k,index,istat                           ! loop index
-    real(dp)                 :: time                                        ! tiempo
+    real(dp)                 :: time,L                                      ! tiempo
     real(dp)                 :: vx_mc,vy_mc,vz_mc                           ! componentes de la velocidad del centro de masa
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
     integer(sp), parameter   :: m=3_sp                                      ! numero de celdas por dimensión 
     integer(sp), allocatable :: map(:),list(:),head(:)
+    integer(sp), parameter   :: linkedlist_type=1_sp                        ! simular con(1)/sin(0) linkedlist
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
-                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.false.,&              ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                       ! energía interna
+    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
+                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.true.,&              ! coeficiente de difusión vs densidad
+                                energie_switch=.false.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades (1.2_dp - 0.8_dp)
-    integer(sp), parameter   :: n_density=1_sp                              ! cantidad de densidades simuladas (2_sp - 10_sp)
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=1.1_dp       ! rango de densidades (1.2_dp - 0.8_dp)
+    integer(sp), parameter   :: n_density=10_sp                             ! cantidad de densidades simuladas (2_sp - 10_sp)
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*& ! paso de variación de densidades
                                              (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
@@ -65,15 +66,15 @@ program molecular_dynamic_lennard_jones
     20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
-        open(10,file='../results/md_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(10,file='../results/md_pressure_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
         write(10,'(2(A12,x),x,A12)') 'density','pressure','error';end if
     if (structure_factor_switch.eqv..true.) then
-        open(11,file='../results/md_struct_factor_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(11,file='../results/md_struct_factor_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
         write(11,'(2(A12,x),x,A12)') 'density','S(k)_med','error';end if
     if (diffusion_coeff_switch.eqv..true.) then
-        open(12,file='../results/md_diffusion_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/md_diffusion_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
@@ -97,7 +98,6 @@ program molecular_dynamic_lennard_jones
 
         force_x(:)=0._dp;force_y(:)=0._dp;force_z(:)=0._dp
         map(:)=0_sp;list(:)=0_sp;head(:)=0_sp
-        call maps(m,map) ! inicializo map (para usar linked list)
 
         sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp;sum_wxx_vector(:)=0._dp
         x_vector_noPBC(:)=0._dp;y_vector_noPBC(:)=0._dp;z_vector_noPBC(:)=0._dp
@@ -114,13 +114,21 @@ program molecular_dynamic_lennard_jones
         call md_initial_parameters(n_p,x_vector,y_vector,z_vector,&
             vx_vector,vy_vector,vz_vector,T_adim_ref,delta_time,density,mass)
 
-        ! computamos fuerzas en el tiempo inicia
-        ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-        ! call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
-
-        ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-        call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
-            force_x,force_y,force_z,m,map,list,head)
+        select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    ! INICIALIZAMOS LISTA DE VECINOS
+                    L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
+                    ! inicializo map (para usar linked list)
+                    call maps(m,map)
+                    ! ACTUALIZAMOS LISTA DE VECINOS
+                    call links(n_p,m,L,head,list,x_vector,y_vector,z_vector)
+                    ! computamos fuerzas en el tiempo inicial
+                    call f_lj_total_linkedlist(x_vector,y_vector,z_vector,r_cutoff,n_p,density,&
+                        force_x,force_y,force_z,m,map,list,head)
+                case(0) ! simulation whitout linked-list
+                    ! computamos fuerzas en el tiempo inicial
+                    call f_lj_total(x_vector,y_vector,z_vector,r_cutoff,n_p,density,force_x,force_y,force_z)
+        end select
 
         ! computamos desplazamiendo cuadrático medio en paso inicial
         if (diffusion_coeff_switch.eqv..true.) then
@@ -134,16 +142,20 @@ program molecular_dynamic_lennard_jones
         ! computamos energía interna en el paso inicial
         if (energie_switch.eqv..true.) then
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
-            open(13,file='../results/md_energies.dat',status='replace',action='write',iostat=istat)
+
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    open(13,file='../results/md_energies_with_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
+                    Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                        r_cutoff,density,m,map,list,head)
+                case(0)  ! simulation whitout linked-list
+                    open(13,file='../results/md_energies_without_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
+                    Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            end select
             if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
             write(13,'(A12,x,A12)') 'MD_step','Uadim'
-
-            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-            ! Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-
-            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-            Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
-
             write(13,21) index,Uadim
         end if
 
@@ -155,18 +167,19 @@ program molecular_dynamic_lennard_jones
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 
-            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-            ! call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
-            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-            !     vx_vector,vy_vector,vz_vector,&
-            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
-
-            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-            call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                vx_vector,vy_vector,vz_vector,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                m,map,list,head)
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        vx_vector,vy_vector,vz_vector,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        m,map,list,head)
+                case(0)  ! simulation whitout linked-list
+                    call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        vx_vector,vy_vector,vz_vector,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
+            end select
 
             ! velocity center of mass to zero
             vx_mc=sum(vx_vector(:))*(1._dp/real(n_p,dp));vx_vector(:)=(vx_vector(:)-vx_mc)
@@ -188,18 +201,19 @@ program molecular_dynamic_lennard_jones
 
             call rescaling_velocities(n_p,vx_vector,vy_vector,vz_vector,T_adim_ref,mass)
 
-            ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-            ! call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
-            !     x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-            !     vx_vector,vy_vector,vz_vector,&
-            !     delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
-
-            ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-            call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
-                x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
-                vx_vector,vy_vector,vz_vector,&
-                delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
-                m,map,list,head)
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    call velocity_verlet_linked_list(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        vx_vector,vy_vector,vz_vector,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z,&
+                        m,map,list,head)
+                case(0)  ! simulation whitout linked-list
+                    call velocity_verlet(n_p,x_vector,y_vector,z_vector,&
+                        x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
+                        vx_vector,vy_vector,vz_vector,&
+                        delta_time,mass,r_cutoff,density,force_x,force_y,force_z)
+            end select
 
             ! computamos observables,1er y 2do momento,valores medios y varianzas
             if (pressure_switch.eqv..true.) then
@@ -222,12 +236,13 @@ program molecular_dynamic_lennard_jones
             end if
             time=real(index,dp)*delta_time
             if (energie_switch.eqv..true.) then
-                ! ++++++++++ DESCOMENTAR PARA CORRER SIN USAR LINKED LIST ++++++++++
-                ! Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-
-                ! ++++++++++ DESCOMENTAR PARA CORRER USANDO LINKED LIST ++++++++++
-                Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,r_cutoff,density,m,map,list,head)
-
+                select case (linkedlist_type)
+                    case(1) ! simulation whit linked-list
+                        Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                            r_cutoff,density,m,map,list,head)
+                    case(0)  ! simulation whitout linked-list
+                        Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                end select
                 s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
                 Uadim_med=s1_Uadim*(1._dp/real(i,dp))
                 var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
@@ -238,7 +253,7 @@ program molecular_dynamic_lennard_jones
         if (energie_switch.eqv..true.) then
             ! computamos errores en el último paso
             err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
-            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+            print*, 'Uadim_med=',Uadim_med*(1._dp/real(n_p,dp)),'+-',err_Uadim
         end if
 
         if (pressure_switch.eqv..true.) then

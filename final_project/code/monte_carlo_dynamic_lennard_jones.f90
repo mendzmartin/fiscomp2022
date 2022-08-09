@@ -5,9 +5,9 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.05_dp
-    integer(sp), parameter   :: MC_step_eq=0_sp!1_sp!                       ! monte carlo step para equilibración (transitorio)
-    integer(sp), parameter   :: MC_step_run=1000_sp!1000_sp!0_sp!           ! monete carlo step para corrida (estacionario)
-    real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
+    integer(sp), parameter   :: MC_step_eq=10000_sp                             ! monte carlo step para equilibración (transitorio)
+    integer(sp), parameter   :: MC_step_run=1000_sp                         ! monete carlo step para corrida (estacionario)
+    real(dp),    parameter   :: T_adim_ref=2.74_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp)                 :: delta_x,delta_y,delta_z
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
@@ -27,13 +27,13 @@ program monte_carlo_dynamic_lennard_jones
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                          ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.false.,&                    ! presión vs densidad
-                                structure_factor_switch=.false.,&            ! factor de estructura vs densidad
-                                diffusion_coeff_switch=.false.,&             ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                        ! energía interna
+    logical                  :: pressure_switch=.true.,&                    ! presión vs densidad
+                                structure_factor_switch=.true.,&            ! factor de estructura vs densidad
+                                diffusion_coeff_switch=.true.,&             ! coeficiente de difusión vs densidad
+                                energie_switch=.false.                        ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
-    real(dp),    parameter   :: density_min=0.8_dp,density_max=0.8_dp       ! rango de densidades
-    integer(sp), parameter   :: n_density=1_sp                              ! cantidad de densidades simuladas
+    real(dp),    parameter   :: density_min=0.8_dp,density_max=1.1_dp       ! rango de densidades
+    integer(sp), parameter   :: n_density=10_sp                              ! cantidad de densidades simuladas
     real(dp),    parameter   :: step_density=abs(density_max-density_min)*&
                                 (1._dp/real(n_density,dp))                  ! paso de variación de densidades
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
@@ -71,15 +71,15 @@ program monte_carlo_dynamic_lennard_jones
     20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
-        open(10,file='../results/mcd_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(10,file='../results/mcd_pressure_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
         write(10,'(2(A12,x),x,A12)') 'density','pressure','error';end if
     if (structure_factor_switch.eqv..true.) then
-        open(11,file='../results/mcd_struct_factor_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(11,file='../results/mcd_struct_factor_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
         write(11,'(2(A12,x),x,A12)') 'density','S(k)_med','error';end if
     if (diffusion_coeff_switch.eqv..true.) then
-        open(12,file='../results/mcd_diffusion_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/mcd_diffusion_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
@@ -132,7 +132,14 @@ program monte_carlo_dynamic_lennard_jones
         index=0_sp
         if (energie_switch.eqv..true.) then
             ! recordar medir energía vs tiempo para un único valor de densidad (CONTROL DE ESTABILIDAD)
-            open(13,file='../results/mcd_energies.dat',status='replace',action='write',iostat=istat)
+            select case (linkedlist_type)
+                case(1) ! simulation whit linked-list
+                    open(13,file='../results/mcd_energies_with_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
+                case(0)  ! simulation whitout linked-list
+                    open(13,file='../results/mcd_energies_without_linkedlist.dat',&
+                        status='replace',action='write',iostat=istat)
+            end select
             if (istat/=0) write(*,*) 'ERROR! istat(13ile) = ',istat
             write(13,'(A12,x,A12)') 'MC_step','Uadim'
             write(13,21) index,Uadim
@@ -148,8 +155,7 @@ program monte_carlo_dynamic_lennard_jones
         ! Termalizados hasta una temperatura anterior a la buscada
         do i=1,n_Temp
             Tadim=T_adim_min+step_Temp*real(i,dp)
-            print*,i
-
+            print*,'Tadim=',Tadim
             select case (linkedlist_type)
                 case(1) ! simulation whit linked-list
                     ! calcular desplazamiento optimizados para acceptancia del 50%
@@ -160,9 +166,8 @@ program monte_carlo_dynamic_lennard_jones
                         Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
                 case(0) ! simulation whitout linked-list
                     ! calcular desplazamiento optimizados para acceptancia del 50%
-                    ! call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                    !     Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
-                    delta_x=0.21_dp;delta_y=0.21_dp;delta_z=0.21_dp
+                    call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                        Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
                     call evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
                         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
                         Uadim,Tadim,r_cutoff,density,delta_x,delta_y,delta_z)
@@ -176,10 +181,11 @@ program monte_carlo_dynamic_lennard_jones
                         Uadim,T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z,m,map,list,head)
             case(0) ! simulation whitout linked-list
                 ! calcular desplazamiento optimizados para acceptancia del 50%
-                ! call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
-                !         T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
-                delta_x=0.21_dp;delta_y=0.21_dp;delta_z=0.21_dp
+                call max_displacement_adjusting(n_p,x_vector,y_vector,z_vector,&
+                        T_adim_ref,r_cutoff,density,delta_x,delta_y,delta_z)
         end select
+
+        print*,'Tadim=',T_adim_ref,'dx=',delta_x,'dy=',delta_y,'dz=',delta_z
 
         ! RÉGIMEN TRANSITORIO
         do i=1,MC_step_eq
@@ -248,7 +254,7 @@ program monte_carlo_dynamic_lennard_jones
         if (energie_switch.eqv..true.) then
             ! computamos errores en el último paso
             err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
-            print*, 'Uadim_med=',Uadim_med,'+-',err_Uadim
+            print*, 'Uadim_med=',Uadim_med*(1._dp/real(n_p,dp)),'+-',err_Uadim
         end if
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso

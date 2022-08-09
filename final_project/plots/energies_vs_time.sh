@@ -166,15 +166,56 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "md_energies_without_linked_list.dat"
-sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'energies_vs_time.pdf'
-rows=1;columns=1;set multiplot layout rows,columns
-    set xtics 1000
-    set autoscale
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    MD:{/Symbol D}t=.005;BD:{/Symbol D}t=.001"
-    set xlabel "MD_{step}/BD_{step}/MC_{step}"
-    set ylabel "Potential adimensional energie (U_{adim}/{n_{p}})"
+sizex=4;sizey=12;set terminal pdf size sizey,sizex;set output 'energies_vs_time.pdf'
+rows=1;columns=3;set multiplot layout rows,columns
+    set ylabel "Potential adimensional energy (U_{adim}/{n_{p}})"
     set key right
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-    p '../results/md_energies.dat' u 0:($2/256) w l lw 2 lc 'red' t 'MD_{step}=3000' smooth mcsplines,\
-    '../results/bd_energies.dat' u 1:($2/256) w l lw 2 lc 'blue' t 'BD_{step}=7000' smooth mcsplines
+
+    set autoscale;set xrange[0:10000];set yrange[-6:-4.7]
+    set xlabel "MD_{step} (Molecular Dynamic)"
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
+    {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000"
+    p '../results/md_energies_with_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'red' t 'with linked-list' smooth mcsplines,\
+    '../results/md_energies_without_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'blue' t 'without linked-list' smooth mcsplines
+
+    set autoscale;set xrange[0:100000];set yrange[-6:-4.7]
+    set xlabel "BD_{step} (Brownian Dynamic)"
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
+    {/Symbol r}=.8,{/Symbol D}t=.001;BD_{step}=100000;{BD_{step}}^{ens}=10"
+    p '../results/bd_energies_with_linkedlist_rho08.dat' u 1:(($2-0.4198)/256) w l lw 2 lc 'blue' t 'with linked-list' smooth mcsplines
+
+    set autoscale;set xrange[0:10000];set yrange[-6:-4.7]
+    set xlabel "MCD_{step} (Monte Carlo Dynamic)"
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
+    {/Symbol r}=.8,MCD_{step}=10000"
+    p '../results/mcd_energies_without_linkedlist_rho08.dat' u 1:(($2-0.4198)/256) w l lw 2 lc 'red' t 'without linked-list' smooth mcsplines
+unset multiplot
+
+
+# results
+# MD
+#   +++++++++++ without linked-list +++++++++++
+#     cpu_time      delta_t     r_cutoff        T_ref          n_p         t_eq        t_run  tau_max_corr
+#   0.1682E+03   0.5000E-02   0.2500E+01   0.7500E+00          256            0        10000          100
+#   Uadim_med=  -4.9272859003801894      +-  0.14657077219363179
+#   +++++++++++ with linked-list +++++++++++ 
+#     cpu_time      delta_t     r_cutoff        T_ref          n_p         t_eq        t_run  tau_max_corr
+#   0.1521E+03   0.5000E-02   0.2500E+01   0.7500E+00          256            0        10000          100
+#   Uadim_med=  -4.9212789648311270      +-  0.14319123660881800 
+# BD
+#   +++++++++++ without linked-list +++++++++++
+#     cpu_time      delta_t     r_cutoff        T_ref          n_p         t_eq        t_run tau_max_corr         t_ens
+#   0.1299E+04   0.1000E-02   0.2500E+01   0.7500E+00          256            0       100000          100           10
+#   Uadim_med=  -5.0072678131945318      +-   1.1803916341923242
+#   +++++++++++ with linked-list +++++++++++
+#     cpu_time      delta_t     r_cutoff        T_ref          n_p         t_eq        t_run  tau_max_corr         t_ens
+#   0.1312E+04   0.1000E-02   0.2500E+01   0.7500E+00          256            0       100000          100           10
+#   Uadim_med=  -4.9736326533582087      +-   1.3994986381748959    
+# MCD
+#   +++++++++++ without linked-list +++++++++++
+#     cpu_time      delta_t     r_cutoff        T_ref          n_p   MC_step_eq  MC_step_run  tau_max_corr
+#   0.2267E+03   0.5000E-01   0.2500E+01   0.7500E+00          256            0        10000          100
+#   Uadim_med=  -4.9441419509924955      +-  0.19483034310410302
+#   +++++++++++ with linked-list +++++++++++
+#         

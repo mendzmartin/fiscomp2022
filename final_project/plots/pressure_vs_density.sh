@@ -166,23 +166,43 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "bd_pressure_vs_density_T0.75.dat"
-sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'pressure_vs_density.pdf'
-rows=1;columns=1;set multiplot layout rows,columns
+sizex=4;sizey=8;set terminal pdf size sizey,sizex;set output 'pressure_vs_density.pdf'
+rows=1;columns=2;set multiplot layout rows,columns
     set xrange[0.1:1.2];set xtics 0.1
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    BD -> t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001\n\
-    MD -> t_{eq}=2000,t_{run}=1000,{/Symbol D}t=.005\n\
-    MCD -> MCstep_{eq}=3000,MCstep_{run}=2000,{/Symbol D}t=.005"
+    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
+    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
+    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005"
     set xlabel "density ({/Symbol r})"
     set ylabel "Osmotic adimensional pressure (P_{adim})"
     set key left
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-    p '../results/pressure_vs_density_paper.dat' u 1:2 w lp ps 0.5 pt 2 dt 2 lw 2 lc 'black' t 'T_{adim}=0.75(paper)',\
-    '../results/bd_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'red' t 'T_{adim}=0.75(BD)' smooth mcsplines,\
-    '../results/bd_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/md_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'blue' t 'T_{adim}=0.75(MD)' smooth mcsplines,\
-    '../results/md_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
-#    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2 w l lw 2 lc 'green' t 'T_{adim}=0.75(MC)' smooth mcsplines,\
-#    '../results/mcd_pressure_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+    set xrange[0.8:1.1];set yrange[:10]
+    p '../results/paper_pressure_vs_density.dat' u 1:2 w p ps 0.8 pt 7 lc 'black' t 'T_{adim}=0.75(paper)',\
+    '../results/paper_pressure_vs_density.dat' u 1:2 w l dt 2 lw 2 lc 'black' notitle smooth unique,\
+    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w l lw 2 lc 'blue' t 'T_{adim}=0.75(MD)' smooth mcsplines,\
+    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+   '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w l lw 2 lc 'green' t 'T_{adim}=0.75(MCD)' smooth mcsplines,\
+   '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+    # '../results/bd_pressure_vs_density_T1.15.dat' u 1:2 w l lw 2 lc 'red' t 'T_{adim}=0.75(BD)' smooth mcsplines,\
+    # '../results/bd_pressure_vs_density_T1.15.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+
+    set autoscale;set xrange[0.83:1.1];set yrange[-2:27]
+    p '../results/md_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1) w l lw 2 dt 4 lc 'red' t 'T_{adim}=0.75(MD)' smooth mcsplines,\
+    '../results/md_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w l lw 2 dt 4 lc 'blue' t 'T_{adim}=1.15(MD)' smooth mcsplines,\
+    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/md_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1) w l lw 2 dt 4 lc 'purple' t 'T_{adim}=1.35(MD)' smooth mcsplines,\
+    '../results/md_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/md_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1) w l lw 2 dt 4 lc 'orange' t 'T_{adim}=2.74(MD)' smooth mcsplines,\
+    '../results/md_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+   '../results/mcd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1) w l lw 2 dt 2 lc 'red' t 'T_{adim}=0.75(MCD)' smooth mcsplines,\
+   '../results/mcd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w l lw 2 dt 2 lc 'blue' t 'T_{adim}=1.15(MD)' smooth mcsplines,\
+    '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1) w l lw 2 dt 2 lc 'purple' t 'T_{adim}=1.35(MD)' smooth mcsplines,\
+    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/mcd_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1) w l lw 2 dt 2 lc 'orange' t 'T_{adim}=2.74(MD)' smooth mcsplines,\
+    '../results/mcd_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
 unset multiplot
 #    EOF
