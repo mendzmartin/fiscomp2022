@@ -168,7 +168,7 @@ GNUTERM = "qt"
 ## Last datafile plotted: "temperature_vs_density.dat"
 sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'temperature_vs_density.pdf'
 rows=1;columns=1;set multiplot layout rows,columns
-    set xrange[0.8:1.2];set xtics 0.1
+    set xrange[0.8:1.2];set yrange[:3];set xtics 0.05;set ytics 0.25;set grid
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
     MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
     BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
@@ -178,6 +178,11 @@ rows=1;columns=1;set multiplot layout rows,columns
     set key left
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     p '../results/paper_temperature_vs_density.dat' u 1:2 w p pt 7 ps 0.5 lc 'black' t 'theoretical result',\
-    '../results/temperature_vs_density.dat' u 2:1 w lp lw 1 pt 7 dt 2 lc 'red' t 'simulation result'
+    '../results/temperature_vs_density.dat' u 2:1 w lp lw 1 pt 7 dt 2 lc 'red' t 'MD simulations',\
+    '../results/temperature_vs_density.dat' u 2:1:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/temperature_vs_density.dat' u 4:1 w lp lw 1 pt 7 dt 2 lc 'blue' t 'MCD simulations',\
+    '../results/temperature_vs_density.dat' u 4:1:5 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/temperature_vs_density.dat' u 6:1 w lp lw 1 pt 7 dt 2 lc 'green' t 'BD simulations',\
+    '../results/temperature_vs_density.dat' u 6:1:7 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
 unset multiplot
 #    EOF

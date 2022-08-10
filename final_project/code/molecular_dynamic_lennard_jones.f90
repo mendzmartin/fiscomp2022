@@ -6,8 +6,8 @@ program molecular_dynamic_lennard_jones
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
     integer(sp), parameter   :: time_eq=5000_sp,&                              ! pasos de equilibración
-                                time_run=1000_sp                            ! pasos de evolucion en el estado estacionario
-    real(dp),    parameter   :: T_adim_ref=2.74_dp                          ! temperatura de referencia adimensional
+                                time_run=50000_sp                            ! pasos de evolucion en el estado estacionario
+    real(dp),    parameter   :: T_adim_ref=1.15_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
     real(dp),    allocatable :: vx_vector(:),vy_vector(:),vz_vector(:)      ! componentes de la velocidad/particula
@@ -22,8 +22,8 @@ program molecular_dynamic_lennard_jones
     ! VARIABLES PARA COMPUTAR TIEMPO TRANSCURRIDO DE CPU
     real(dp)                 :: time_end,time_start                         ! tiempos de CPU
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
-                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
+    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
+                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
                                 diffusion_coeff_switch=.true.,&              ! coeficiente de difusión vs densidad
                                 energie_switch=.false.                       ! energía interna
     ! VARIABLES PARA REALIZAR BARRIDO DE DENSIDADES
@@ -42,7 +42,7 @@ program molecular_dynamic_lennard_jones
     real(dp)                 :: Sk,Sk_med,var_Sk,err_Sk
     real(dp)                 :: s1_Sk,s2_Sk
     ! VARIABLES PARA COMPUTAR MSD Y COEFICIENTE DE DIFUSIÓN
-    integer(sp), parameter   :: tau_max_corr=100_sp                   ! pasos maximos de correlación
+    integer(sp), parameter   :: tau_max_corr=10000_sp                   ! pasos maximos de correlación
     real(dp),    allocatable :: x_vector_noPBC(:),y_vector_noPBC(:),&  ! componentes de la posición sin PBC
                                 z_vector_noPBC(:)
     real(dp),    allocatable :: wxx_matrix(:,:),wyy_matrix(:,:),&      ! matrices auxiliares para cálculo de msd
@@ -66,15 +66,15 @@ program molecular_dynamic_lennard_jones
     20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
-        open(10,file='../results/md_pressure_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
+        open(10,file='../results/md_pressure_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
         write(10,'(2(A12,x),x,A12)') 'density','pressure','error';end if
     if (structure_factor_switch.eqv..true.) then
-        open(11,file='../results/md_struct_factor_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
+        open(11,file='../results/md_struct_factor_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
         write(11,'(2(A12,x),x,A12)') 'density','S(k)_med','error';end if
     if (diffusion_coeff_switch.eqv..true.) then
-        open(12,file='../results/md_diffusion_vs_density_T2.74.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/md_diffusion_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
@@ -269,8 +269,9 @@ program molecular_dynamic_lennard_jones
         if (diffusion_coeff_switch.eqv..true.) then
             D_med=0._dp;s1_D=0._dp;s2_D=0._dp
             msd_med=0._dp;s1_msd=0._dp;s2_msd=0._dp
+            call open_file(90,j) ! abrimos archivo de datos según densidad
             do k=1,tau_max_corr
-                if (counter_data(k)==0_sp) stop
+                if (counter_data(k)==0_sp) then;print*,'counter_data=0',k;stop;end if
                 time=real(k,dp)*delta_time
                 ! computamos msd
                 msd=(sum_wxx_vector(k)+sum_wyy_vector(k)+sum_wzz_vector(k))*&
@@ -284,7 +285,9 @@ program molecular_dynamic_lennard_jones
                 s1_msd=s1_msd+msd;s2_msd=s2_msd+msd*msd
                 msd_med=s1_msd*(1._dp/real(k,dp))
                 var_msd=(real(k,dp)*s2_msd-s1_msd*s1_msd)*(1._dp/real(k*k,dp))
+                write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
             end do
+            close(90)
             ! computamos errores en el último paso
             err_D=(var_D*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
             err_msd=(var_msd*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
@@ -346,7 +349,7 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
     ! NOTA: CONDICIÓN QUE SE DEBE CUMPLIR
     ! nmax_tau_corr_0 < (time_eq+time_run)/tau_max_corr
-    integer(sp), parameter :: nmax_tau_corr_0=5_sp ! maximo número de tau_corr_0 que almacenamos
+    integer(sp), parameter :: nmax_tau_corr_0=4_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina
     tau_corr_0=mod(counter-1,tau_max_corr)+1 ! tiempo de correlación actual tau_corr_0={1,2,...,tau_max_corr}
@@ -375,3 +378,18 @@ subroutine mean_squared_displacement(n_p,x_vector,y_vector,z_vector,tau_max_corr
         end do
     end if
 end subroutine mean_squared_displacement
+
+subroutine open_file(file_num,index)
+    use module_precision
+    implicit none
+    integer(sp), intent(in)      :: index,file_num
+    character(len=44)            :: file_name
+    character(len=2)             :: index_str
+    integer(sp)                  :: istat,index_new
+    index_new=index+10_sp
+    write (index_str,'(I2)') index_new
+    file_name='../results/md_diffusion_vs_time_T1.15_'//trim(index_str)//'.dat'
+    open(file_num,file=file_name,status='replace',action='write',iostat=istat)
+    if (istat/=0) write(*,*) 'ERROR! istat(subroutine open_file) = ',istat
+    write(file_num,"(2(A12,x),A12)") 'time_corr','D','msd'
+end subroutine open_file

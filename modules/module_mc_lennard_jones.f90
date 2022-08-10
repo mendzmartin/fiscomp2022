@@ -81,6 +81,7 @@ module module_mc_lennard_jones
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                if (rij_pow02==0._dp) then;print*,'rij_pow02=0',i,j;stop;end if
                 if (rij_pow02<=r_cutoff*r_cutoff) then
                     u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
@@ -107,7 +108,7 @@ module module_mc_lennard_jones
                     ! calculamos distancia relativa corregida según PBC
                     rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                         x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                     if (rij_pow02<=r_cutoff*r_cutoff) then
                         u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                     else; u_indiv=0._dp; end if
@@ -123,7 +124,7 @@ module module_mc_lennard_jones
                         ! calculamos distancia relativa corregida según PBC
                         rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                         if (rij_pow02<=r_cutoff*r_cutoff) then
                             u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                         else; u_indiv=0._dp; end if
@@ -151,6 +152,7 @@ module module_mc_lennard_jones
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(index),y_vector(index),z_vector(index),&
                     x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                 if (rij_pow02<=r_cutoff*r_cutoff) then
                     u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
                     u_lj_reduced=u_lj_reduced+u_indiv
@@ -203,7 +205,7 @@ module module_mc_lennard_jones
                         ! calculamos distancia relativa corregida según PBC
                         rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                         if (rij_pow02<=r_cutoff*r_cutoff) then
                             u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
                         else; u_indiv=0._dp; end if
@@ -225,7 +227,7 @@ module module_mc_lennard_jones
                             ! calculamos distancia relativa corregida según PBC
                             rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                            if (rij_pow02==0._dp) stop
+                            if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                             if (rij_pow02<=r_cutoff*r_cutoff) then
                                 u_indiv=u_lj_individual(rij_pow02)!-u_lj_individual(r_cutoff*r_cutoff)
                             else; u_indiv=0._dp; end if
@@ -345,7 +347,7 @@ module module_mc_lennard_jones
                 do while (j/=0) ! en la celda
                     rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                         x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                     if (rij_pow02<=r_cutoff*r_cutoff) then
                         force_indiv=f_lj_individual(rij_pow02)
                     else; force_indiv=0._dp;end if
@@ -369,7 +371,7 @@ module module_mc_lennard_jones
                     do while (j/=0) ! en la celda
                         rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                         if (rij_pow02<=r_cutoff*r_cutoff) then
                             force_indiv=f_lj_individual(rij_pow02)
                         else; force_indiv=0._dp;end if
@@ -496,7 +498,7 @@ module module_mc_lennard_jones
                     y_vector(index)=real(j-1,dp)*a-0.5_dp*L
                     z_vector(index)=real(k-1,dp)*a-0.5_dp*L
                 end do;end do;end do
-            case(2) ! fcc laticce (2nd method)
+            case(2) ! fcc laticce (2nd method) (debe cumplirse n_p=(n^3)*4 con n natural)
                 points_unitcells=4._dp
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=L*(1._dp/(n_unitcells))!a=(4*(1._dp/density))**(1._dp/3._dp)
@@ -516,7 +518,7 @@ module module_mc_lennard_jones
                     end do
                 end do;end do;end do
                 deallocate(aux_matrix)
-            case(3) ! fcc laticce (3rd method)
+            case(3) ! fcc laticce (3rd method) (debe cumplirse n_p=(n^3)*4 con n natural)
                 points_unitcells=4._dp     
                 n_unitcells=anint((real(n_p,dp)*(1._dp/points_unitcells))**(1._dp/3._dp),dp)
                 a=(points_unitcells*(1._dp/density))**(1._dp/3._dp)
@@ -559,7 +561,11 @@ module module_mc_lennard_jones
         integer(sp)             :: counter           ! contador de aceptaciones
         real(dp)                :: accept_prob       ! acceptance_probability
         real(dp),    parameter  :: value_prob=0.5_dp,epsilon_prob=0.05_dp  ! variables para definir cota adimisible
-        logical                 :: end_loop           
+        logical                 :: end_loop
+        real(dp)                :: U_adim_old,U_adim_new 
+
+        ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
+        U_adim_old=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
         
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
 
@@ -584,7 +590,10 @@ module module_mc_lennard_jones
                 ! corrección de posiciones según PBC
                 call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
                 ! variación de energía interna
-                deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+                ! deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+                ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
+                U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                deltaU_adim=U_adim_new-U_adim_old
                 cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
                     else
                         if (T_adim==0._dp) then
@@ -707,7 +716,7 @@ module module_mc_lennard_jones
         end do
     end subroutine max_displacement_adjusting_linkedlist
 
-    ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO
+    ! SUBRUTINA DE EVOLUCIÓN CONFIGURACIONAL DEL SISTEMA
     subroutine evolution_monte_carlo(n_p,x_vector,y_vector,z_vector,&
         x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,&
         U_adim,T_adim,r_cutoff,density,delta_x,delta_y,delta_z)
@@ -726,7 +735,7 @@ module module_mc_lennard_jones
         real(dp)    :: L
         real(dp)    :: nrand                                ! numero random
         integer(sp) :: seed,seed_val(8),MC_index,index
-        real(dp)    :: U_adim_old,U_adim_new,deltaU_adim_good
+        real(dp)    :: U_adim_old,U_adim_new
 
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
 
@@ -751,10 +760,10 @@ module module_mc_lennard_jones
             ! corrección de posiciones según PBC
             call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
             ! variación de energía interna
-            deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+            ! deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
             ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
-            !U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            !deltaU_adim=U_adim_new-U_adim_old
+            U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            deltaU_adim=U_adim_new-U_adim_old
             cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                 else
                     if (T_adim==0._dp) then
@@ -783,9 +792,7 @@ module module_mc_lennard_jones
                         z_vector(index)=z_old;z_vector_noPBC(index)=z_old_noPBC
                     end if
             end if cond1
-            !print*,'U_adim=',U_adim,'deltaU_adim=',deltaU_adim
         end do
-        !stop
     end subroutine evolution_monte_carlo
 
     ! SUBRUTINA DE INTEGRACIÓN DE ECUACIONES DE MOVIMIENTO (USANDO LINKED LIST)

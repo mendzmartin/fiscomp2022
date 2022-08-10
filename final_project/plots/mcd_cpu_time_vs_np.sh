@@ -102,15 +102,15 @@ set mcbtics default
 set mrtics default
 set nomttics
 set xtics border in scale 1,0.5 mirror norotate  autojustify
-set xtics  norangelimit autofreq 
+set xtics  norangelimit logscale autofreq 
 set ytics border in scale 1,0.5 mirror norotate  autojustify
-set ytics  norangelimit autofreq 
+set ytics  norangelimit logscale autofreq 
 set ztics border in scale 1,0.5 nomirror norotate  autojustify
-set ztics  norangelimit autofreq 
+set ztics  norangelimit logscale autofreq 
 unset x2tics
 unset y2tics
 set cbtics border in scale 1,0.5 mirror norotate  autojustify
-set cbtics  norangelimit autofreq 
+set cbtics  norangelimit logscale autofreq 
 set rtics axis in scale 1,0.5 nomirror norotate  autojustify
 set rtics  norangelimit autofreq 
 unset ttics
@@ -144,13 +144,19 @@ set rlabel ""
 set rlabel  font "" textcolor lt -1 norotate
 set rrange [ * : * ] noreverse writeback
 unset logscale
+set logscale z 10
+set logscale y 10
+set logscale x 10
+set logscale cb 10
+set logscale y2 10
+set logscale x2 10
 unset jitter
 set zero 1e-08
 set lmargin  -1
 set bmargin  -1
 set rmargin  -1
 set tmargin  -1
-set locale "en_GB.UTF-8"
+set locale "es_AR.UTF-8"
 set pm3d explicit at s
 set pm3d scansautomatic
 set pm3d interpolate 1,1 flush begin noftriangles noborder corners2color mean
@@ -165,39 +171,31 @@ set fontpath
 set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
-## Last datafile plotted: "bd_pressure_vs_density_T0.75.dat"
-sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'pressure_vs_density.pdf'
+## Last datafile plotted: "mcd_data_run_vs_np.dat"
+sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'mcd_cpu_time_vs_np.pdf'
 rows=1;columns=1;set multiplot layout rows,columns
-    set xtics 0.1
-    set xlabel "density ({/Symbol r})"
-    set ylabel "Osmotic adimensional pressure (P_{adim})"
-    set key left
+    set ylabel "Elapsed cpu time [s]"
+    set key right
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
-    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
-    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005"
-    set autoscale;set xrange[0.83:1.1];set yrange[-2:30]
-    p '../results/md_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 2 ps 0.8 lc 'red' t 'T_{adim}=0.75(MD)',\
-    '../results/md_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 2 ps 0.8 lc 'blue' t 'T_{adim}=1.15(MD)',\
-    '../results/md_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/md_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 2 ps 0.8 lc 'green' t 'T_{adim}=1.35(MD)',\
-    '../results/md_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/md_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 2 ps 0.8 lc 'orange' t 'T_{adim}=2.74(MD)',\
-    '../results/md_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-   '../results/mcd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 4 ps 0.8 lc 'dark-red' t 'T_{adim}=0.75(MCD)',\
-   '../results/mcd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 4 ps 0.8 lc 'dark-blue' t 'T_{adim}=1.15(MCD)',\
-    '../results/mcd_pressure_vs_density_T1.15.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 4 ps 0.8 lc 'dark-green' t 'T_{adim}=1.35(MCD)',\
-    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/mcd_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 4 ps 0.8 lc 'dark-orange' t 'T_{adim}=2.74(MCD)',\
-    '../results/mcd_pressure_vs_density_T2.74.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/bd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 8 ps 0.8 lc 'magenta' t 'T_{adim}=0.75(BD)',\
-    '../results/bd_pressure_vs_density_T0.75.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1) w lp lw 2 pt 8 ps 0.8 lc 'cyan' t 'T_{adim}=1.35(BD)',\
-    '../results/mcd_pressure_vs_density_T1.35.dat' u 1:($2-0.52475*$1):3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+
+    set autoscale y; set yrange[0:35000]; set xrange[0:1500]
+    set xlabel "Total number of particles ({n_{p})"
+    set title "r_{cutoff}=2.5,FCC structure,T_{adim}=2.74\n\
+    {/Symbol D}{/Symbol r}={0.8-1.1};MCD_{step}=1000\n\
+    (Monte Carlo Simulation)"
+
+    f(x)=a*(x**b)
+    fit [32:500] f(x) '../results/mcd_data_run_vs_np.dat' u 4:1 via a,b
+
+    g(x)=c*(x**d)
+    fit [32:256] g(x) '../results/mcd_data_run_vs_np.dat' u 4:7 via c,d
+
+    unset logscale
+
+    p '../results/mcd_data_run_vs_np.dat' u 4:1 w lp pt 7 dt 2 lc 'red' t 'without linked-list,with {/Symbol D}U',\
+    '../results/mcd_data_run_vs_np.dat' u 4:7 w lp pt 7 dt 2 lc 'blue' t 'without linked-list,without {/Symbol D}U',\
+    f(x) lw 3 dt 2 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{2.19}",\
+    g(x) lw 3 dt 2 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{2.88}"
 
 unset multiplot
 #    EOF

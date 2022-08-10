@@ -6,9 +6,8 @@ program brownian_dynamic_lennard_jones
     integer(sp), parameter   :: n_p=256_sp                             ! cantidad de partículasa
     real(dp),    parameter   :: delta_time=0.001_dp                    ! paso temporal
     integer(sp), parameter   :: time_eq=100000_sp,&                     ! pasos de equilibración
-                                time_run=50000_sp,&                    ! pasos de evolucion en el estado estacionario
-                                ensamble_step=10_sp                    ! pasos de evolución para promedio en ensamble
-    real(dp),    parameter   :: T_adim_ref=0.75_dp                     ! temperatura de referencia adimensional
+                                time_run=1000_sp                    ! pasos de evolucion en el estado estacionario
+    real(dp),    parameter   :: T_adim_ref=1.35_dp                     ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp             ! radio de corte de interacciones y masa    
     real(dp),    parameter   :: dinamic_viscosity=2.87_dp
     real(dp),    parameter   :: pi=4._dp*atan(1._dp)
@@ -16,7 +15,7 @@ program brownian_dynamic_lennard_jones
                                  (1._dp/(3._dp*pi*dinamic_viscosity)) 
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)    ! componentes de las posiciones/particula
     real(dp),    allocatable :: force_x(:),force_y(:),force_z(:)       ! componentes de la fuerza/particula
-    integer(sp)              :: i,j,k,index,istat                      ! loop index
+    integer(sp)              :: i,k,index,istat                      ! loop index
     real(dp)                 :: time,L
     ! VARIABLES PARA COMPUTAR FUERZAS CON LINKED LIST
     integer(sp), parameter   :: m=3_sp                                  ! numero de celdas por dimensión 
@@ -31,10 +30,10 @@ program brownian_dynamic_lennard_jones
                                              (1._dp/real(n_density,dp))
     real(dp)                 :: density                                     ! densidad (particulas/volumen)
     ! VARIABLES PARA ACTIVAR/DESACTIVAR ESCRITURA DE DATOS
-    logical                  :: pressure_switch=.false.,&                   ! presión vs densidad
-                                structure_factor_switch=.false.,&           ! factor de estructura vs densidad
+    logical                  :: pressure_switch=.true.,&                   ! presión vs densidad
+                                structure_factor_switch=.true.,&           ! factor de estructura vs densidad
                                 diffusion_coeff_switch=.false.,&            ! coeficiente de difusión vs densidad
-                                energie_switch=.true.                      ! energía interna
+                                energie_switch=.false.                      ! energía interna
     ! VARIABLES PARA COMPUTAR ENERGÍA INTERNA
     real(dp)                 :: Uadim,Uadim_med,var_Uadim,err_Uadim
     real(dp)                 :: s1_Uadim,s2_Uadim
@@ -68,15 +67,15 @@ program brownian_dynamic_lennard_jones
     20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
-        open(10,file='../results/bd_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(10,file='../results/bd_pressure_vs_density_T1.35.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
         write(10,'(2(A12,x),x,A12)') 'density','pressure','error';end if
     if (structure_factor_switch.eqv..true.) then
-        open(11,file='../results/bd_struct_factor_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(11,file='../results/bd_struct_factor_vs_density_T1.35.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
         write(11,'(2(A12,x),x,A12)') 'density','S(k)_med','error';end if
     if (diffusion_coeff_switch.eqv..true.) then
-        open(12,file='../results/bd_diffusion_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/bd_diffusion_vs_density_T1.35.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
@@ -179,8 +178,7 @@ program brownian_dynamic_lennard_jones
         press_med=0._dp;s1_press=0._dp;s2_press=0._dp
         Sk_med=0._dp;s1_Sk=0._dp;s2_Sk=0._dp
 
-        i=0_sp ! seteamos indice del ensamble (estadística)
-        do j=1,time_run
+        do i=1,time_run
             index=index+1
 
             ! Mensaje del progreso de la simulación
@@ -201,63 +199,63 @@ program brownian_dynamic_lennard_jones
 
             time=real(index,dp)*delta_time ! tiempo real
 
-            ! ESCRIBIMOS DATOS (y acumulamos según ensamble)
-            if (mod(j,ensamble_step)==0_sp) then
-                i=i+1_sp
-                if (pressure_switch.eqv..true.) then
-                    press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
-                    s1_press=s1_press+press;s2_press=s2_press+press*press
-                    press_med=s1_press*(1._dp/real(i,dp))
-                    var_press=(real(i,dp)*s2_press-s1_press*s1_press)*(1._dp/real(i*i,dp))
-                end if
-                if (structure_factor_switch.eqv..true.) then
-                    Sk=static_structure_factor(n_p,density,x_vector,y_vector,z_vector)
-                    s1_Sk=s1_Sk+Sk;s2_Sk=s2_Sk+Sk*Sk
-                    Sk_med=s1_Sk*(1._dp/real(i,dp))
-                    var_Sk=(real(i,dp)*s2_Sk-s1_Sk*s1_Sk)*(1._dp/real(i*i,dp))
-                end if
-                if (diffusion_coeff_switch.eqv..true.) then
-                    call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
-                        wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
-                        counter_data,counter)
-                end if
-                if (energie_switch.eqv..true.) then
-                    select case (linkedlist_type)
-                        case(1) ! simulation whit linked-list
-                            Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
-                                r_cutoff,density,m,map,list,head)
-                        case(0) ! simulation whitout linked-list
-                            Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                    end select
+            ! ESCRIBIMOS DATOS
+            if (pressure_switch.eqv..true.) then
+                press=osmotic_pressure(n_p,density,mass,r_cutoff,x_vector,y_vector,z_vector)
+                s1_press=s1_press+press;s2_press=s2_press+press*press
+                press_med=s1_press*(1._dp/real(i,dp))
+                var_press=s2_press*(1._dp/real(i,dp))-press_med*press_med
+            end if
+            if (structure_factor_switch.eqv..true.) then
+                Sk=static_structure_factor(n_p,density,x_vector,y_vector,z_vector)
+                s1_Sk=s1_Sk+Sk;s2_Sk=s2_Sk+Sk*Sk
+                Sk_med=s1_Sk*(1._dp/real(i,dp))
+                var_Sk=s2_Sk*(1._dp/real(i,dp))-Sk_med*Sk_med
+            end if
+            if (diffusion_coeff_switch.eqv..true.) then
+                call mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_noPBC,tau_max_corr,&
+                    wxx_matrix,wyy_matrix,wzz_matrix,sum_wxx_vector,sum_wyy_vector,sum_wzz_vector,&
+                    counter_data,counter)
+            end if
+            if (energie_switch.eqv..true.) then
+                select case (linkedlist_type)
+                    case(1) ! simulation whit linked-list
+                        Uadim=u_lj_total_linkedlist(n_p,x_vector,y_vector,z_vector,&
+                            r_cutoff,density,m,map,list,head)
+                    case(0) ! simulation whitout linked-list
+                        Uadim=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                end select
 
-                    s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
-                    Uadim_med=s1_Uadim*(1._dp/real(i,dp))
-                    var_Uadim=(real(i,dp)*s2_Uadim-s1_Uadim*s1_Uadim)*(1._dp/real(i*i,dp))
-                    write(13,21) index,Uadim_med
-                end if
+                s1_Uadim=s1_Uadim+Uadim;s2_Uadim=s2_Uadim+Uadim*Uadim
+                Uadim_med=s1_Uadim*(1._dp/real(i,dp))
+                var_Uadim=s2_Uadim*(1._dp/real(i,dp))-Uadim_med*Uadim_med
+                write(13,21) index,Uadim_med
             end if
         end do
         
         if (energie_switch.eqv..true.) then
             ! computamos errores en el último paso
-            err_Uadim=sqrt(var_Uadim*(1._dp/real(i-1,dp)))
-            print*, 'Uadim_med=',Uadim_med*(1._dp/real(n_p,dp)),'+-',err_Uadim
+            err_Uadim=sqrt(var_Uadim*(1._dp/real(time_run-1,dp)))
+            if (var_Uadim<0._dp) then; print*,'var_Uadim<0';end if
+            if (var_Uadim==0._dp) then; print*,'var_Uadim=0';end if
+            write(*,*), 'Uadim_med=',Uadim_med*(1._dp/real(n_p,dp)),'+-',err_Uadim
         end if
         if (pressure_switch.eqv..true.) then
             ! computamos errores en el último paso
-            err_press=sqrt(var_press*(1._dp/real(i-1,dp)))
+            err_press=sqrt(var_press*(1._dp/real(time_run-1,dp)))
             write(10,20) density,press_med,err_press
         end if
         if (structure_factor_switch.eqv..true.) then
             ! computamos errores en el último paso
-            err_Sk=var_Sk*(1._dp/real(i-1,dp))
+            err_Sk=var_Sk*(1._dp/real(time_run-1,dp))
             write(11,20) density,Sk_med,err_Sk
         end if
         if (diffusion_coeff_switch.eqv..true.) then
             msd_med=0._dp;s1_msd=0._dp;s2_msd=0._dp
             D_med=0._dp;s1_D=0._dp;s2_D=0._dp
+            call open_file(90,k) ! abrimos archivo de datos según densidad
             do i=1,tau_max_corr
-                if (counter_data(i)==0_sp) stop
+                if (counter_data(i)==0_sp) then;print*,'counter_data=0',i;stop;end if
                 time=real(i,dp)*delta_time
                 ! computamos msd
                 msd=(sum_wxx_vector(i)+sum_wyy_vector(i)+sum_wzz_vector(i))*&
@@ -266,12 +264,14 @@ program brownian_dynamic_lennard_jones
                 ! computamos observables,1er y 2do momento,valores medios y varianzas
                 s1_msd=s1_msd+msd;s2_msd=s2_msd+msd*msd
                 msd_med=s1_msd*(1._dp/real(i,dp))
-                var_msd=(real(i,dp)*s2_msd-s1_msd*s1_msd)*(1._dp/real(i*i,dp))
+                var_msd=s2_msd*(1._dp/real(i,dp))-msd_med*msd_med
 
                 s1_D=s1_D+D;s2_D=s2_D+D*D
                 D_med=s1_D*(1._dp/real(i,dp))
-                var_D=(real(i,dp)*s2_D-s1_D*s1_D)*(1._dp/real(i*i,dp))
+                var_D=s2_D*(1._dp/real(i,dp))-D_med*D_med
+                write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
             end do
+            close(90)
             ! computamos errores en el último paso
             !err_msd=(var_msd*0.25_dp)*(1._dp/real(tau_max_corr-1,dp))
             err_msd=sqrt(var_msd*(1._dp/real(tau_max_corr-1,dp)))
@@ -305,7 +305,7 @@ program brownian_dynamic_lennard_jones
         write(50,'(8(A12,x),x,A12)') 'cpu_time','delta_t','r_cutoff','T_ref','n_p','t_eq',&
             't_run','tau_max_corr','t_ens'
         write(50,'(4(E12.4,x),4(I12,x),I12)') time_end-time_start,delta_time,r_cutoff,T_adim_ref,&
-            n_p,time_eq,time_run,tau_max_corr,ensamble_step
+            n_p,time_eq,time_run,tau_max_corr
     close(50)
 
     ! Mensaje del progreso de la simulación
@@ -336,7 +336,7 @@ subroutine mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_
     integer(sp)            :: tau_corr_0,tau_corr_t ! tiempos de correlación
     ! NOTA: CONDICIÓN QUE SE DEBE CUMPLIR
     ! nmax_tau_corr_0 < (time_eq+time_run)/(ensamble_step*tau_max_corr)
-    integer(sp), parameter :: nmax_tau_corr_0=5_sp ! maximo número de tau_corr_0 que almacenamos
+    integer(sp), parameter :: nmax_tau_corr_0=4_sp ! maximo número de tau_corr_0 que almacenamos
 
     counter=counter+1                        ! numero de veces que entro a la subrutina
     tau_corr_0=mod(counter-1,tau_max_corr)+1 ! tiempo de correlación actual tau_corr_0={1,2,...,tau_max_corr}
@@ -365,3 +365,18 @@ subroutine mean_squared_displacement(n_p,x_vector_noPBC,y_vector_noPBC,z_vector_
         end do
     end if
 end subroutine mean_squared_displacement
+
+subroutine open_file(file_num,index)
+    use module_precision
+    implicit none
+    integer(sp), intent(in)      :: index,file_num
+    character(len=44)            :: file_name
+    character(len=2)             :: index_str
+    integer(sp)                  :: istat,index_new
+    index_new=index+10_sp
+    write (index_str,'(I2)') index_new
+    file_name='../results/md_diffusion_vs_time_T2.74_'//trim(index_str)//'.dat'
+    open(file_num,file=file_name,status='replace',action='write',iostat=istat)
+    if (istat/=0) write(*,*) 'ERROR! istat(subroutine open_file) = ',istat
+    write(file_num,"(2(A12,x),A12)") 'time_corr','D','msd'
+end subroutine open_file
