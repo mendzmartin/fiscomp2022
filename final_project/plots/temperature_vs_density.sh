@@ -177,12 +177,14 @@ rows=1;columns=1;set multiplot layout rows,columns
     set ylabel "Adimensional Temperature (T_{adim})"
     set key left
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    x1label=0.9;y1label=1.75;set label "Liquid" at x1label,y1label center
+    x2label=1.1;y2label=1;set label "Solid" at x2label,y2label center
     p '../results/paper_temperature_vs_density.dat' u 1:2 w p pt 7 ps 0.5 lc 'black' t 'theoretical result',\
-    '../results/temperature_vs_density.dat' u 2:1 w lp lw 1 pt 7 dt 2 lc 'red' t 'MD simulations',\
+    '../results/temperature_vs_density.dat' u 2:1 w p pt 2 dt 2 lc 'red' t 'MD simulations',\
     '../results/temperature_vs_density.dat' u 2:1:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/temperature_vs_density.dat' u 4:1 w lp lw 1 pt 7 dt 2 lc 'blue' t 'MCD simulations',\
+    '../results/temperature_vs_density.dat' u 4:1 w p pt 4 dt 2 lc 'blue' t 'MCD simulations',\
     '../results/temperature_vs_density.dat' u 4:1:5 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
-    '../results/temperature_vs_density.dat' u 6:1 w lp lw 1 pt 7 dt 2 lc 'green' t 'BD simulations',\
+    '../results/temperature_vs_density.dat' u 6:1 w p pt 8 dt 2 lc 'green' t 'BD simulations',\
     '../results/temperature_vs_density.dat' u 6:1:7 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
 unset multiplot
 #    EOF

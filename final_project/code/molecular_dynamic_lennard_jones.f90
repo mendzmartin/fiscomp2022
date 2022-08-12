@@ -7,7 +7,7 @@ program molecular_dynamic_lennard_jones
     real(dp),    parameter   :: delta_time=0.005_dp                         ! paso temporal
     integer(sp), parameter   :: time_eq=5000_sp,&                              ! pasos de equilibración
                                 time_run=50000_sp                            ! pasos de evolucion en el estado estacionario
-    real(dp),    parameter   :: T_adim_ref=1.15_dp                          ! temperatura de referencia adimensional
+    real(dp),    parameter   :: T_adim_ref=0.75_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones y masa     
     real(dp),    allocatable :: x_vector(:),y_vector(:),z_vector(:)         ! componentes de las posiciones/particula
     real(dp),    allocatable :: vx_vector(:),vy_vector(:),vz_vector(:)      ! componentes de la velocidad/particula
@@ -66,15 +66,15 @@ program molecular_dynamic_lennard_jones
     20 format(2(E12.4,x),x,E12.4);21 format(I12,x,E12.4);22 format(4(E12.4,x),x,E12.4)
     ! APERTURA DE ARCHIVOS DE DATOS
     if (pressure_switch.eqv..true.) then
-        open(10,file='../results/md_pressure_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
+        open(10,file='../results/md_pressure_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(10file) = ',istat
         write(10,'(2(A12,x),x,A12)') 'density','pressure','error';end if
     if (structure_factor_switch.eqv..true.) then
-        open(11,file='../results/md_struct_factor_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
+        open(11,file='../results/md_struct_factor_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(11file) = ',istat
         write(11,'(2(A12,x),x,A12)') 'density','S(k)_med','error';end if
     if (diffusion_coeff_switch.eqv..true.) then
-        open(12,file='../results/md_diffusion_vs_density_T1.15.dat',status='replace',action='write',iostat=istat)
+        open(12,file='../results/md_diffusion_vs_density_T0.75.dat',status='replace',action='write',iostat=istat)
         if (istat/=0) write(*,*) 'ERROR! istat(12file) = ',istat
         write(12,'(4(A12,x),x,A12)') 'density','D','error','msd','error';end if
 
@@ -388,7 +388,7 @@ subroutine open_file(file_num,index)
     integer(sp)                  :: istat,index_new
     index_new=index+10_sp
     write (index_str,'(I2)') index_new
-    file_name='../results/md_diffusion_vs_time_T1.15_'//trim(index_str)//'.dat'
+    file_name='../results/md_diffusion_vs_time_T0.75_'//trim(index_str)//'.dat'
     open(file_num,file=file_name,status='replace',action='write',iostat=istat)
     if (istat/=0) write(*,*) 'ERROR! istat(subroutine open_file) = ',istat
     write(file_num,"(2(A12,x),A12)") 'time_corr','D','msd'

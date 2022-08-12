@@ -48,6 +48,7 @@ module module_md_lennard_jones
             do i=1,j-1
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                 if (rij_pow02<=r_cutoff*r_cutoff) then
                     force_indiv=f_lj_individual(rij_pow02)
                 else; force_indiv=0._dp; end if
@@ -68,6 +69,7 @@ module module_md_lennard_jones
         ! calculamos distancia relativa corregida según PBC
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do  ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         u_lj_individual=4._dp*(1._dp/r12_pow06)*((1._dp/r12_pow06)-1._dp)
     end function u_lj_individual
     ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
@@ -83,6 +85,7 @@ module module_md_lennard_jones
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
+                if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                 if (rij_pow02<=r_cutoff*r_cutoff) then
                     u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                 else; u_indiv=0._dp; end if
@@ -109,7 +112,7 @@ module module_md_lennard_jones
                     ! calculamos distancia relativa corregida según PBC
                     rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                         x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                     if (rij_pow02<=r_cutoff*r_cutoff) then
                         u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                     else; u_indiv=0._dp; end if
@@ -125,7 +128,7 @@ module module_md_lennard_jones
                         ! calculamos distancia relativa corregida según PBC
                     rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                         x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                     if (rij_pow02<=r_cutoff*r_cutoff) then
                         u_indiv=u_lj_individual(rij_pow02)-u_lj_individual(r_cutoff*r_cutoff)
                     else; u_indiv=0._dp; end if
@@ -157,6 +160,7 @@ module module_md_lennard_jones
         integer(sp)          :: i
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         f_lj_individual=24._dp*(1._dp/(r12_pow02*r12_pow06))*(2._dp*(1._dp/r12_pow06)-1._dp)
     end function f_lj_individual
 
@@ -179,7 +183,7 @@ module module_md_lennard_jones
                 ! calculamos distancia relativa corregida según PBC
                 rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                 x_vector(j),y_vector(j),z_vector(j),n_p,density)
-
+                if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                 if (rij_pow02<=r_cutoff*r_cutoff) then
                     force_indiv=f_lj_individual(rij_pow02)
                 else; force_indiv=0._dp;end if
@@ -223,7 +227,7 @@ module module_md_lennard_jones
                 do while (j/=0) ! en la celda
                     rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                         x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                    if (rij_pow02==0._dp) stop
+                    if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                     if (rij_pow02<=r_cutoff*r_cutoff) then
                         force_indiv=f_lj_individual(rij_pow02)
                     else; force_indiv=0._dp;end if
@@ -247,7 +251,7 @@ module module_md_lennard_jones
                     do while (j/=0) ! en la celda
                         rij_pow02=rel_pos_correction(x_vector(i),y_vector(i),z_vector(i),&
                             x_vector(j),y_vector(j),z_vector(j),n_p,density)
-                        if (rij_pow02==0._dp) stop
+                        if (rij_pow02==0._dp) then;print*,'rij_pow02=0';stop;end if
                         if (rij_pow02<=r_cutoff*r_cutoff) then
                             force_indiv=f_lj_individual(rij_pow02)
                         else; force_indiv=0._dp;end if

@@ -65,6 +65,7 @@ module module_mc_lennard_jones
         ! calculamos distancia relativa corregida según PBC
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do  ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         u_lj_individual=4._dp*(1._dp/r12_pow06)*((1._dp/r12_pow06)-1._dp)
     end function u_lj_individual
 
@@ -283,6 +284,7 @@ module module_mc_lennard_jones
         integer(sp)          :: i
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         f_lj_individual=24._dp*(1._dp/(r12_pow02*r12_pow06))*(2._dp*(1._dp/r12_pow06)-1._dp)
     end function f_lj_individual
 
@@ -565,7 +567,7 @@ module module_mc_lennard_jones
         real(dp)                :: U_adim_old,U_adim_new 
 
         ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
-        U_adim_old=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+        ! U_adim_old=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
         
         L=(real(n_p,dp)*(1._dp/density))**(1._dp/3._dp)
 
@@ -590,10 +592,10 @@ module module_mc_lennard_jones
                 ! corrección de posiciones según PBC
                 call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
                 ! variación de energía interna
-                ! deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+                deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
                 ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
-                U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-                deltaU_adim=U_adim_new-U_adim_old
+                ! U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+                ! deltaU_adim=U_adim_new-U_adim_old
                 cond1:  if (deltaU_adim<=0._dp) then;counter=counter+1_sp;exit cond1
                     else
                         if (T_adim==0._dp) then
@@ -760,10 +762,10 @@ module module_mc_lennard_jones
             ! corrección de posiciones según PBC
             call position_correction(n_p,density,x_vector(index),y_vector(index),z_vector(index))
             ! variación de energía interna
-            ! deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
+            deltaU_adim=delta_u_lj(n_p,x_vector,y_vector,z_vector,r_cutoff,density,x_old,y_old,z_old,index)
             ! +++ DESCOMENTAR SI SE QUIERE COMPARAR CON EL MÉTODO ORIGINAL +++
-            U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
-            deltaU_adim=U_adim_new-U_adim_old
+            ! U_adim_old=U_adim;U_adim_new=u_lj_total(n_p,x_vector,y_vector,z_vector,r_cutoff,density)
+            ! deltaU_adim=U_adim_new-U_adim_old
             cond1:  if (deltaU_adim<=0._dp) then;U_adim=U_adim+deltaU_adim;exit cond1
                 else
                     if (T_adim==0._dp) then

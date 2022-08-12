@@ -4,8 +4,8 @@ program monte_carlo_dynamic_lennard_jones
     implicit none
     ! VARIABLES GENERALES
     integer(sp), parameter   :: n_p=256_sp                                  ! cantidad de partículasa (n_p=(n^3)*4)
-    integer(sp), parameter   :: MC_step_eq=500_sp                           ! monte carlo step para equilibración (transitorio)
-    integer(sp), parameter   :: MC_step_run=500_sp                          ! monete carlo step para corrida (estacionario)
+    integer(sp), parameter   :: MC_step_eq=5000_sp                           ! monte carlo step para equilibración (transitorio)
+    integer(sp), parameter   :: MC_step_run=1000_sp                          ! monete carlo step para corrida (estacionario)
     real(dp),    parameter   :: T_adim_ref=2.74_dp                          ! temperatura de referencia adimensional
     real(dp),    parameter   :: r_cutoff=2.5_dp,mass=1._dp                  ! radio de corte de interacciones (r_c<L/2) y masa     
     real(dp)                 :: delta_x,delta_y,delta_z

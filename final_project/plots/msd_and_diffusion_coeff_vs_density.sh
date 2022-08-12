@@ -166,80 +166,21 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "pressure_vs_density.dat"
-sizex=8;sizey=8
+sizex=4;sizey=4
 set terminal pdf size sizex,sizey;set output 'msd_and_diffusion_coeff_vs_density.pdf'
-rows=2;columns=2
+rows=1;columns=1
 set multiplot layout rows,columns
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
     set key left top
-
     set autoscale y
-    set xrange [0.8:1.1];set xtics 0.1
+    set xrange [0.83:1.1];set xtics 0.1;set grid
     set xlabel "density ({/Symbol r})"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
-    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
-    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005"
+    t_{eq}=100000,t_{run}=50000,{/Symbol D}t=.005,{/Symbol t}_{max}^{corr}=10000\n\
+    Molecular Dynamic Simulations"
     set ylabel "diffusion constant (D)"
-    p '../results/md_diffusion_vs_density_T0.75.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines t 'T_{adim}=0.75(MD)',\
-    "../results/md_diffusion_vs_density_T0.75.dat" u 1:2:3 with yerrorbars lc 'black'notitle,\
-    '../results/md_diffusion_vs_density_T1.15.dat' u 1:2 w l lw 3 lc 'blue' smooth mcsplines t 'T_{adim}=1.15(MD)',\
-    "../results/md_diffusion_vs_density_T1.15.dat" u 1:2:3 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T1.35.dat' u 1:2 w l lw 3 lc 'purple' smooth mcsplines t 'T_{adim}=1.35(MD)',\
-    "../results/md_diffusion_vs_density_T1.35.dat" u 1:2:3 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T2.74.dat' u 1:2 w l lw 3 lc 'orange' smooth mcsplines t 'T_{adim}=2.74(MD)',\
-    "../results/md_diffusion_vs_density_T2.74.dat" u 1:2:3 with yerrorbars lc 'black' notitle
-
-    set autoscale y
-    set xrange [0.8:1.1];set xtics 0.1
-    set xlabel "density ({/Symbol r})"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
-    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
-    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005"
-    set ylabel "mean squared displacement (MSD)"
-    p '../results/md_diffusion_vs_density_T0.75.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines t 'T_{adim}=0.75(MD)',\
-    "../results/md_diffusion_vs_density_T0.75.dat" u 1:4:5 with yerrorbars lc 'black'notitle,\
-    '../results/md_diffusion_vs_density_T1.15.dat' u 1:4 w l lw 3 lc 'blue' smooth mcsplines t 'T_{adim}=1.15(MD)',\
-    "../results/md_diffusion_vs_density_T1.15.dat" u 1:4:5 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T1.35.dat' u 1:4 w l lw 3 lc 'purple' smooth mcsplines t 'T_{adim}=1.35(MD)',\
-    "../results/md_diffusion_vs_density_T1.35.dat" u 1:4:5 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T2.74.dat' u 1:4 w l lw 3 lc 'orange' smooth mcsplines t 'T_{adim}=2.74(MD)',\
-    "../results/md_diffusion_vs_density_T2.74.dat" u 1:4:5 with yerrorbars lc 'black' notitle
-
-    set logscale y;set autoscale y
-    set xrange [0.8:1.1];set xtics 0.1
-    set xlabel "density ({/Symbol r})"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
-    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
-    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005\n\
-    LOGSCALE"
-    set ylabel "diffusion constant (D)"
-    p '../results/md_diffusion_vs_density_T0.75.dat' u 1:2 w l lw 3 lc 'red' smooth mcsplines t 'T_{adim}=0.75(MD)',\
-    "../results/md_diffusion_vs_density_T0.75.dat" u 1:2:3 with yerrorbars lc 'black'notitle,\
-    '../results/md_diffusion_vs_density_T1.15.dat' u 1:2 w l lw 3 lc 'blue' smooth mcsplines t 'T_{adim}=1.15(MD)',\
-    "../results/md_diffusion_vs_density_T1.15.dat" u 1:2:3 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T1.35.dat' u 1:2 w l lw 3 lc 'purple' smooth mcsplines t 'T_{adim}=1.35(MD)',\
-    "../results/md_diffusion_vs_density_T1.35.dat" u 1:2:3 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T2.74.dat' u 1:2 w l lw 3 lc 'orange' smooth mcsplines t 'T_{adim}=2.74(MD)',\
-    "../results/md_diffusion_vs_density_T2.74.dat" u 1:2:3 with yerrorbars lc 'black' notitle
-
-    set autoscale y;set yrange[:10]
-    set xrange [0.8:1.1];set xtics 0.1
-    set xlabel "density ({/Symbol r})"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    MD -> t_{eq}=5000,t_{run}=1000,{/Symbol D}t=.005\n\
-    BD -> t_{eq}=100000,t_{ens}=10,t_{run}=50000,{/Symbol D}t=.001\n\
-    MCD -> MCstep_{eq}=10000,MCstep_{run}=1000,{/Symbol D}t=.005\n\
-    LOGSCALE"
-    set ylabel "mean squared displacement (MSD)"
-    p '../results/md_diffusion_vs_density_T0.75.dat' u 1:4 w l lw 3 lc 'red' smooth mcsplines t 'T_{adim}=0.75(MD)',\
-    "../results/md_diffusion_vs_density_T0.75.dat" u 1:4:5 with yerrorbars lc 'black'notitle,\
-    '../results/md_diffusion_vs_density_T1.15.dat' u 1:4 w l lw 3 lc 'blue' smooth mcsplines t 'T_{adim}=1.15(MD)',\
-    "../results/md_diffusion_vs_density_T1.15.dat" u 1:4:5 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T1.35.dat' u 1:4 w l lw 3 lc 'purple' smooth mcsplines t 'T_{adim}=1.35(MD)',\
-    "../results/md_diffusion_vs_density_T1.35.dat" u 1:4:5 with yerrorbars lc 'black' notitle,\
-    '../results/md_diffusion_vs_density_T2.74.dat' u 1:4 w l lw 3 lc 'orange' smooth mcsplines t 'T_{adim}=2.74(MD)',\
-    "../results/md_diffusion_vs_density_T2.74.dat" u 1:4:5 with yerrorbars lc 'black' notitle
+    p '../results/md_diffusion_coeff_vs_density.dat' u 1:2 w lp lw 3 lc 'red' t 'T_{adim}=0.75(MD)',\
+    '../results/md_diffusion_coeff_vs_density.dat' u 1:3 w lp lw 3 lc 'blue' t 'T_{adim}=1.15(MD)',\
+    '../results/md_diffusion_coeff_vs_density.dat' u 1:4 w lp lw 3 lc 'purple' t 'T_{adim}=1.35(MD)',\
+    '../results/md_diffusion_coeff_vs_density.dat' u 1:5 w lp lw 3 lc 'orange' t 'T_{adim}=2.74(MD)'
 unset multiplot

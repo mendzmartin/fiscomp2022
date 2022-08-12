@@ -171,40 +171,41 @@ rows=3;columns=1;set multiplot layout rows,columns
     set ylabel "Potential adimensional energy (U_{adim}/{n_{p}})"
     set key right
     set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
+    set parametric
+    t1=3000;set trange [-6:-5.3]
 
-    set autoscale;set xrange[0:10000];set yrange[-6:0]
+    set autoscale;set xrange[0:10000];set yrange[-6:-5.2]
     set xlabel "MD_{step} (Molecular Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
     {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000"
-    p '../results/md_energies_with_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'red' t 'with linked-list' smooth mcsplines,\
-    '../results/md_energies_without_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'blue' t 'without linked-list' smooth mcsplines
+    x1label=1500;y1label=-5.6;set label "transitory" at x1label,y1label center
+    x2label=6000;y2label=-5.6;set label "estationary" at x2label,y2label center
+    p '../results/md_energies_with_linkedlist_rho08.dat' u 0:(($2/256)-0.4198) w l lw 2 lc 'red' t 'with linked-list Uadim_{med}=-5.34+-0.14' smooth mcsplines,\
+    '../results/md_energies_without_linkedlist_rho08.dat' u 0:(($2/256)-0.4198) w l lw 2 lc 'blue' t 'without linked-list Uadim_{med}=-5.35+-0.15' smooth mcsplines,\
+    t1,t w l lw 3 lc 'black' dt 2 notitle
 
-    set autoscale;set xrange[0:100000];set yrange[-6:0]
+    set autoscale;set xrange[0:100000];set yrange[-6:-1.5]
+    t2=80000;set trange [-6:-5]
     set xlabel "BD_{step} (Brownian Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
     {/Symbol r}=.8,{/Symbol D}t=.001;BD_{step}=100000;{BD_{step}}^{ens}=10"
-    p '../results/bd_energies_with_linkedlist_rho08.dat' u 1:(($2-0.4198)/256) w l lw 2 lc 'blue' t 'with linked-list' smooth mcsplines,\
-    '../results/bd_energies_without_linkedlist_rho08.dat' u 1:(($2-0.4198)/256) w l lw 2 lc 'red' t 'without linked-list' smooth mcsplines
+    unset label
+    x1label=40000;y1label=-4;set label "transitory" at x1label,y1label center
+    x2label=90000;y2label=-4;set label "estationary" at x2label,y2label center
+    p '../results/bd_energies_with_linkedlist_rho08.dat' u 1:(($2/256)-0.4198) w l lw 2 lc 'blue' t 'with linked-list Uadim_{med}=-5.34+-0.64' smooth mcsplines,\
+    '../results/bd_energies_without_linkedlist_rho08.dat' u 1:(($2/256)-0.4198) w l lw 2 lc 'red' t 'without linked-list Uadim_{med}=-5.37+-0.52' smooth mcsplines,\
+    t2,t w l lw 3 lc 'black' dt 2 notitle
 
-    set autoscale;set xrange[0:10000];set yrange[-6:0]
+    set autoscale;set xrange[0:10000];set yrange[-6:-5.2]
+    t3=6000;set trange [-6:-5.3]
     set xlabel "MCD_{step} (Monte Carlo Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
     {/Symbol r}=.8,MCD_{step}=10000"
-    p '../results/mcd_energies_without_linkedlist_rho08.dat' u 1:(($2-0.4198)/256) w l lw 2 lc 'red' t 'without linked-list' smooth mcsplines
-unset multiplot
-
-sizey=4;sizex=4;set terminal pdf size sizex,sizey;set output 'md_energies_vs_time.pdf'
-rows=1;columns=1;set multiplot layout rows,columns
-    set ylabel "Potential adimensional energy (U_{adim}/{n_{p}})"
-    set key right
-    set grid;set key font ",12";set xlabel  font ",12" ;set ylabel  font ",12"
-
-    set autoscale;set xrange[0:10000];set yrange[-6:0]
-    set xlabel "MD_{step} (Molecular Dynamic)"
-    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000"
-    p '../results/md_energies_with_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'red' t 'with linked-list' smooth mcsplines,\
-    '../results/md_energies_without_linkedlist_rho08.dat' u 0:(($2-0.4198)/256) w l lw 2 lc 'blue' t 'without linked-list' smooth mcsplines
+    unset label
+    x1label=3000;y1label=-5.6;set label "transitory" at x1label,y1label center
+    x2label=8000;y2label=-5.6;set label "estationary" at x2label,y2label center
+    p '../results/mcd_energies_without_linkedlist_rho08.dat' u 1:(($2/256)-0.4198) w l lw 2 lc 'red' t 'without linked-list Uadim_{med}=-5.36+-0.19' smooth mcsplines,\
+    t3,t w l lw 3 lc 'black' dt 2 notitle
 unset multiplot
 
 

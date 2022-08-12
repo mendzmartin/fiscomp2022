@@ -166,13 +166,12 @@ set psdir
 set fit brief errorvariables nocovariancevariables errorscaling prescale nowrap v5
 GNUTERM = "qt"
 ## Last datafile plotted: "bd_struct_factor_vs_density_T0.75.dat"
-sizex=4;sizey=4;set terminal pdf size sizey,sizex;set output 'struct_factor_vs_density.pdf'
-rows=1;columns=1;set multiplot layout rows,columns
-    set xrange[0.82:1.12];set xtics 0.03;set yrange[0:2]
+sizex=4;sizey=12;set terminal pdf size sizex,sizey;set output 'struct_factor_vs_density.pdf'
+rows=3;columns=1;set multiplot layout rows,columns
+    set xrange[0.82:1.12];set xtics 0.03;set yrange[0:1.5]
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,{/Symbol k}=2{/Symbol p}/a(-1,1,-1)\n\
-    BD -> t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001\n\
     MD -> t_{eq}=2000,t_{run}=1000,{/Symbol D}t=.005\n\
-    MCD -> MCstep_{eq}=3000,MCstep_{run}=2000,{/Symbol D}t=.005"
+    Molecular Dynamic Simulations"
     set xlabel "density ({/Symbol r})"
     set ylabel "static structure function (S({/Symbol k},t))"
     set key left
@@ -185,7 +184,12 @@ rows=1;columns=1;set multiplot layout rows,columns
     '../results/md_struct_factor_vs_density_T1.35.dat' u 1:2 w lp lw 2 pt 2 ps 0.8 lc 'green' t 'T_{adim}=1.35(MD)',\
     '../results/md_struct_factor_vs_density_T1.35.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
     '../results/md_struct_factor_vs_density_T2.74.dat' u 1:2 w lp lw 2 pt 2 ps 0.8 lc 'orange' t 'T_{adim}=2.74(MD)',\
-    '../results/md_struct_factor_vs_density_T2.74.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/md_struct_factor_vs_density_T2.74.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,{/Symbol k}=2{/Symbol p}/a(-1,1,-1)\n\
+    MCD -> MCstep_{eq}=3000,MCstep_{run}=2000,{/Symbol D}t=.005\n\
+    Monte Carlo Simulations"
+    p '../results/md_struct_factor_vs_density_T0.75.dat' u 1:(1) w l lw 3 dt 8 lc 'black' notitle,\
     '../results/mcd_struct_factor_vs_density_T0.75.dat' u 1:2 w lp lw 2 pt 4 ps 0.8 lc 'dark-red' t 'T_{adim}=0.75(MCD)',\
     '../results/mcd_struct_factor_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
     '../results/mcd_struct_factor_vs_density_T1.15.dat' u 1:2 w lp lw 2 pt 4 ps 0.8 lc 'dark-blue' t 'T_{adim}=1.15(MCD)',\
@@ -193,7 +197,12 @@ rows=1;columns=1;set multiplot layout rows,columns
     '../results/mcd_struct_factor_vs_density_T1.35.dat' u 1:2 w lp lw 2 pt 4 ps 0.8 lc 'dark-green' t 'T_{adim}=1.35(MCD)',\
     '../results/mcd_struct_factor_vs_density_T1.35.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
     '../results/mcd_struct_factor_vs_density_T2.74.dat' u 1:2 w lp lw 2 pt 4 ps 0.8 lc 'dark-orange' t 'T_{adim}=2.74(MCD)',\
-    '../results/mcd_struct_factor_vs_density_T2.74.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
+    '../results/mcd_struct_factor_vs_density_T2.74.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle
+
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,{/Symbol k}=2{/Symbol p}/a(-1,1,-1)\n\
+    BD -> t_{eq}=15000,t_{ens}=10,t_{run}=15000,{/Symbol D}t=.001\n\
+    Brownian Dynamic Simulations"
+    p '../results/md_struct_factor_vs_density_T0.75.dat' u 1:(1) w l lw 3 dt 8 lc 'black' notitle,\
     '../results/bd_struct_factor_vs_density_T0.75.dat' u 1:2 w lp lw 2 pt 8 ps 0.8 lc 'magenta' t 'T_{adim}=0.75(BD)',\
     '../results/bd_struct_factor_vs_density_T0.75.dat' u 1:2:3 with yerrorbars pt 7 ps 0.2 lw 0.1 lc 'black' notitle,\
     '../results/bd_struct_factor_vs_density_T1.35.dat' u 1:2 w lp lw 2 pt 4 ps 0.8 lc 'cyan' t 'T_{adim}=1.15(BD)',\

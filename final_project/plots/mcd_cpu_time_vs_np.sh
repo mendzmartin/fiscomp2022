@@ -190,12 +190,17 @@ rows=1;columns=1;set multiplot layout rows,columns
     g(x)=c*(x**d)
     fit [32:256] g(x) '../results/mcd_data_run_vs_np.dat' u 4:7 via c,d
 
+    h(x)=e*(x**f)
+    fit [32:256] h(x) '../results/mcd_data_run_vs_np.dat' u 4:8 via e,f
+
     unset logscale
 
-    p '../results/mcd_data_run_vs_np.dat' u 4:1 w lp pt 7 dt 2 lc 'red' t 'without linked-list,with {/Symbol D}U',\
-    '../results/mcd_data_run_vs_np.dat' u 4:7 w lp pt 7 dt 2 lc 'blue' t 'without linked-list,without {/Symbol D}U',\
+    p '../results/mcd_data_run_vs_np.dat' u 4:1 w p pt 7 lc 'red' t 'without linked-list,with {/Symbol D}U',\
+    '../results/mcd_data_run_vs_np.dat' u 4:7 w p pt 7 lc 'blue' t 'without linked-list,without {/Symbol D}U',\
+    '../results/mcd_data_run_vs_np.dat' u 4:8 w p pt 7 lc 'green' t 'with linked-list,with {/Symbol D}U',\
     f(x) lw 3 dt 2 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{2.19}",\
-    g(x) lw 3 dt 2 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{2.88}"
+    g(x) lw 3 dt 4 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{2.88}",\
+    h(x) lw 3 dt 8 lc 'black' t "fit -> t_{CPU} \\~ (n_p)^{3.21}"
 
 unset multiplot
 #    EOF

@@ -141,6 +141,7 @@ module module_bd_lennard_jones
         ! calculamos distancia relativa corregida según PBC
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do  ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         u_lj_individual=4._dp*(1._dp/r12_pow06)*((1._dp/r12_pow06)-1._dp)
     end function u_lj_individual
     ! compute total lennard jones potential (TRUNCADO Y DESPLAZADO)
@@ -224,6 +225,7 @@ module module_bd_lennard_jones
         integer(sp)          :: i
         r12_pow06=1._dp
         do i=1,3;r12_pow06=r12_pow06*r12_pow02;end do ! (r12)^6
+        if (r12_pow06==0._dp) then;print*,'r12_pow06=0';stop;end if
         f_lj_individual=24._dp*(1._dp/(r12_pow02*r12_pow06))*(2._dp*(1._dp/r12_pow06)-1._dp)
     end function f_lj_individual
     ! calculo de la componente xi de la fuerza total (TRUNCADO Y DESPLAZADO)
