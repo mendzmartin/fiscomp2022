@@ -177,7 +177,8 @@ rows=3;columns=1;set multiplot layout rows,columns
     set autoscale;set xrange[0:10000];set yrange[-6:-5.2]
     set xlabel "MD_{step} (Molecular Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000"
+    {/Symbol r}=.8,{/Symbol D}t=.005;MD_{step}=10000,\n\
+    Molecular Dynamic Simulations"
     x1label=1500;y1label=-5.6;set label "transitory" at x1label,y1label center
     x2label=6000;y2label=-5.6;set label "estationary" at x2label,y2label center
     p '../results/md_energies_with_linkedlist_rho08.dat' u 0:(($2/256)-0.4198) w l lw 2 lc 'red' t 'with linked-list Uadim_{med}=-5.34+-0.14' smooth mcsplines,\
@@ -188,7 +189,8 @@ rows=3;columns=1;set multiplot layout rows,columns
     t2=80000;set trange [-6:-5]
     set xlabel "BD_{step} (Brownian Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    {/Symbol r}=.8,{/Symbol D}t=.001;BD_{step}=100000;{BD_{step}}^{ens}=10"
+    {/Symbol r}=.8,{/Symbol D}t=.001;BD_{step}=100000;{BD_{step}}^{ens}=10\n\
+    Brownian Dynamic Simulations"
     unset label
     x1label=40000;y1label=-4;set label "transitory" at x1label,y1label center
     x2label=90000;y2label=-4;set label "estationary" at x2label,y2label center
@@ -200,7 +202,8 @@ rows=3;columns=1;set multiplot layout rows,columns
     t3=6000;set trange [-6:-5.3]
     set xlabel "MCD_{step} (Monte Carlo Dynamic)"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure,T_{adim}=0.75\n\
-    {/Symbol r}=.8,MCD_{step}=10000"
+    {/Symbol r}=.8,MCD_{step}=10000\n\
+    Monte Carlo Simulations"
     unset label
     x1label=3000;y1label=-5.6;set label "transitory" at x1label,y1label center
     x2label=8000;y2label=-5.6;set label "estationary" at x2label,y2label center

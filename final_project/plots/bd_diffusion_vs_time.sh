@@ -174,9 +174,8 @@ GNUTERM = "qt"
 x = 0.0
 unset logscale
 ## Last datafile plotted: "md_diffusion_vs_time_T0.75_20.dat"
-sizex=8;sizey=8;set terminal pdf size sizex,sizey;set output 'bd_diffusion_vs_time.pdf'
-rows=2;columns=2;set multiplot layout rows,columns
-    #set xrange[0.8:1.2];set yrange[:3];set xtics 0.05;set ytics 0.25
+sizex=8;sizey=12;set terminal pdf size sizex,sizey;set output 'bd_diffusion_vs_time.pdf'
+rows=3;columns=2;set multiplot layout rows,columns
     set autoscale;set grid
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure;T_{adim}=0.75\n\
     Brownian Dynamic Simulations\n\
@@ -220,7 +219,7 @@ rows=2;columns=2;set multiplot layout rows,columns
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure;T_{adim}=1.35\n\
     Brownian Dynamic Simulations\n\
     BD -> t_{eq}=100000,t_{run}=50000,{/Symbol D}t=.001"
-    D0=0.75/27.0491
+    D0=1.35/27.0491
     x1label=0.001;y1label=0.001;set label "diffusion" at x1label,y1label center
     x2label=0.1;y2label=1;set label "diffusion" at x2label,y2label center
     x3label=0.01;y3label=0.01;set label "subdiffusion" at x3label,y3label center
@@ -251,6 +250,42 @@ rows=2;columns=2;set multiplot layout rows,columns
     '../results/bd_diffusion_vs_time_T1.35_18.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'dark-blue' t '{/Symbol r}=1.04',\
     '../results/bd_diffusion_vs_time_T1.35_19.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'dark-green' t '{/Symbol r}=1.07',\
     '../results/bd_diffusion_vs_time_T1.35_20.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'orange' t '{/Symbol r}=1.1'
+
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure;T_{adim}=2.74\n\
+    Brownian Dynamic Simulations\n\
+    BD -> t_{eq}=100000,t_{run}=50000,{/Symbol D}t=.001"
+    D0=2.74/27.0491
+    x1label=0.003;y1label=0.001;set label "diffusion" at x1label,y1label center
+    x2label=0.03;y2label=10;set label "diffusion" at x2label,y2label center
+    x3label=0.03;y3label=0.01;set label "subdiffusion" at x3label,y3label center
+    set ylabel "Mean squared displacement (log(MSD))"
+    set logscale
+    set key left top
+    p '../results/bd_diffusion_vs_time_T2.74_11.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'red' t '{/Symbol r}=0.83',\
+    '../results/bd_diffusion_vs_time_T2.74_12.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'blue' t '{/Symbol r}=0.86',\
+    '../results/bd_diffusion_vs_time_T2.74_13.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'green' t '{/Symbol r}=0.89',\
+    '../results/bd_diffusion_vs_time_T2.74_14.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'magenta' t '{/Symbol r}=0.92',\
+    '../results/bd_diffusion_vs_time_T2.74_15.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'brown' t '{/Symbol r}=0.95',\
+    '../results/bd_diffusion_vs_time_T2.74_16.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'cyan' t '{/Symbol r}=0.98',\
+    '../results/bd_diffusion_vs_time_T2.74_17.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'black' t '{/Symbol r}=1.01'
+    # '../results/bd_diffusion_vs_time_T2.74_18.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'dark-blue' t '{/Symbol r}=1.04',\
+    # '../results/bd_diffusion_vs_time_T2.74_19.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'dark-green' t '{/Symbol r}=1.07',\
+    # '../results/bd_diffusion_vs_time_T2.74_20.dat' u ($1*D0):3 w lp pt 7 ps 0.5 lw 0.1 lc 'orange' t '{/Symbol r}=1.1'
+
+    unset label
+    set ylabel "Diffusion constant (log(D)=log(MSD/({/Symbol t}{D_{0}})))"
+    set key right top
+    set yrange[:10]
+    p '../results/bd_diffusion_vs_time_T2.74_11.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'red' t '{/Symbol r}=0.83',\
+    '../results/bd_diffusion_vs_time_T2.74_12.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'blue' t '{/Symbol r}=0.86',\
+    '../results/bd_diffusion_vs_time_T2.74_13.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'green' t '{/Symbol r}=0.89',\
+    '../results/bd_diffusion_vs_time_T2.74_14.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'magenta' t '{/Symbol r}=0.92',\
+    '../results/bd_diffusion_vs_time_T2.74_15.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'brown' t '{/Symbol r}=0.95',\
+    '../results/bd_diffusion_vs_time_T2.74_16.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'cyan' t '{/Symbol r}=0.98',\
+    '../results/bd_diffusion_vs_time_T2.74_17.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'black' t '{/Symbol r}=1.01'
+    # '../results/bd_diffusion_vs_time_T2.74_18.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'dark-blue' t '{/Symbol r}=1.04',\
+    # '../results/bd_diffusion_vs_time_T2.74_19.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'dark-green' t '{/Symbol r}=1.07',\
+    # '../results/bd_diffusion_vs_time_T2.74_20.dat' u ($1*D0):(1/($2*6)) w lp pt 7 ps 0.5 lw 0.1 lc 'orange' t '{/Symbol r}=1.1'
 
 unset multiplot
 #    EOF
