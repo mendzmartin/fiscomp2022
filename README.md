@@ -4,7 +4,7 @@
 > I have created this repository to develop required practical works for the postgraduate course called Computational Physics from Faculty of Mathematic, Astronomy, Physics and Computation (FaMAF) of National University of Córdoba (UNC).
 
 ## Details
-> The course's codes was writing in FORTRAN 90 language, also there are some scripts on GNUPLOT and BASH.
+> The course's codes were writing in FORTRAN 90 language, also there are some scripts on GNUPLOT and BASH.
 
 ## Contents
 + `lab(xx)` folder
