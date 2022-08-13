@@ -21,3 +21,6 @@
 
 + `reports` folder
   + directory that contains laboratory's reports.
+  
++ `final_project` folder
+  + directory that contains final project's codes, results and plots.
