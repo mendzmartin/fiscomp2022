@@ -269,7 +269,8 @@ program brownian_dynamic_lennard_jones
                 s1_D=s1_D+D;s2_D=s2_D+D*D
                 D_med=s1_D*(1._dp/real(i,dp))
                 var_D=s2_D*(1._dp/real(i,dp))-D_med*D_med
-                write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
+                ! write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
+                write(90,"(2(E12.4,x),E12.4)") time,D,msd
             end do
             close(90)
             ! computamos errores en el último paso

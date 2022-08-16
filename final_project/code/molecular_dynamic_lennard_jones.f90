@@ -285,7 +285,8 @@ program molecular_dynamic_lennard_jones
                 s1_msd=s1_msd+msd;s2_msd=s2_msd+msd*msd
                 msd_med=s1_msd*(1._dp/real(k,dp))
                 var_msd=(real(k,dp)*s2_msd-s1_msd*s1_msd)*(1._dp/real(k*k,dp))
-                write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
+                ! write(90,"(2(E12.4,x),E12.4)") time,D_med,msd_med
+                write(90,"(2(E12.4,x),E12.4)") time,D,msd
             end do
             close(90)
             ! computamos errores en el último paso
