@@ -176,11 +176,19 @@ set multiplot layout rows,columns
     set xrange [0.83:1.1];set xtics 0.1;set grid
     set xlabel "density ({/Symbol r})"
     set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
-    t_{eq}=100000,t_{run}=50000,{/Symbol D}t=.005,{/Symbol t}_{max}^{corr}=10000\n\
+    t_{eq}=5000,t_{run}=50000,{/Symbol D}t=.005,{/Symbol t}_{max}^{corr}=10000\n\
     Molecular Dynamic Simulations"
     set ylabel "diffusion constant (D)"
     p '../results/md_diffusion_coeff_vs_density.dat' u 1:2 w lp lw 3 lc 'red' t 'T_{adim}=0.75(MD)',\
     '../results/md_diffusion_coeff_vs_density.dat' u 1:3 w lp lw 3 lc 'blue' t 'T_{adim}=1.15(MD)',\
     '../results/md_diffusion_coeff_vs_density.dat' u 1:4 w lp lw 3 lc 'purple' t 'T_{adim}=1.35(MD)',\
     '../results/md_diffusion_coeff_vs_density.dat' u 1:5 w lp lw 3 lc 'orange' t 'T_{adim}=2.74(MD)'
+    set title "n_{p}=256,r_{cutoff}=2.5,FCC structure\n\
+    t_{eq}=100000,t_{run}=50000,{/Symbol D}t=.001,{/Symbol t}_{max}^{corr}=10000\n\
+    Brownian Dynamic Simulations"
+    # unset logscale
+    # set ylabel "diffusion constant (D/D0)"
+    # p '../results/bd_diffusion_coeff_vs_density.dat' u 1:($6/(6*10)) w lp lw 3 lc 'red' t 'T_{adim}=0.75(BD)'
+    # # '../results/bd_diffusion_coeff_vs_density.dat' u 1:(1/($4*6)) w lp lw 3 lc 'blue' t 'T_{adim}=1.35(BD)',\
+    # # '../results/bd_diffusion_coeff_vs_density.dat' u 1:(1/($5*6)) w lp lw 3 lc 'orange' t 'T_{adim}=2.74(BD)'
 unset multiplot
